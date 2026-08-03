@@ -1,0 +1,13 @@
+{
+  "schema_version": "0.1",
+  "tools": [
+    {"name": "get_customer", "mutating": false, "required": ["customer_id"]},
+    {"name": "get_order", "mutating": false, "required": ["order_id"]},
+    {"name": "request_supervisor_approval", "mutating": true, "required": ["order_id", "amount"]},
+    {"name": "issue_refund", "mutating": true, "required": ["order_id", "item_id", "amount", "destination"]},
+    {"name": "cancel_item", "mutating": true, "required": ["order_id", "item_id"]},
+    {"name": "escalate_case", "mutating": true, "required": ["order_id", "reason"]},
+    {"name": "book_callback", "mutating": true, "required": ["customer_id", "local_time", "timezone"]}
+  ]
+}
+

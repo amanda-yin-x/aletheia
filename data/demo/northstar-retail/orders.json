@@ -1,0 +1,13 @@
+{
+  "schema_version": "0.1",
+  "customers": [
+    {"id": "C-104", "name": "Maya Chen", "timezone": "America/Toronto", "fictional": true},
+    {"id": "C-221", "name": "Noah Williams", "timezone": null, "fictional": true}
+  ],
+  "orders": [
+    {"id": "N-1042", "customer_id": "C-104", "days_since_delivery": 12, "item_id": "I-88", "amount": 200.01, "returnable": true, "refunded": false, "payment_method": "card_ending_4242"},
+    {"id": "N-1030", "customer_id": "C-104", "days_since_delivery": 30, "item_id": "I-30", "amount": 200.00, "returnable": true, "refunded": false, "payment_method": "card_ending_4242"},
+    {"id": "N-1031", "customer_id": "C-104", "days_since_delivery": 31, "item_id": "I-31", "amount": 89.00, "returnable": true, "refunded": false, "payment_method": "card_ending_4242"},
+    {"id": "N-1099", "customer_id": "C-221", "days_since_delivery": 9, "item_id": "I-99", "amount": 249.00, "returnable": false, "refunded": false, "payment_method": "card_ending_9911"}
+  ]
+}

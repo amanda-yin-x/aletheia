@@ -1,0 +1,98 @@
+from pathlib import Path
+
+import pytest
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.models import Document, Finding, Project, Rule, ScenarioResult
+from app.models import TestCase as CaseModel
+from app.services.compiler import compile_project
+from app.services.errors import ServiceError
+from app.services.ingestion import parse_document
+from app.services.reporting import EVIDENCE_BOUNDARY, create_report
+from app.services.review import resolve_finding, revise_rule
+from app.services.runner import run_comparison
+from app.services.seed import seed_demo
+
+
+async def prepare(session: AsyncSession) -> Project:
+    project = await session.scalar(select(Project).where(Project.slug == "northstar-retail"))
+    assert project
+    findings = list((await session.scalars(select(Finding).where(Finding.project_id == project.id, Finding.severity == "critical"))).all())
+    for finding in findings:
+        await resolve_finding(session, finding.id, "resolved", "Current policy v3 is authoritative.")
+    threshold = await session.scalar(select(Rule).where(Rule.project_id == project.id, Rule.stable_key == "rule.refund.approval_threshold", Rule.status == "needs_review"))
+    assert threshold
+    await revise_rule(session, threshold.id, expected_revision=threshold.revision, changes={"reviewer_note": "Strict > boundary verified."}, status="approved")
+    return project
+
+
+@pytest.mark.asyncio
+async def test_seed_is_idempotent_and_quotes_are_exact(session: AsyncSession) -> None:
+    first = await seed_demo(session)
+    second = await seed_demo(session)
+    assert first.id == second.id
+    assert await session.scalar(select(func.count()).select_from(CaseModel)) == 16
+    documents = {doc.id: doc for doc in (await session.scalars(select(Document))).all()}
+    rules = list((await session.scalars(select(Rule).where(Rule.status != "superseded"))).all())
+    for rule in rules:
+        assert rule.source_refs
+        for ref in rule.source_refs:
+            document = documents[ref["document_id"]]
+            span = "\n".join(document.normalized_text.splitlines()[ref["line_start"] - 1 : ref["line_end"]])
+            assert span == ref["quote"]
+            assert ref["source_sha256"] == document.original_sha256
+
+
+@pytest.mark.asyncio
+async def test_critical_findings_block_compilation(session: AsyncSession) -> None:
+    project = await session.scalar(select(Project).where(Project.slug == "northstar-retail"))
+    assert project
+    with pytest.raises(ServiceError, match="Resolve critical policy conflicts") as error:
+        await compile_project(session, project.id)
+    assert error.value.code == "critical_findings_unresolved"
+
+
+@pytest.mark.asyncio
+async def test_complete_no_key_workflow_and_boundary_trace(session: AsyncSession) -> None:
+    project = await prepare(session)
+    build = await compile_project(session, project.id)
+    assert build.stats["original"]["lines"] > build.stats["candidate"]["lines"]
+    assert len(build.artifacts["policies/tool-policy.json"]["rules"]) == 7
+    assert set(build.source_map) >= {"prompt-kernel.md", "policies/tool-policy.json", "tests/regression.yaml"}
+    run = await run_comparison(session, project.id, build.id)
+    assert run.metrics["compiled_enforced"]["executed_violation_rate"] == 0
+    assert run.metrics["compiled_enforced"]["false_block_rate"] == 0
+    assert run.metrics["coverage"]["test_count"] == 16
+    case = await session.scalar(select(CaseModel).where(CaseModel.stable_key == "refund.amount.200_01.no_approval"))
+    assert case
+    guarded = await session.scalar(select(ScenarioResult).where(ScenarioResult.run_id == run.id, ScenarioResult.test_case_id == case.id, ScenarioResult.arm == "compiled_enforced"))
+    baseline = await session.scalar(select(ScenarioResult).where(ScenarioResult.run_id == run.id, ScenarioResult.test_case_id == case.id, ScenarioResult.arm == "baseline_unenforced"))
+    assert guarded and baseline
+    assert guarded.metrics["executed_calls"] == 0
+    assert guarded.metrics["blocked_calls"] == 1
+    assert baseline.metrics["executed_violation"] is True
+    report = await create_report(session, run.id)
+    assert report.verdict == "Ready for sandbox pilot"
+    assert report.evidence["evidence_boundary"] == EVIDENCE_BOUNDARY
+    assert len(report.content_hash) == 64
+    assert "not a safety, security, or compliance certification" in report.rendered_markdown.lower()
+
+
+def test_ingestion_accepts_safe_formats_and_rejects_unsafe() -> None:
+    text, mime, _ = parse_document("policy.yaml", b"window: 30\napproval: 200\n")
+    assert text.startswith("window") and mime == "application/yaml"
+    with pytest.raises(ServiceError) as unsupported:
+        parse_document("payload.zip", b"PK")
+    assert unsupported.value.code == "unsupported_file_type"
+    with pytest.raises(ServiceError) as too_large:
+        parse_document("policy.md", b"x" * 11, max_bytes=10)
+    assert too_large.value.code == "file_too_large"
+
+
+def test_demo_corpus_has_meaningful_baseline() -> None:
+    path = Path(__file__).resolve().parents[3] / "data" / "demo" / "northstar-retail" / "baseline-system-prompt.md"
+    text = path.read_text()
+    assert 150 <= len(text.splitlines()) <= 260
+    assert "Refunds over $200 require supervisor approval" in text
+    assert "Never describe a proposed call as an executed call" in text

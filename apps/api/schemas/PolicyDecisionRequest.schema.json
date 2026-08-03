@@ -1,0 +1,41 @@
+{
+  "properties": {
+    "context": {
+      "additionalProperties": true,
+      "default": {},
+      "title": "Context",
+      "type": "object"
+    },
+    "events": {
+      "default": [],
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Events",
+      "type": "array"
+    },
+    "state": {
+      "additionalProperties": true,
+      "default": {},
+      "title": "State",
+      "type": "object"
+    },
+    "tool": {
+      "additionalProperties": true,
+      "title": "Tool",
+      "type": "object"
+    },
+    "user": {
+      "additionalProperties": true,
+      "default": {},
+      "title": "User",
+      "type": "object"
+    }
+  },
+  "required": [
+    "tool"
+  ],
+  "title": "PolicyDecisionRequest",
+  "type": "object"
+}

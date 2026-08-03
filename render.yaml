@@ -1,0 +1,32 @@
+databases:
+  - name: aletheia-db
+    plan: free
+services:
+  - type: web
+    name: aletheia-api
+    runtime: docker
+    dockerfilePath: ./apps/api/Dockerfile
+    dockerContext: .
+    healthCheckPath: /healthz
+    preDeployCommand: uv run alembic upgrade head
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase: { name: aletheia-db, property: connectionString }
+      - key: DEMO_MODE
+        value: "true"
+      - key: DEMO_INLINE_JOBS
+        value: "false"
+      - key: WEB_ORIGIN
+        sync: false
+  - type: worker
+    name: aletheia-worker
+    runtime: docker
+    dockerfilePath: ./apps/api/Dockerfile
+    dockerContext: .
+    dockerCommand: uv run aletheia worker
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase: { name: aletheia-db, property: connectionString }
+      - key: DEMO_INLINE_JOBS
+        value: "false"
+

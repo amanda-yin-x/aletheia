@@ -1,0 +1,49 @@
+{
+  "properties": {
+    "decision": {
+      "enum": [
+        "allow",
+        "deny",
+        "require_approval",
+        "require_prior_event",
+        "indeterminate"
+      ],
+      "title": "Decision",
+      "type": "string"
+    },
+    "decision_hash": {
+      "title": "Decision Hash",
+      "type": "string"
+    },
+    "evaluated_facts": {
+      "additionalProperties": true,
+      "title": "Evaluated Facts",
+      "type": "object"
+    },
+    "reason": {
+      "title": "Reason",
+      "type": "string"
+    },
+    "reason_code": {
+      "title": "Reason Code",
+      "type": "string"
+    },
+    "rule_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Rule Ids",
+      "type": "array"
+    }
+  },
+  "required": [
+    "decision",
+    "reason_code",
+    "reason",
+    "rule_ids",
+    "evaluated_facts",
+    "decision_hash"
+  ],
+  "title": "PolicyDecisionResult",
+  "type": "object"
+}

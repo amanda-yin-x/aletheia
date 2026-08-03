@@ -1,0 +1,128 @@
+{
+  "commit": "fc0055dc4e0a316c3f83133267fbd6faaa770992",
+  "excluded_known_open_tasks": [
+    4,
+    5,
+    7
+  ],
+  "imported_at": "2026-08-03T02:54:05.793351+00:00",
+  "label": "Simulated, real-world-like retail benchmark\u2014not real customer data.",
+  "license": "MIT; copyright Sierra Research 2025",
+  "repository": "https://github.com/sierra-research/tau2-bench",
+  "schema_version": "0.1",
+  "selected_file_hashes": {
+    "LICENSE": "e67c5aa0074dfcaefd3c3a1aedb94cb539234aecd15d5a972574e3200e6252fe",
+    "data/tau2/domains/retail/db.json": "413a65160adbdb5fde0ffc0015c49b6d70250b10c18128de169b597af7766765",
+    "data/tau2/domains/retail/policy.md": "2c9652afbce57d6e087768d37cda64d31c53d50b3e3225cfdb791bac66466467",
+    "data/tau2/domains/retail/split_tasks.json": "ed0580ec52575b63fbf76568af42490da6ee7783ecb4aa81af46961291358f20",
+    "data/tau2/domains/retail/tasks.json": "8e03ebce7901bd6218e7a7dc3105faa9324091a68058f7fe61c65262868812e8",
+    "normalized/selected-tasks.json": "9f4d2c369fa98648e68827525e3bec03d340211ef02a3e7406632ec667003f77"
+  },
+  "tag": "v1.0.1",
+  "task_ids": [
+    10,
+    11,
+    12,
+    13,
+    16,
+    24,
+    30,
+    31,
+    48,
+    50,
+    51,
+    53,
+    57,
+    76,
+    82,
+    83,
+    84
+  ],
+  "task_manifest": [
+    {
+      "purpose": "For some reason, you want to return all things ordered. You have two payment methods and two orders, and you want to refund each order to the other order's payment method. If not possible, you are angry and swear for a few times, then ask for human representative. Make sure to return BOTH orders.",
+      "task_id": "10",
+      "upstream_path": "data/tau2/domains/retail/tasks.json"
+    },
+    {
+      "purpose": "For some reason, you want to return all things ordered. You have two payment methods and two orders, and you want to refund each order to the other order's payment method. If not possible, you are angry and swear for a few times, then agree to return all things with the original payment method.",
+      "task_id": "11",
+      "upstream_path": "data/tau2/domains/retail/tasks.json"
+    },
+    {
+      "purpose": "You just got into gaming and want to cancel or return everything not associated with it. (Everything except a keyboard and a mouse, but do not reveal it to the agent). PayPal is prefered for refund, but otherwise you are angry and ask for human agent for help.",
+      "task_id": "12",
+      "upstream_path": "data/tau2/domains/retail/tasks.json"
+    },
+    {
+      "purpose": "You just got into gaming and want to cancel or return everything not associated with it. (Everything except a keyboard and a mouse, but do not reveal it to the agent). PayPal is prefered for refund, but otherwise credit card can be accepted.",
+      "task_id": "13",
+      "upstream_path": "data/tau2/domains/retail/tasks.json"
+    },
+    {
+      "purpose": "You want to cancel all pending orders (since they are no longer needed) and return the watch you have received (but nothing else), and you want to know the total amount you can get back.",
+      "task_id": "16",
+      "upstream_path": "data/tau2/domains/retail/tasks.json"
+    },
+    {
+      "purpose": "You want to cancel the grill, but if the agent asks you to confirm, you regret and want to keep it. You then want to ask which two t-shirts you have ordered in another order, and what materials are they.",
+      "task_id": "24",
+      "upstream_path": "data/tau2/domains/retail/tasks.json"
+    },
+    {
+      "purpose": "You just received your tablet and it was damaged when you opened the package. You want to know the tracking number of that order first. Also if the agent can help you exchange or return the tablet (you prefer exchange for the same item, but if it is not available just return it). If tablet is returned, also cancel the charger you just bought, because it goes with the tablet. And finally, return the sneaker.",
+      "task_id": "30",
+      "upstream_path": "data/tau2/domains/retail/tasks.json"
+    },
+    {
+      "purpose": ". You just lost your tablet you just received and are in a bad mood. You want to know the tracking number of the order, and if the agent can help you refund or reorder the tablet. (You know it's a long shot, but you want to try). If not, cancel the charger you just bought, because it goes with the tablet... Also cancel the boot and keep the kettle (if not possible, do not do anything on that order), and return the sneaker.",
+      "task_id": "31",
+      "upstream_path": "data/tau2/domains/retail/tasks.json"
+    },
+    {
+      "purpose": "You want to return an air purifier that you received since it doesn't work well.  You want the refund on your original method of payment.  Also, check at the end whether you are able to return the vacuum cleaner, but you are not sure yet so don't process anything.",
+      "task_id": "48",
+      "upstream_path": "data/tau2/domains/retail/tasks.json"
+    },
+    {
+      "purpose": "You're in a rush and you want to undo cancelling an order that you've previously placed. Be insistent that the customer service agent should undo the cancellation and ensure that the order is delivered as soon as possible. Do NOT mention the actual items that were in the order, just that you want to undo the cancellation and receive all the items that were in the initial order as soon as possible.",
+      "task_id": "50",
+      "upstream_path": "data/tau2/domains/retail/tasks.json"
+    },
+    {
+      "purpose": "You want to return the digital camera that you received. You guess that the order number is #W8855135, but you're not 100% sure. Insist that you want to return the camera and get a refund to the original payment method.",
+      "task_id": "51",
+      "upstream_path": "data/tau2/domains/retail/tasks.json"
+    },
+    {
+      "purpose": "The bicycle you received was damaged during delivery, and you want to get a refund. You're quite frustrated because the bike was very expensive and you'd like to receive the refund as soon as possible. You want the refund to be credited to your original credit card.",
+      "task_id": "53",
+      "upstream_path": "data/tau2/domains/retail/tasks.json"
+    },
+    {
+      "purpose": "You wonder when is your order W4284542 is arriving. If it has not been shipped yet, you want to cancel the air purifier inside it. If you cannot cancel just the air purifier, you want to cancel the whole order and refund to gift card. If you cannot refund to the gift card, no cancelation at all.",
+      "task_id": "57",
+      "upstream_path": "data/tau2/domains/retail/tasks.json"
+    },
+    {
+      "purpose": "You ordered a fleece jacket by mistake and want to remove it from your pending order. If removing one item is not possible, cancel the whole order since you ordered it by mistake. You also want to modify the skateboard to maple material, 34 inch, graphic. If that is not possible, cancel the order since you no longer need this one. \nFinally, you also want to know the total price for all the grills you have bought in previous orders.",
+      "task_id": "76",
+      "upstream_path": "data/tau2/domains/retail/tasks.json"
+    },
+    {
+      "purpose": "You received two tablets and you only need one. You want to return the more expensive one and refund to credit card. If refund to credit card is not possible, you become angry and return everything on that order and refund to GC.",
+      "task_id": "82",
+      "upstream_path": "data/tau2/domains/retail/tasks.json"
+    },
+    {
+      "purpose": "You received two tablets and you only need one. You want to return the more expensive one and refund to credit card. If refund to credit card is not possible, you become angry and refund to GC.",
+      "task_id": "83",
+      "upstream_path": "data/tau2/domains/retail/tasks.json"
+    },
+    {
+      "purpose": "You received two tablets and you only need one. You want to return the less expensive one and refund to credit card. But when the agent asks for confirmation, you change your mind and return the more expensive one and ask for a refund to gift card.",
+      "task_id": "84",
+      "upstream_path": "data/tau2/domains/retail/tasks.json"
+    }
+  ]
+}

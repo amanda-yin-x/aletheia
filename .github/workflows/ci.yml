@@ -1,0 +1,35 @@
+name: CI
+permissions:
+  contents: read
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+on:
+  push:
+  pull_request:
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with: { python-version: "3.12", enable-cache: true }
+      - uses: actions/setup-node@v4
+        with: { node-version: "22", cache: "pnpm" }
+      - run: corepack enable
+      - run: cd apps/api && uv sync --all-groups --frozen
+      - run: corepack pnpm install --frozen-lockfile
+      - run: cd apps/api && uv run ruff check app tests
+      - run: cd apps/api && uv run mypy app
+      - run: cd apps/api && uv run pytest
+      - run: cd apps/api && uv run python scripts/export_contracts.py
+      - run: corepack pnpm --filter @aletheia/web exec openapi-typescript ../../apps/api/openapi.json -o ../../packages/api-client/src/schema.d.ts
+      - name: Verify generated API contracts are committed
+        run: git diff --exit-code -- apps/api/openapi.json packages/api-client/src/schema.d.ts
+      - run: corepack pnpm --filter @aletheia/web lint
+      - run: corepack pnpm --filter @aletheia/web typecheck
+      - run: corepack pnpm --filter @aletheia/web test
+      - run: corepack pnpm --filter @aletheia/web build
+      - run: corepack pnpm --filter @aletheia/web exec playwright install --with-deps chromium
+      - run: corepack pnpm --filter @aletheia/web test:e2e

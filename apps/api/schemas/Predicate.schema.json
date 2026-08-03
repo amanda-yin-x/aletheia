@@ -1,0 +1,41 @@
+{
+  "properties": {
+    "fact": {
+      "title": "Fact",
+      "type": "string"
+    },
+    "kind": {
+      "const": "predicate",
+      "default": "predicate",
+      "title": "Kind",
+      "type": "string"
+    },
+    "op": {
+      "enum": [
+        "eq",
+        "ne",
+        "lt",
+        "lte",
+        "gt",
+        "gte",
+        "in",
+        "not_in",
+        "exists",
+        "contains",
+        "regex"
+      ],
+      "title": "Op",
+      "type": "string"
+    },
+    "value": {
+      "default": null,
+      "title": "Value"
+    }
+  },
+  "required": [
+    "fact",
+    "op"
+  ],
+  "title": "Predicate",
+  "type": "object"
+}

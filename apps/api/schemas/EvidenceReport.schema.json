@@ -1,0 +1,83 @@
+{
+  "properties": {
+    "comparison_arms": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Comparison Arms",
+      "type": "array"
+    },
+    "deterministic_runtime_boundary": {
+      "title": "Deterministic Runtime Boundary",
+      "type": "string"
+    },
+    "evidence_boundary": {
+      "title": "Evidence Boundary",
+      "type": "string"
+    },
+    "hashes": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Hashes",
+      "type": "object"
+    },
+    "limitations": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Limitations",
+      "type": "array"
+    },
+    "metrics": {
+      "additionalProperties": true,
+      "title": "Metrics",
+      "type": "object"
+    },
+    "provenance": {
+      "additionalProperties": true,
+      "title": "Provenance",
+      "type": "object"
+    },
+    "schema_version": {
+      "const": "0.1",
+      "default": "0.1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "test_count": {
+      "title": "Test Count",
+      "type": "integer"
+    },
+    "top_failures": {
+      "items": {
+        "additionalProperties": true,
+        "type": "object"
+      },
+      "title": "Top Failures",
+      "type": "array"
+    },
+    "verdict": {
+      "enum": [
+        "Changes required",
+        "Ready for sandbox pilot"
+      ],
+      "title": "Verdict",
+      "type": "string"
+    }
+  },
+  "required": [
+    "verdict",
+    "evidence_boundary",
+    "deterministic_runtime_boundary",
+    "provenance",
+    "hashes",
+    "comparison_arms",
+    "test_count",
+    "metrics",
+    "top_failures",
+    "limitations"
+  ],
+  "title": "EvidenceReport",
+  "type": "object"
+}

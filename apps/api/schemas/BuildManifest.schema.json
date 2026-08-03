@@ -1,0 +1,64 @@
+{
+  "properties": {
+    "artifact_hashes": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Artifact Hashes",
+      "type": "object"
+    },
+    "compiler_version": {
+      "title": "Compiler Version",
+      "type": "string"
+    },
+    "estimator": {
+      "title": "Estimator",
+      "type": "string"
+    },
+    "input_hashes": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Input Hashes",
+      "type": "object"
+    },
+    "limitations": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Limitations",
+      "type": "array"
+    },
+    "rule_revisions": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Rule Revisions",
+      "type": "array"
+    },
+    "schema_version": {
+      "const": "0.1",
+      "default": "0.1",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "test_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Test Ids",
+      "type": "array"
+    }
+  },
+  "required": [
+    "compiler_version",
+    "input_hashes",
+    "rule_revisions",
+    "artifact_hashes",
+    "test_ids",
+    "estimator",
+    "limitations"
+  ],
+  "title": "BuildManifest",
+  "type": "object"
+}

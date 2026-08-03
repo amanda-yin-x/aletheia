@@ -1,0 +1,27 @@
+{
+  "scanned_at": "2026-08-03",
+  "framework": "Next.js 16 App Router",
+  "font_stack": "Space Grotesk display, IBM Plex Sans body and labels, JetBrains Mono policy trace and keyboard/code UI via next/font",
+  "palette": "Cobalt-on-cool-paper marketing tokens layered over the existing navy/teal product workspace",
+  "motion": "Native React and CSS; one-shot type-in, one page-load settle, and control press states",
+  "spacing": "4-point semantic token scale",
+  "preserved": [
+    "Existing product routes and workbench information architecture",
+    "Existing application status colors and dense workspace layout",
+    "Reduced-motion support and global focus-visible behavior"
+  ],
+  "introduced": [
+    "Narrative Workflow marketing macrostructure",
+    "Project-scoped Hallmark design skill",
+    "Root design tokens and marketing typography",
+    "Concrete Northstar failure scenario and release-evidence story"
+  ],
+  "source_files": [
+    "apps/web/app/layout.tsx",
+    "apps/web/app/globals.css",
+    "apps/web/app/page.tsx",
+    "apps/web/components/marketing-landing.tsx",
+    "apps/web/components/site-header.tsx",
+    "tokens.css"
+  ]
+}

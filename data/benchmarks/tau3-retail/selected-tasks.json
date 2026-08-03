@@ -1,0 +1,2360 @@
+{
+  "label": "Simulated, real-world-like retail benchmark\u2014not real customer data.",
+  "schema_version": "0.1",
+  "task_count": 17,
+  "task_ids": [
+    10,
+    11,
+    12,
+    13,
+    16,
+    24,
+    30,
+    31,
+    48,
+    50,
+    51,
+    53,
+    57,
+    76,
+    82,
+    83,
+    84
+  ],
+  "tasks": [
+    {
+      "expected": {
+        "actions": [
+          {
+            "action_id": "10_0",
+            "arguments": {
+              "email": "mia.garcia2723@example.com"
+            },
+            "info": null,
+            "name": "find_user_id_by_email"
+          },
+          {
+            "action_id": "10_1",
+            "arguments": {
+              "user_id": "mia_garcia_4516"
+            },
+            "info": null,
+            "name": "get_user_details"
+          },
+          {
+            "action_id": "10_2",
+            "arguments": {
+              "order_id": "#W5490111"
+            },
+            "info": null,
+            "name": "get_order_details"
+          },
+          {
+            "action_id": "10_3",
+            "arguments": {
+              "order_id": "#W7387996"
+            },
+            "info": null,
+            "name": "get_order_details"
+          },
+          {
+            "action_id": "10_4",
+            "arguments": {
+              "summary": "The user wants to refund each order to the opposite order's payment method, but the agent cannot help."
+            },
+            "compare_args": [],
+            "info": null,
+            "name": "transfer_to_human_agents"
+          }
+        ],
+        "communicate_info": []
+      },
+      "id": "tau3.retail.10",
+      "initial_state": null,
+      "messages": [
+        {
+          "content": "For some reason, you want to return all things ordered. You have two payment methods and two orders, and you want to refund each order to the other order's payment method. If not possible, you are angry and swear for a few times, then ask for human representative. Make sure to return BOTH orders.",
+          "role": "user"
+        }
+      ],
+      "provenance": {
+        "selector": "id=10",
+        "source": "tau3-retail-v1.0.1",
+        "upstream_path": "data/tau2/domains/retail/tasks.json"
+      },
+      "purpose": "For some reason, you want to return all things ordered. You have two payment methods and two orders, and you want to refund each order to the other order's payment method. If not possible, you are angry and swear for a few times, then ask for human representative. Make sure to return BOTH orders.",
+      "source_record": {
+        "description": {
+          "notes": null,
+          "purpose": null,
+          "relevant_policies": null
+        },
+        "evaluation_criteria": {
+          "actions": [
+            {
+              "action_id": "10_0",
+              "arguments": {
+                "email": "mia.garcia2723@example.com"
+              },
+              "info": null,
+              "name": "find_user_id_by_email"
+            },
+            {
+              "action_id": "10_1",
+              "arguments": {
+                "user_id": "mia_garcia_4516"
+              },
+              "info": null,
+              "name": "get_user_details"
+            },
+            {
+              "action_id": "10_2",
+              "arguments": {
+                "order_id": "#W5490111"
+              },
+              "info": null,
+              "name": "get_order_details"
+            },
+            {
+              "action_id": "10_3",
+              "arguments": {
+                "order_id": "#W7387996"
+              },
+              "info": null,
+              "name": "get_order_details"
+            },
+            {
+              "action_id": "10_4",
+              "arguments": {
+                "summary": "The user wants to refund each order to the opposite order's payment method, but the agent cannot help."
+              },
+              "compare_args": [],
+              "info": null,
+              "name": "transfer_to_human_agents"
+            }
+          ],
+          "communicate_info": [],
+          "nl_assertions": null,
+          "reward_basis": [
+            "DB",
+            "NL_ASSERTION"
+          ]
+        },
+        "id": "10",
+        "initial_state": null,
+        "user_scenario": {
+          "instructions": {
+            "domain": "retail",
+            "known_info": "You are mia_garcia_4516 (mia.garcia2723@example.com).",
+            "reason_for_call": "For some reason, you want to return all things ordered. You have two payment methods and two orders, and you want to refund each order to the other order's payment method. If not possible, you are angry and swear for a few times, then ask for human representative. Make sure to return BOTH orders.",
+            "task_instructions": "You are a mysterious person and do not want to reveal much about yourself or speak too many words at the same time.",
+            "unknown_info": null
+          },
+          "persona": null
+        }
+      },
+      "title": "tau3 Retail task 10",
+      "upstream_task_id": "10"
+    },
+    {
+      "expected": {
+        "actions": [
+          {
+            "action_id": "11_0",
+            "arguments": {
+              "email": "mia.garcia2723@example.com"
+            },
+            "info": null,
+            "name": "find_user_id_by_email"
+          },
+          {
+            "action_id": "11_1",
+            "arguments": {
+              "user_id": "mia_garcia_4516"
+            },
+            "info": null,
+            "name": "get_user_details"
+          },
+          {
+            "action_id": "11_2",
+            "arguments": {
+              "order_id": "#W5490111"
+            },
+            "info": null,
+            "name": "get_order_details"
+          },
+          {
+            "action_id": "11_3",
+            "arguments": {
+              "order_id": "#W7387996"
+            },
+            "info": null,
+            "name": "get_order_details"
+          },
+          {
+            "action_id": "11_4",
+            "arguments": {
+              "item_ids": [
+                "4579334072",
+                "1421289881",
+                "6117189161",
+                "4947717507"
+              ],
+              "order_id": "#W5490111",
+              "payment_method_id": "credit_card_3124723"
+            },
+            "info": null,
+            "name": "return_delivered_order_items"
+          },
+          {
+            "action_id": "11_5",
+            "arguments": {
+              "item_ids": [
+                "5796612084"
+              ],
+              "order_id": "#W7387996",
+              "payment_method_id": "paypal_9497703"
+            },
+            "info": null,
+            "name": "return_delivered_order_items"
+          }
+        ],
+        "communicate_info": []
+      },
+      "id": "tau3.retail.11",
+      "initial_state": null,
+      "messages": [
+        {
+          "content": "For some reason, you want to return all things ordered. You have two payment methods and two orders, and you want to refund each order to the other order's payment method. If not possible, you are angry and swear for a few times, then agree to return all things with the original payment method.",
+          "role": "user"
+        }
+      ],
+      "provenance": {
+        "selector": "id=11",
+        "source": "tau3-retail-v1.0.1",
+        "upstream_path": "data/tau2/domains/retail/tasks.json"
+      },
+      "purpose": "For some reason, you want to return all things ordered. You have two payment methods and two orders, and you want to refund each order to the other order's payment method. If not possible, you are angry and swear for a few times, then agree to return all things with the original payment method.",
+      "source_record": {
+        "description": {
+          "notes": null,
+          "purpose": null,
+          "relevant_policies": null
+        },
+        "evaluation_criteria": {
+          "actions": [
+            {
+              "action_id": "11_0",
+              "arguments": {
+                "email": "mia.garcia2723@example.com"
+              },
+              "info": null,
+              "name": "find_user_id_by_email"
+            },
+            {
+              "action_id": "11_1",
+              "arguments": {
+                "user_id": "mia_garcia_4516"
+              },
+              "info": null,
+              "name": "get_user_details"
+            },
+            {
+              "action_id": "11_2",
+              "arguments": {
+                "order_id": "#W5490111"
+              },
+              "info": null,
+              "name": "get_order_details"
+            },
+            {
+              "action_id": "11_3",
+              "arguments": {
+                "order_id": "#W7387996"
+              },
+              "info": null,
+              "name": "get_order_details"
+            },
+            {
+              "action_id": "11_4",
+              "arguments": {
+                "item_ids": [
+                  "4579334072",
+                  "1421289881",
+                  "6117189161",
+                  "4947717507"
+                ],
+                "order_id": "#W5490111",
+                "payment_method_id": "credit_card_3124723"
+              },
+              "info": null,
+              "name": "return_delivered_order_items"
+            },
+            {
+              "action_id": "11_5",
+              "arguments": {
+                "item_ids": [
+                  "5796612084"
+                ],
+                "order_id": "#W7387996",
+                "payment_method_id": "paypal_9497703"
+              },
+              "info": null,
+              "name": "return_delivered_order_items"
+            }
+          ],
+          "communicate_info": [],
+          "nl_assertions": null,
+          "reward_basis": [
+            "DB",
+            "NL_ASSERTION"
+          ]
+        },
+        "id": "11",
+        "initial_state": null,
+        "user_scenario": {
+          "instructions": {
+            "domain": "retail",
+            "known_info": "You are mia_garcia_4516 (mia.garcia2723@example.com).",
+            "reason_for_call": "For some reason, you want to return all things ordered. You have two payment methods and two orders, and you want to refund each order to the other order's payment method. If not possible, you are angry and swear for a few times, then agree to return all things with the original payment method.",
+            "task_instructions": "You are a mysterious person and do not want to reveal much about yourself or speak too many words at the same time.",
+            "unknown_info": null
+          },
+          "persona": null
+        }
+      },
+      "title": "tau3 Retail task 11",
+      "upstream_task_id": "11"
+    },
+    {
+      "expected": {
+        "actions": [
+          {
+            "action_id": "12_0",
+            "arguments": {
+              "email": "mia.garcia2723@example.com"
+            },
+            "info": null,
+            "name": "find_user_id_by_email"
+          },
+          {
+            "action_id": "12_1",
+            "arguments": {
+              "user_id": "mia_garcia_4516"
+            },
+            "info": null,
+            "name": "get_user_details"
+          },
+          {
+            "action_id": "12_2",
+            "arguments": {
+              "order_id": "#W5490111"
+            },
+            "info": null,
+            "name": "get_order_details"
+          },
+          {
+            "action_id": "12_3",
+            "arguments": {
+              "order_id": "#W7387996"
+            },
+            "info": null,
+            "name": "get_order_details"
+          },
+          {
+            "action_id": "12_4",
+            "arguments": {
+              "summary": "The user prefers PayPal for refund, but the agent cannot help."
+            },
+            "compare_args": [],
+            "info": null,
+            "name": "transfer_to_human_agents"
+          }
+        ],
+        "communicate_info": []
+      },
+      "id": "tau3.retail.12",
+      "initial_state": null,
+      "messages": [
+        {
+          "content": "You just got into gaming and want to cancel or return everything not associated with it. (Everything except a keyboard and a mouse, but do not reveal it to the agent). PayPal is prefered for refund, but otherwise you are angry and ask for human agent for help.",
+          "role": "user"
+        }
+      ],
+      "provenance": {
+        "selector": "id=12",
+        "source": "tau3-retail-v1.0.1",
+        "upstream_path": "data/tau2/domains/retail/tasks.json"
+      },
+      "purpose": "You just got into gaming and want to cancel or return everything not associated with it. (Everything except a keyboard and a mouse, but do not reveal it to the agent). PayPal is prefered for refund, but otherwise you are angry and ask for human agent for help.",
+      "source_record": {
+        "description": {
+          "notes": null,
+          "purpose": null,
+          "relevant_policies": null
+        },
+        "evaluation_criteria": {
+          "actions": [
+            {
+              "action_id": "12_0",
+              "arguments": {
+                "email": "mia.garcia2723@example.com"
+              },
+              "info": null,
+              "name": "find_user_id_by_email"
+            },
+            {
+              "action_id": "12_1",
+              "arguments": {
+                "user_id": "mia_garcia_4516"
+              },
+              "info": null,
+              "name": "get_user_details"
+            },
+            {
+              "action_id": "12_2",
+              "arguments": {
+                "order_id": "#W5490111"
+              },
+              "info": null,
+              "name": "get_order_details"
+            },
+            {
+              "action_id": "12_3",
+              "arguments": {
+                "order_id": "#W7387996"
+              },
+              "info": null,
+              "name": "get_order_details"
+            },
+            {
+              "action_id": "12_4",
+              "arguments": {
+                "summary": "The user prefers PayPal for refund, but the agent cannot help."
+              },
+              "compare_args": [],
+              "info": null,
+              "name": "transfer_to_human_agents"
+            }
+          ],
+          "communicate_info": [],
+          "nl_assertions": null,
+          "reward_basis": [
+            "DB",
+            "NL_ASSERTION"
+          ]
+        },
+        "id": "12",
+        "initial_state": null,
+        "user_scenario": {
+          "instructions": {
+            "domain": "retail",
+            "known_info": "You are mia_garcia_4516 (mia.garcia2723@example.com).",
+            "reason_for_call": "You just got into gaming and want to cancel or return everything not associated with it. (Everything except a keyboard and a mouse, but do not reveal it to the agent). PayPal is prefered for refund, but otherwise you are angry and ask for human agent for help.",
+            "task_instructions": "You are into gaming but realized the importance of studying hard recently.",
+            "unknown_info": null
+          },
+          "persona": null
+        }
+      },
+      "title": "tau3 Retail task 12",
+      "upstream_task_id": "12"
+    },
+    {
+      "expected": {
+        "actions": [
+          {
+            "action_id": "13_0",
+            "arguments": {
+              "email": "mia.garcia2723@example.com"
+            },
+            "info": null,
+            "name": "find_user_id_by_email"
+          },
+          {
+            "action_id": "13_1",
+            "arguments": {
+              "user_id": "mia_garcia_4516"
+            },
+            "info": null,
+            "name": "get_user_details"
+          },
+          {
+            "action_id": "13_2",
+            "arguments": {
+              "order_id": "#W5490111"
+            },
+            "info": null,
+            "name": "get_order_details"
+          },
+          {
+            "action_id": "13_3",
+            "arguments": {
+              "order_id": "#W7387996"
+            },
+            "info": null,
+            "name": "get_order_details"
+          },
+          {
+            "action_id": "13_4",
+            "arguments": {
+              "item_ids": [
+                "4579334072",
+                "6117189161",
+                "4947717507"
+              ],
+              "order_id": "#W5490111",
+              "payment_method_id": "credit_card_3124723"
+            },
+            "info": null,
+            "name": "return_delivered_order_items"
+          }
+        ],
+        "communicate_info": []
+      },
+      "id": "tau3.retail.13",
+      "initial_state": null,
+      "messages": [
+        {
+          "content": "You just got into gaming and want to cancel or return everything not associated with it. (Everything except a keyboard and a mouse, but do not reveal it to the agent). PayPal is prefered for refund, but otherwise credit card can be accepted.",
+          "role": "user"
+        }
+      ],
+      "provenance": {
+        "selector": "id=13",
+        "source": "tau3-retail-v1.0.1",
+        "upstream_path": "data/tau2/domains/retail/tasks.json"
+      },
+      "purpose": "You just got into gaming and want to cancel or return everything not associated with it. (Everything except a keyboard and a mouse, but do not reveal it to the agent). PayPal is prefered for refund, but otherwise credit card can be accepted.",
+      "source_record": {
+        "description": {
+          "notes": null,
+          "purpose": null,
+          "relevant_policies": null
+        },
+        "evaluation_criteria": {
+          "actions": [
+            {
+              "action_id": "13_0",
+              "arguments": {
+                "email": "mia.garcia2723@example.com"
+              },
+              "info": null,
+              "name": "find_user_id_by_email"
+            },
+            {
+              "action_id": "13_1",
+              "arguments": {
+                "user_id": "mia_garcia_4516"
+              },
+              "info": null,
+              "name": "get_user_details"
+            },
+            {
+              "action_id": "13_2",
+              "arguments": {
+                "order_id": "#W5490111"
+              },
+              "info": null,
+              "name": "get_order_details"
+            },
+            {
+              "action_id": "13_3",
+              "arguments": {
+                "order_id": "#W7387996"
+              },
+              "info": null,
+              "name": "get_order_details"
+            },
+            {
+              "action_id": "13_4",
+              "arguments": {
+                "item_ids": [
+                  "4579334072",
+                  "6117189161",
+                  "4947717507"
+                ],
+                "order_id": "#W5490111",
+                "payment_method_id": "credit_card_3124723"
+              },
+              "info": null,
+              "name": "return_delivered_order_items"
+            }
+          ],
+          "communicate_info": [],
+          "nl_assertions": null,
+          "reward_basis": [
+            "DB",
+            "NL_ASSERTION"
+          ]
+        },
+        "id": "13",
+        "initial_state": null,
+        "user_scenario": {
+          "instructions": {
+            "domain": "retail",
+            "known_info": "You are mia_garcia_4516 with email mia.garcia2723@example.com",
+            "reason_for_call": "You just got into gaming and want to cancel or return everything not associated with it. (Everything except a keyboard and a mouse, but do not reveal it to the agent). PayPal is prefered for refund, but otherwise credit card can be accepted.",
+            "task_instructions": "You are into gaming but realized the importance of studying hard.",
+            "unknown_info": null
+          },
+          "persona": null
+        }
+      },
+      "title": "tau3 Retail task 13",
+      "upstream_task_id": "13"
+    },
+    {
+      "expected": {
+        "actions": [
+          {
+            "action_id": "16_0",
+            "arguments": {
+              "first_name": "Fatima",
+              "last_name": "Johnson",
+              "zip": "78712"
+            },
+            "info": null,
+            "name": "find_user_id_by_name_zip"
+          },
+          {
+            "action_id": "16_1",
+            "arguments": {
+              "user_id": "fatima_johnson_7581"
+            },
+            "info": null,
+            "name": "get_user_details"
+          },
+          {
+            "action_id": "16_2",
+            "arguments": {
+              "order_id": "#W5199551"
+            },
+            "info": null,
+            "name": "get_order_details"
+          },
+          {
+            "action_id": "16_3",
+            "arguments": {
+              "order_id": "#W8665881"
+            },
+            "info": null,
+            "name": "get_order_details"
+          },
+          {
+            "action_id": "16_4",
+            "arguments": {
+              "order_id": "#W9389413"
+            },
+            "info": null,
+            "name": "get_order_details"
+          },
+          {
+            "action_id": "16_5",
+            "arguments": {
+              "expression": "3131.1 + 4777.75 + 367.38"
+            },
+            "info": null,
+            "name": "calculate"
+          },
+          {
+            "action_id": "16_6",
+            "arguments": {
+              "order_id": "#W5199551",
+              "reason": "no longer needed"
+            },
+            "info": null,
+            "name": "cancel_pending_order"
+          },
+          {
+            "action_id": "16_7",
+            "arguments": {
+              "order_id": "#W8665881",
+              "reason": "no longer needed"
+            },
+            "info": null,
+            "name": "cancel_pending_order"
+          },
+          {
+            "action_id": "16_8",
+            "arguments": {
+              "item_ids": [
+                "2554056026"
+              ],
+              "order_id": "#W9389413",
+              "payment_method_id": "paypal_5364164"
+            },
+            "info": null,
+            "name": "return_delivered_order_items"
+          }
+        ],
+        "communicate_info": [
+          "8276.23"
+        ]
+      },
+      "id": "tau3.retail.16",
+      "initial_state": null,
+      "messages": [
+        {
+          "content": "You want to cancel all pending orders (since they are no longer needed) and return the watch you have received (but nothing else), and you want to know the total amount you can get back.",
+          "role": "user"
+        }
+      ],
+      "provenance": {
+        "selector": "id=16",
+        "source": "tau3-retail-v1.0.1",
+        "upstream_path": "data/tau2/domains/retail/tasks.json"
+      },
+      "purpose": "You want to cancel all pending orders (since they are no longer needed) and return the watch you have received (but nothing else), and you want to know the total amount you can get back.",
+      "source_record": {
+        "description": {
+          "notes": null,
+          "purpose": null,
+          "relevant_policies": null
+        },
+        "evaluation_criteria": {
+          "actions": [
+            {
+              "action_id": "16_0",
+              "arguments": {
+                "first_name": "Fatima",
+                "last_name": "Johnson",
+                "zip": "78712"
+              },
+              "info": null,
+              "name": "find_user_id_by_name_zip"
+            },
+            {
+              "action_id": "16_1",
+              "arguments": {
+                "user_id": "fatima_johnson_7581"
+              },
+              "info": null,
+              "name": "get_user_details"
+            },
+            {
+              "action_id": "16_2",
+              "arguments": {
+                "order_id": "#W5199551"
+              },
+              "info": null,
+              "name": "get_order_details"
+            },
+            {
+              "action_id": "16_3",
+              "arguments": {
+                "order_id": "#W8665881"
+              },
+              "info": null,
+              "name": "get_order_details"
+            },
+            {
+              "action_id": "16_4",
+              "arguments": {
+                "order_id": "#W9389413"
+              },
+              "info": null,
+              "name": "get_order_details"
+            },
+            {
+              "action_id": "16_5",
+              "arguments": {
+                "expression": "3131.1 + 4777.75 + 367.38"
+              },
+              "info": null,
+              "name": "calculate"
+            },
+            {
+              "action_id": "16_6",
+              "arguments": {
+                "order_id": "#W5199551",
+                "reason": "no longer needed"
+              },
+              "info": null,
+              "name": "cancel_pending_order"
+            },
+            {
+              "action_id": "16_7",
+              "arguments": {
+                "order_id": "#W8665881",
+                "reason": "no longer needed"
+              },
+              "info": null,
+              "name": "cancel_pending_order"
+            },
+            {
+              "action_id": "16_8",
+              "arguments": {
+                "item_ids": [
+                  "2554056026"
+                ],
+                "order_id": "#W9389413",
+                "payment_method_id": "paypal_5364164"
+              },
+              "info": null,
+              "name": "return_delivered_order_items"
+            }
+          ],
+          "communicate_info": [
+            "8276.23"
+          ],
+          "nl_assertions": [
+            "Agent should tell the user the total refund amount is $8,276.23."
+          ],
+          "reward_basis": [
+            "DB",
+            "NL_ASSERTION"
+          ]
+        },
+        "id": "16",
+        "initial_state": null,
+        "user_scenario": {
+          "instructions": {
+            "domain": "retail",
+            "known_info": "You are Fatima Johnson in zipcode 78712.",
+            "reason_for_call": "You want to cancel all pending orders (since they are no longer needed) and return the watch you have received (but nothing else), and you want to know the total amount you can get back.",
+            "task_instructions": "You are a private person that does not want to reveal much about yourself.",
+            "unknown_info": "You do not remember your email address"
+          },
+          "persona": null
+        }
+      },
+      "title": "tau3 Retail task 16",
+      "upstream_task_id": "16"
+    },
+    {
+      "expected": {
+        "actions": [],
+        "communicate_info": [
+          "polyester",
+          "cotton"
+        ]
+      },
+      "id": "tau3.retail.24",
+      "initial_state": null,
+      "messages": [
+        {
+          "content": "You want to cancel the grill, but if the agent asks you to confirm, you regret and want to keep it. You then want to ask which two t-shirts you have ordered in another order, and what materials are they.",
+          "role": "user"
+        }
+      ],
+      "provenance": {
+        "selector": "id=24",
+        "source": "tau3-retail-v1.0.1",
+        "upstream_path": "data/tau2/domains/retail/tasks.json"
+      },
+      "purpose": "You want to cancel the grill, but if the agent asks you to confirm, you regret and want to keep it. You then want to ask which two t-shirts you have ordered in another order, and what materials are they.",
+      "source_record": {
+        "description": {
+          "notes": null,
+          "purpose": null,
+          "relevant_policies": null
+        },
+        "evaluation_criteria": {
+          "actions": [],
+          "communicate_info": [
+            "polyester",
+            "cotton"
+          ],
+          "nl_assertions": [
+            "Agent should tell the user the materials of the two t-shirts are polyester and cotton."
+          ],
+          "reward_basis": [
+            "DB",
+            "NL_ASSERTION"
+          ]
+        },
+        "id": "24",
+        "initial_state": null,
+        "user_scenario": {
+          "instructions": {
+            "domain": "retail",
+            "known_info": "You are Sofia Hernandez, and you live in Seattle, WA, 98193.",
+            "reason_for_call": "You want to cancel the grill, but if the agent asks you to confirm, you regret and want to keep it. You then want to ask which two t-shirts you have ordered in another order, and what materials are they.",
+            "task_instructions": "Make everything sound very natural and make up reasons.",
+            "unknown_info": "You do not remember your email address"
+          },
+          "persona": null
+        }
+      },
+      "title": "tau3 Retail task 24",
+      "upstream_task_id": "24"
+    },
+    {
+      "expected": {
+        "actions": [
+          {
+            "action_id": "30_0",
+            "arguments": {
+              "first_name": "Olivia",
+              "last_name": "Lopez",
+              "zip": "76171"
+            },
+            "info": null,
+            "name": "find_user_id_by_name_zip"
+          },
+          {
+            "action_id": "30_1",
+            "arguments": {
+              "user_id": "olivia_lopez_3865"
+            },
+            "info": null,
+            "name": "get_user_details"
+          },
+          {
+            "action_id": "30_2",
+            "arguments": {
+              "order_id": "#W9319364"
+            },
+            "info": null,
+            "name": "get_order_details"
+          },
+          {
+            "action_id": "30_3",
+            "arguments": {
+              "order_id": "#W9373487"
+            },
+            "info": null,
+            "name": "get_order_details"
+          },
+          {
+            "action_id": "30_4",
+            "arguments": {
+              "order_id": "#W2692684"
+            },
+            "info": null,
+            "name": "get_order_details"
+          },
+          {
+            "action_id": "30_5",
+            "arguments": {
+              "product_id": "8024098596"
+            },
+            "info": null,
+            "name": "get_product_details"
+          },
+          {
+            "action_id": "30_6",
+            "arguments": {
+              "item_ids": [
+                "3788616824"
+              ],
+              "order_id": "#W2692684",
+              "payment_method_id": "gift_card_7711863"
+            },
+            "info": null,
+            "name": "return_delivered_order_items"
+          },
+          {
+            "action_id": "30_7",
+            "arguments": {
+              "order_id": "#W9373487"
+            },
+            "info": null,
+            "name": "get_order_details"
+          },
+          {
+            "action_id": "30_8",
+            "arguments": {
+              "order_id": "#W9373487",
+              "reason": "no longer needed"
+            },
+            "info": null,
+            "name": "cancel_pending_order"
+          },
+          {
+            "action_id": "30_9",
+            "arguments": {
+              "order_id": "#W2692684"
+            },
+            "info": null,
+            "name": "get_order_details"
+          },
+          {
+            "action_id": "30_10",
+            "arguments": {
+              "order_id": "#W5481803"
+            },
+            "info": null,
+            "name": "get_order_details"
+          },
+          {
+            "action_id": "30_11",
+            "arguments": {
+              "order_id": "#W7449508"
+            },
+            "info": null,
+            "name": "get_order_details"
+          },
+          {
+            "action_id": "30_12",
+            "arguments": {
+              "item_ids": [
+                "6477915553"
+              ],
+              "order_id": "#W7449508",
+              "payment_method_id": "gift_card_7711863"
+            },
+            "info": null,
+            "name": "return_delivered_order_items"
+          }
+        ],
+        "communicate_info": [
+          "746342064230"
+        ]
+      },
+      "id": "tau3.retail.30",
+      "initial_state": null,
+      "messages": [
+        {
+          "content": "You just received your tablet and it was damaged when you opened the package. You want to know the tracking number of that order first. Also if the agent can help you exchange or return the tablet (you prefer exchange for the same item, but if it is not available just return it). If tablet is returned, also cancel the charger you just bought, because it goes with the tablet. And finally, return the sneaker.",
+          "role": "user"
+        }
+      ],
+      "provenance": {
+        "selector": "id=30",
+        "source": "tau3-retail-v1.0.1",
+        "upstream_path": "data/tau2/domains/retail/tasks.json"
+      },
+      "purpose": "You just received your tablet and it was damaged when you opened the package. You want to know the tracking number of that order first. Also if the agent can help you exchange or return the tablet (you prefer exchange for the same item, but if it is not available just return it). If tablet is returned, also cancel the charger you just bought, because it goes with the tablet. And finally, return the sneaker.",
+      "source_record": {
+        "description": {
+          "notes": null,
+          "purpose": null,
+          "relevant_policies": null
+        },
+        "evaluation_criteria": {
+          "actions": [
+            {
+              "action_id": "30_0",
+              "arguments": {
+                "first_name": "Olivia",
+                "last_name": "Lopez",
+                "zip": "76171"
+              },
+              "info": null,
+              "name": "find_user_id_by_name_zip"
+            },
+            {
+              "action_id": "30_1",
+              "arguments": {
+                "user_id": "olivia_lopez_3865"
+              },
+              "info": null,
+              "name": "get_user_details"
+            },
+            {
+              "action_id": "30_2",
+              "arguments": {
+                "order_id": "#W9319364"
+              },
+              "info": null,
+              "name": "get_order_details"
+            },
+            {
+              "action_id": "30_3",
+              "arguments": {
+                "order_id": "#W9373487"
+              },
+              "info": null,
+              "name": "get_order_details"
+            },
+            {
+              "action_id": "30_4",
+              "arguments": {
+                "order_id": "#W2692684"
+              },
+              "info": null,
+              "name": "get_order_details"
+            },
+            {
+              "action_id": "30_5",
+              "arguments": {
+                "product_id": "8024098596"
+              },
+              "info": null,
+              "name": "get_product_details"
+            },
+            {
+              "action_id": "30_6",
+              "arguments": {
+                "item_ids": [
+                  "3788616824"
+                ],
+                "order_id": "#W2692684",
+                "payment_method_id": "gift_card_7711863"
+              },
+              "info": null,
+              "name": "return_delivered_order_items"
+            },
+            {
+              "action_id": "30_7",
+              "arguments": {
+                "order_id": "#W9373487"
+              },
+              "info": null,
+              "name": "get_order_details"
+            },
+            {
+              "action_id": "30_8",
+              "arguments": {
+                "order_id": "#W9373487",
+                "reason": "no longer needed"
+              },
+              "info": null,
+              "name": "cancel_pending_order"
+            },
+            {
+              "action_id": "30_9",
+              "arguments": {
+                "order_id": "#W2692684"
+              },
+              "info": null,
+              "name": "get_order_details"
+            },
+            {
+              "action_id": "30_10",
+              "arguments": {
+                "order_id": "#W5481803"
+              },
+              "info": null,
+              "name": "get_order_details"
+            },
+            {
+              "action_id": "30_11",
+              "arguments": {
+                "order_id": "#W7449508"
+              },
+              "info": null,
+              "name": "get_order_details"
+            },
+            {
+              "action_id": "30_12",
+              "arguments": {
+                "item_ids": [
+                  "6477915553"
+                ],
+                "order_id": "#W7449508",
+                "payment_method_id": "gift_card_7711863"
+              },
+              "info": null,
+              "name": "return_delivered_order_items"
+            }
+          ],
+          "communicate_info": [
+            "746342064230"
+          ],
+          "nl_assertions": null,
+          "reward_basis": [
+            "DB",
+            "NL_ASSERTION"
+          ]
+        },
+        "id": "30",
+        "initial_state": null,
+        "user_scenario": {
+          "instructions": {
+            "domain": "retail",
+            "known_info": "You are Olivia Lopez, and you live in Texas in zipcode 76171.",
+            "reason_for_call": "You just received your tablet and it was damaged when you opened the package. You want to know the tracking number of that order first. Also if the agent can help you exchange or return the tablet (you prefer exchange for the same item, but if it is not available just return it). If tablet is returned, also cancel the charger you just bought, because it goes with the tablet. And finally, return the sneaker.",
+            "task_instructions": "You like to do one thing at a time, and reveal minimal information about yourself.",
+            "unknown_info": "You do not remember your email address."
+          },
+          "persona": null
+        }
+      },
+      "title": "tau3 Retail task 30",
+      "upstream_task_id": "30"
+    },
+    {
+      "expected": {
+        "actions": [
+          {
+            "action_id": "31_0",
+            "arguments": {
+              "first_name": "Olivia",
+              "last_name": "Lopez",
+              "zip": "76171"
+            },
+            "info": null,
+            "name": "find_user_id_by_name_zip"
+          },
+          {
+            "action_id": "31_1",
+            "arguments": {
+              "user_id": "olivia_lopez_3865"
+            },
+            "info": null,
+            "name": "get_user_details"
+          },
+          {
+            "action_id": "31_2",
+            "arguments": {
+              "order_id": "#W9319364"
+            },
+            "info": null,
+            "name": "get_order_details"
+          },
+          {
+            "action_id": "31_3",
+            "arguments": {
+              "order_id": "#W9373487"
+            },
+            "info": null,
+            "name": "get_order_details"
+          },
+          {
+            "action_id": "31_4",
+            "arguments": {
+              "order_id": "#W2692684"
+            },
+            "info": null,
+            "name": "get_order_details"
+          },
+          {
+            "action_id": "31_5",
+            "arguments": {
+              "order_id": "#W5481803"
+            },
+            "info": null,
+            "name": "get_order_details"
+          },
+          {
+            "action_id": "31_6",
+            "arguments": {
+              "order_id": "#W7449508"
+            },
+            "info": null,
+            "name": "get_order_details"
+          },
+          {
+            "action_id": "31_7",
+            "arguments": {
+              "order_id": "#W9373487"
+            },
+            "info": null,
+            "name": "get_order_details"
+          },
+          {
+            "action_id": "31_8",
+            "arguments": {
+              "order_id": "#W9373487",
+              "reason": "no longer needed"
+            },
+            "info": null,
+            "name": "cancel_pending_order"
+          },
+          {
+            "action_id": "31_9",
+            "arguments": {
+              "order_id": "#W5481803"
+            },
+            "info": null,
+            "name": "get_order_details"
+          },
+          {
+            "action_id": "31_10",
+            "arguments": {
+              "order_id": "#W7449508"
+            },
+            "info": null,
+            "name": "get_order_details"
+          },
+          {
+            "action_id": "31_11",
+            "arguments": {
+              "item_ids": [
+                "6477915553"
+              ],
+              "order_id": "#W7449508",
+              "payment_method_id": "gift_card_7711863"
+            },
+            "info": null,
+            "name": "return_delivered_order_items"
+          }
+        ],
+        "communicate_info": [
+          "746342064230"
+        ]
+      },
+      "id": "tau3.retail.31",
+      "initial_state": null,
+      "messages": [
+        {
+          "content": ". You just lost your tablet you just received and are in a bad mood. You want to know the tracking number of the order, and if the agent can help you refund or reorder the tablet. (You know it's a long shot, but you want to try). If not, cancel the charger you just bought, because it goes with the tablet... Also cancel the boot and keep the kettle (if not possible, do not do anything on that order), and return the sneaker.",
+          "role": "user"
+        }
+      ],
+      "provenance": {
+        "selector": "id=31",
+        "source": "tau3-retail-v1.0.1",
+        "upstream_path": "data/tau2/domains/retail/tasks.json"
+      },
+      "purpose": ". You just lost your tablet you just received and are in a bad mood. You want to know the tracking number of the order, and if the agent can help you refund or reorder the tablet. (You know it's a long shot, but you want to try). If not, cancel the charger you just bought, because it goes with the tablet... Also cancel the boot and keep the kettle (if not possible, do not do anything on that order), and return the sneaker.",
+      "source_record": {
+        "description": {
+          "notes": null,
+          "purpose": null,
+          "relevant_policies": null
+        },
+        "evaluation_criteria": {
+          "actions": [
+            {
+              "action_id": "31_0",
+              "arguments": {
+                "first_name": "Olivia",
+                "last_name": "Lopez",
+                "zip": "76171"
+              },
+              "info": null,
+              "name": "find_user_id_by_name_zip"
+            },
+            {
+              "action_id": "31_1",
+              "arguments": {
+                "user_id": "olivia_lopez_3865"
+              },
+              "info": null,
+              "name": "get_user_details"
+            },
+            {
+              "action_id": "31_2",
+              "arguments": {
+                "order_id": "#W9319364"
+              },
+              "info": null,
+              "name": "get_order_details"
+            },
+            {
+              "action_id": "31_3",
+              "arguments": {
+                "order_id": "#W9373487"
+              },
+              "info": null,
+              "name": "get_order_details"
+            },
+            {
+              "action_id": "31_4",
+              "arguments": {
+                "order_id": "#W2692684"
+              },
+              "info": null,
+              "name": "get_order_details"
+            },
+            {
+              "action_id": "31_5",
+              "arguments": {
+                "order_id": "#W5481803"
+              },
+              "info": null,
+              "name": "get_order_details"
+            },
+            {
+              "action_id": "31_6",
+              "arguments": {
+                "order_id": "#W7449508"
+              },
+              "info": null,
+              "name": "get_order_details"
+            },
+            {
+              "action_id": "31_7",
+              "arguments": {
+                "order_id": "#W9373487"
+              },
+              "info": null,
+              "name": "get_order_details"
+            },
+            {
+              "action_id": "31_8",
+              "arguments": {
+                "order_id": "#W9373487",
+                "reason": "no longer needed"
+              },
+              "info": null,
+              "name": "cancel_pending_order"
+            },
+            {
+              "action_id": "31_9",
+              "arguments": {
+                "order_id": "#W5481803"
+              },
+              "info": null,
+              "name": "get_order_details"
+            },
+            {
+              "action_id": "31_10",
+              "arguments": {
+                "order_id": "#W7449508"
+              },
+              "info": null,
+              "name": "get_order_details"
+            },
+            {
+              "action_id": "31_11",
+              "arguments": {
+                "item_ids": [
+                  "6477915553"
+                ],
+                "order_id": "#W7449508",
+                "payment_method_id": "gift_card_7711863"
+              },
+              "info": null,
+              "name": "return_delivered_order_items"
+            }
+          ],
+          "communicate_info": [
+            "746342064230"
+          ],
+          "nl_assertions": null,
+          "reward_basis": [
+            "DB",
+            "NL_ASSERTION"
+          ]
+        },
+        "id": "31",
+        "initial_state": null,
+        "user_scenario": {
+          "instructions": {
+            "domain": "retail",
+            "known_info": "You are Olivia Lopez, and you live in Texas in zipcode 76171.",
+            "reason_for_call": ". You just lost your tablet you just received and are in a bad mood. You want to know the tracking number of the order, and if the agent can help you refund or reorder the tablet. (You know it's a long shot, but you want to try). If not, cancel the charger you just bought, because it goes with the tablet... Also cancel the boot and keep the kettle (if not possible, do not do anything on that order), and return the sneaker.",
+            "task_instructions": "You like to do one thing at a time, and reveal minimal information about yourself.",
+            "unknown_info": "You don't have an email."
+          },
+          "persona": null
+        }
+      },
+      "title": "tau3 Retail task 31",
+      "upstream_task_id": "31"
+    },
+    {
+      "expected": {
+        "actions": [
+          {
+            "action_id": "48_0",
+            "arguments": {
+              "first_name": "Daiki",
+              "last_name": "Johnson",
+              "zip": "80273"
+            },
+            "info": null,
+            "name": "find_user_id_by_name_zip"
+          },
+          {
+            "action_id": "48_1",
+            "arguments": {
+              "user_id": "daiki_johnson_9523"
+            },
+            "info": null,
+            "name": "get_user_details"
+          },
+          {
+            "action_id": "48_2",
+            "arguments": {
+              "order_id": "#W1436802"
+            },
+            "info": null,
+            "name": "get_order_details"
+          },
+          {
+            "action_id": "48_3",
+            "arguments": {
+              "order_id": "#W5282037"
+            },
+            "info": null,
+            "name": "get_order_details"
+          },
+          {
+            "action_id": "48_4",
+            "arguments": {
+              "order_id": "#W9502127"
+            },
+            "info": null,
+            "name": "get_order_details"
+          },
+          {
+            "action_id": "48_5",
+            "arguments": {
+              "item_ids": [
+                "9534205511"
+              ],
+              "order_id": "#W9502127",
+              "payment_method_id": "paypal_2433177"
+            },
+            "info": null,
+            "name": "return_delivered_order_items"
+          }
+        ],
+        "communicate_info": []
+      },
+      "id": "tau3.retail.48",
+      "initial_state": null,
+      "messages": [
+        {
+          "content": "You want to return an air purifier that you received since it doesn't work well.  You want the refund on your original method of payment.  Also, check at the end whether you are able to return the vacuum cleaner, but you are not sure yet so don't process anything.",
+          "role": "user"
+        }
+      ],
+      "provenance": {
+        "selector": "id=48",
+        "source": "tau3-retail-v1.0.1",
+        "upstream_path": "data/tau2/domains/retail/tasks.json"
+      },
+      "purpose": "You want to return an air purifier that you received since it doesn't work well.  You want the refund on your original method of payment.  Also, check at the end whether you are able to return the vacuum cleaner, but you are not sure yet so don't process anything.",
+      "source_record": {
+        "description": {
+          "notes": null,
+          "purpose": null,
+          "relevant_policies": null
+        },
+        "evaluation_criteria": {
+          "actions": [
+            {
+              "action_id": "48_0",
+              "arguments": {
+                "first_name": "Daiki",
+                "last_name": "Johnson",
+                "zip": "80273"
+              },
+              "info": null,
+              "name": "find_user_id_by_name_zip"
+            },
+            {
+              "action_id": "48_1",
+              "arguments": {
+                "user_id": "daiki_johnson_9523"
+              },
+              "info": null,
+              "name": "get_user_details"
+            },
+            {
+              "action_id": "48_2",
+              "arguments": {
+                "order_id": "#W1436802"
+              },
+              "info": null,
+              "name": "get_order_details"
+            },
+            {
+              "action_id": "48_3",
+              "arguments": {
+                "order_id": "#W5282037"
+              },
+              "info": null,
+              "name": "get_order_details"
+            },
+            {
+              "action_id": "48_4",
+              "arguments": {
+                "order_id": "#W9502127"
+              },
+              "info": null,
+              "name": "get_order_details"
+            },
+            {
+              "action_id": "48_5",
+              "arguments": {
+                "item_ids": [
+                  "9534205511"
+                ],
+                "order_id": "#W9502127",
+                "payment_method_id": "paypal_2433177"
+              },
+              "info": null,
+              "name": "return_delivered_order_items"
+            }
+          ],
+          "communicate_info": [],
+          "nl_assertions": null,
+          "reward_basis": [
+            "DB",
+            "NL_ASSERTION"
+          ]
+        },
+        "id": "48",
+        "initial_state": null,
+        "user_scenario": {
+          "instructions": {
+            "domain": "retail",
+            "known_info": "You are daiki_johnson_9523 living in Denver, USA, 80273.",
+            "reason_for_call": "You want to return an air purifier that you received since it doesn't work well.  You want the refund on your original method of payment.  Also, check at the end whether you are able to return the vacuum cleaner, but you are not sure yet so don't process anything.",
+            "task_instructions": "Be polite and thank the agent for the help.",
+            "unknown_info": "You do not remember your email address"
+          },
+          "persona": null
+        }
+      },
+      "title": "tau3 Retail task 48",
+      "upstream_task_id": "48"
+    },
+    {
+      "expected": {
+        "actions": [
+          {
+            "action_id": "50_0",
+            "arguments": {
+              "summary": "The user urgently needs to undo a cancellation of an order and insists on receiving the items from the initial order as soon as possible. The user acknowledges the policy but requests exceptional measures due to the urgency of the situation."
+            },
+            "compare_args": [],
+            "info": null,
+            "name": "transfer_to_human_agents"
+          }
+        ],
+        "communicate_info": []
+      },
+      "id": "tau3.retail.50",
+      "initial_state": null,
+      "messages": [
+        {
+          "content": "You're in a rush and you want to undo cancelling an order that you've previously placed. Be insistent that the customer service agent should undo the cancellation and ensure that the order is delivered as soon as possible. Do NOT mention the actual items that were in the order, just that you want to undo the cancellation and receive all the items that were in the initial order as soon as possible.",
+          "role": "user"
+        }
+      ],
+      "provenance": {
+        "selector": "id=50",
+        "source": "tau3-retail-v1.0.1",
+        "upstream_path": "data/tau2/domains/retail/tasks.json"
+      },
+      "purpose": "You're in a rush and you want to undo cancelling an order that you've previously placed. Be insistent that the customer service agent should undo the cancellation and ensure that the order is delivered as soon as possible. Do NOT mention the actual items that were in the order, just that you want to undo the cancellation and receive all the items that were in the initial order as soon as possible.",
+      "source_record": {
+        "description": {
+          "notes": null,
+          "purpose": null,
+          "relevant_policies": null
+        },
+        "evaluation_criteria": {
+          "actions": [
+            {
+              "action_id": "50_0",
+              "arguments": {
+                "summary": "The user urgently needs to undo a cancellation of an order and insists on receiving the items from the initial order as soon as possible. The user acknowledges the policy but requests exceptional measures due to the urgency of the situation."
+              },
+              "compare_args": [],
+              "info": null,
+              "name": "transfer_to_human_agents"
+            }
+          ],
+          "communicate_info": [],
+          "nl_assertions": null,
+          "reward_basis": [
+            "DB",
+            "NL_ASSERTION"
+          ]
+        },
+        "id": "50",
+        "initial_state": null,
+        "user_scenario": {
+          "instructions": {
+            "domain": "retail",
+            "known_info": "You're Chen Smith, living in Jacksonville 32278.",
+            "reason_for_call": "You're in a rush and you want to undo cancelling an order that you've previously placed. Be insistent that the customer service agent should undo the cancellation and ensure that the order is delivered as soon as possible. Do NOT mention the actual items that were in the order, just that you want to undo the cancellation and receive all the items that were in the initial order as soon as possible.",
+            "task_instructions": ".",
+            "unknown_info": "You do not remember your email address"
+          },
+          "persona": null
+        }
+      },
+      "title": "tau3 Retail task 50",
+      "upstream_task_id": "50"
+    },
+    {
+      "expected": {
+        "actions": [
+          {
+            "action_id": "51_0",
+            "arguments": {
+              "first_name": "Sofia",
+              "last_name": "Li",
+              "zip": "78260"
+            },
+            "info": null,
+            "name": "find_user_id_by_name_zip"
+          },
+          {
+            "action_id": "51_1",
+            "arguments": {
+              "order_id": "#W8855135"
+            },
+            "info": null,
+            "name": "get_order_details"
+          },
+          {
+            "action_id": "51_3",
+            "arguments": {
+              "product_id": "8940227892"
+            },
+            "info": null,
+            "name": "get_product_details"
+          },
+          {
+            "action_id": "51_4",
+            "arguments": {
+              "user_id": "sofia_li_9219"
+            },
+            "info": null,
+            "name": "get_user_details"
+          },
+          {
+            "action_id": "51_5",
+            "arguments": {
+              "order_id": "#W4689314"
+            },
+            "info": null,
+            "name": "get_order_details"
+          },
+          {
+            "action_id": "51_6",
+            "arguments": {
+              "item_ids": [
+                "5996159312"
+              ],
+              "order_id": "#W4689314",
+              "payment_method_id": "credit_card_8105988"
+            },
+            "info": null,
+            "name": "return_delivered_order_items"
+          }
+        ],
+        "communicate_info": []
+      },
+      "id": "tau3.retail.51",
+      "initial_state": null,
+      "messages": [
+        {
+          "content": "You want to return the digital camera that you received. You guess that the order number is #W8855135, but you're not 100% sure. Insist that you want to return the camera and get a refund to the original payment method.",
+          "role": "user"
+        }
+      ],
+      "provenance": {
+        "selector": "id=51",
+        "source": "tau3-retail-v1.0.1",
+        "upstream_path": "data/tau2/domains/retail/tasks.json"
+      },
+      "purpose": "You want to return the digital camera that you received. You guess that the order number is #W8855135, but you're not 100% sure. Insist that you want to return the camera and get a refund to the original payment method.",
+      "source_record": {
+        "description": {
+          "notes": null,
+          "purpose": null,
+          "relevant_policies": null
+        },
+        "evaluation_criteria": {
+          "actions": [
+            {
+              "action_id": "51_0",
+              "arguments": {
+                "first_name": "Sofia",
+                "last_name": "Li",
+                "zip": "78260"
+              },
+              "info": null,
+              "name": "find_user_id_by_name_zip"
+            },
+            {
+              "action_id": "51_1",
+              "arguments": {
+                "order_id": "#W8855135"
+              },
+              "info": null,
+              "name": "get_order_details"
+            },
+            {
+              "action_id": "51_3",
+              "arguments": {
+                "product_id": "8940227892"
+              },
+              "info": null,
+              "name": "get_product_details"
+            },
+            {
+              "action_id": "51_4",
+              "arguments": {
+                "user_id": "sofia_li_9219"
+              },
+              "info": null,
+              "name": "get_user_details"
+            },
+            {
+              "action_id": "51_5",
+              "arguments": {
+                "order_id": "#W4689314"
+              },
+              "info": null,
+              "name": "get_order_details"
+            },
+            {
+              "action_id": "51_6",
+              "arguments": {
+                "item_ids": [
+                  "5996159312"
+                ],
+                "order_id": "#W4689314",
+                "payment_method_id": "credit_card_8105988"
+              },
+              "info": null,
+              "name": "return_delivered_order_items"
+            }
+          ],
+          "communicate_info": [],
+          "nl_assertions": null,
+          "reward_basis": [
+            "DB",
+            "NL_ASSERTION"
+          ]
+        },
+        "id": "51",
+        "initial_state": null,
+        "user_scenario": {
+          "instructions": {
+            "domain": "retail",
+            "known_info": "You are Sofia Li, residing in San Antonio, 78260.",
+            "reason_for_call": "You want to return the digital camera that you received. You guess that the order number is #W8855135, but you're not 100% sure. Insist that you want to return the camera and get a refund to the original payment method.",
+            "task_instructions": ".",
+            "unknown_info": "You do not remember your email address"
+          },
+          "persona": null
+        }
+      },
+      "title": "tau3 Retail task 51",
+      "upstream_task_id": "51"
+    },
+    {
+      "expected": {
+        "actions": [
+          {
+            "action_id": "53_0",
+            "arguments": {
+              "first_name": "Sofia",
+              "last_name": "Li",
+              "zip": "78260"
+            },
+            "info": null,
+            "name": "find_user_id_by_name_zip"
+          },
+          {
+            "action_id": "53_1",
+            "arguments": {
+              "user_id": "sofia_li_9219"
+            },
+            "info": null,
+            "name": "get_user_details"
+          },
+          {
+            "action_id": "53_2",
+            "arguments": {
+              "order_id": "#W4689314"
+            },
+            "info": null,
+            "name": "get_order_details"
+          },
+          {
+            "action_id": "53_3",
+            "arguments": {
+              "order_id": "#W8855135"
+            },
+            "info": null,
+            "name": "get_order_details"
+          },
+          {
+            "action_id": "53_4",
+            "arguments": {
+              "order_id": "#W3916020"
+            },
+            "info": null,
+            "name": "get_order_details"
+          },
+          {
+            "action_id": "53_5",
+            "arguments": {
+              "item_ids": [
+                "7758198585"
+              ],
+              "order_id": "#W3916020",
+              "payment_method_id": "credit_card_8105988"
+            },
+            "info": null,
+            "name": "return_delivered_order_items"
+          }
+        ],
+        "communicate_info": []
+      },
+      "id": "tau3.retail.53",
+      "initial_state": null,
+      "messages": [
+        {
+          "content": "The bicycle you received was damaged during delivery, and you want to get a refund. You're quite frustrated because the bike was very expensive and you'd like to receive the refund as soon as possible. You want the refund to be credited to your original credit card.",
+          "role": "user"
+        }
+      ],
+      "provenance": {
+        "selector": "id=53",
+        "source": "tau3-retail-v1.0.1",
+        "upstream_path": "data/tau2/domains/retail/tasks.json"
+      },
+      "purpose": "The bicycle you received was damaged during delivery, and you want to get a refund. You're quite frustrated because the bike was very expensive and you'd like to receive the refund as soon as possible. You want the refund to be credited to your original credit card.",
+      "source_record": {
+        "description": {
+          "notes": null,
+          "purpose": null,
+          "relevant_policies": null
+        },
+        "evaluation_criteria": {
+          "actions": [
+            {
+              "action_id": "53_0",
+              "arguments": {
+                "first_name": "Sofia",
+                "last_name": "Li",
+                "zip": "78260"
+              },
+              "info": null,
+              "name": "find_user_id_by_name_zip"
+            },
+            {
+              "action_id": "53_1",
+              "arguments": {
+                "user_id": "sofia_li_9219"
+              },
+              "info": null,
+              "name": "get_user_details"
+            },
+            {
+              "action_id": "53_2",
+              "arguments": {
+                "order_id": "#W4689314"
+              },
+              "info": null,
+              "name": "get_order_details"
+            },
+            {
+              "action_id": "53_3",
+              "arguments": {
+                "order_id": "#W8855135"
+              },
+              "info": null,
+              "name": "get_order_details"
+            },
+            {
+              "action_id": "53_4",
+              "arguments": {
+                "order_id": "#W3916020"
+              },
+              "info": null,
+              "name": "get_order_details"
+            },
+            {
+              "action_id": "53_5",
+              "arguments": {
+                "item_ids": [
+                  "7758198585"
+                ],
+                "order_id": "#W3916020",
+                "payment_method_id": "credit_card_8105988"
+              },
+              "info": null,
+              "name": "return_delivered_order_items"
+            }
+          ],
+          "communicate_info": [],
+          "nl_assertions": null,
+          "reward_basis": [
+            "DB",
+            "NL_ASSERTION"
+          ]
+        },
+        "id": "53",
+        "initial_state": null,
+        "user_scenario": {
+          "instructions": {
+            "domain": "retail",
+            "known_info": "You are Sofia Li, residing in San Antonio, 78260.",
+            "reason_for_call": "The bicycle you received was damaged during delivery, and you want to get a refund. You're quite frustrated because the bike was very expensive and you'd like to receive the refund as soon as possible. You want the refund to be credited to your original credit card.",
+            "task_instructions": ".",
+            "unknown_info": "You do not remember your email address"
+          },
+          "persona": null
+        }
+      },
+      "title": "tau3 Retail task 53",
+      "upstream_task_id": "53"
+    },
+    {
+      "expected": {
+        "actions": [],
+        "communicate_info": []
+      },
+      "id": "tau3.retail.57",
+      "initial_state": null,
+      "messages": [
+        {
+          "content": "You wonder when is your order W4284542 is arriving. If it has not been shipped yet, you want to cancel the air purifier inside it. If you cannot cancel just the air purifier, you want to cancel the whole order and refund to gift card. If you cannot refund to the gift card, no cancelation at all.",
+          "role": "user"
+        }
+      ],
+      "provenance": {
+        "selector": "id=57",
+        "source": "tau3-retail-v1.0.1",
+        "upstream_path": "data/tau2/domains/retail/tasks.json"
+      },
+      "purpose": "You wonder when is your order W4284542 is arriving. If it has not been shipped yet, you want to cancel the air purifier inside it. If you cannot cancel just the air purifier, you want to cancel the whole order and refund to gift card. If you cannot refund to the gift card, no cancelation at all.",
+      "source_record": {
+        "description": {
+          "notes": null,
+          "purpose": null,
+          "relevant_policies": null
+        },
+        "evaluation_criteria": {
+          "actions": [],
+          "communicate_info": [],
+          "nl_assertions": null,
+          "reward_basis": [
+            "DB",
+            "NL_ASSERTION"
+          ]
+        },
+        "id": "57",
+        "initial_state": null,
+        "user_scenario": {
+          "instructions": {
+            "domain": "retail",
+            "known_info": "You are ivan_hernandez_6923 living in San Diego, 92133.",
+            "reason_for_call": "You wonder when is your order W4284542 is arriving. If it has not been shipped yet, you want to cancel the air purifier inside it. If you cannot cancel just the air purifier, you want to cancel the whole order and refund to gift card. If you cannot refund to the gift card, no cancelation at all.",
+            "task_instructions": "You are polite but brief and firm.",
+            "unknown_info": "You do not know your email."
+          },
+          "persona": null
+        }
+      },
+      "title": "tau3 Retail task 57",
+      "upstream_task_id": "57"
+    },
+    {
+      "expected": {
+        "actions": [
+          {
+            "action_id": "76_0",
+            "arguments": {
+              "order_id": "#W8367380",
+              "reason": "ordered by mistake"
+            },
+            "info": null,
+            "name": "cancel_pending_order"
+          },
+          {
+            "action_id": "76_1",
+            "arguments": {
+              "order_id": "#W1242543",
+              "reason": "no longer needed"
+            },
+            "info": null,
+            "name": "cancel_pending_order"
+          }
+        ],
+        "communicate_info": [
+          "1939.05"
+        ]
+      },
+      "id": "tau3.retail.76",
+      "initial_state": null,
+      "messages": [
+        {
+          "content": "You ordered a fleece jacket by mistake and want to remove it from your pending order. If removing one item is not possible, cancel the whole order since you ordered it by mistake. You also want to modify the skateboard to maple material, 34 inch, graphic. If that is not possible, cancel the order since you no longer need this one. \nFinally, you also want to know the total price for all the grills you have bought in previous orders.",
+          "role": "user"
+        }
+      ],
+      "provenance": {
+        "selector": "id=76",
+        "source": "tau3-retail-v1.0.1",
+        "upstream_path": "data/tau2/domains/retail/tasks.json"
+      },
+      "purpose": "You ordered a fleece jacket by mistake and want to remove it from your pending order. If removing one item is not possible, cancel the whole order since you ordered it by mistake. You also want to modify the skateboard to maple material, 34 inch, graphic. If that is not possible, cancel the order since you no longer need this one. \nFinally, you also want to know the total price for all the grills you have bought in previous orders.",
+      "source_record": {
+        "description": {
+          "notes": null,
+          "purpose": null,
+          "relevant_policies": null
+        },
+        "evaluation_criteria": {
+          "actions": [
+            {
+              "action_id": "76_0",
+              "arguments": {
+                "order_id": "#W8367380",
+                "reason": "ordered by mistake"
+              },
+              "info": null,
+              "name": "cancel_pending_order"
+            },
+            {
+              "action_id": "76_1",
+              "arguments": {
+                "order_id": "#W1242543",
+                "reason": "no longer needed"
+              },
+              "info": null,
+              "name": "cancel_pending_order"
+            }
+          ],
+          "communicate_info": [
+            "1939.05"
+          ],
+          "nl_assertions": [
+            "Agent should tell the user the total price of all grills is $1,939.05."
+          ],
+          "reward_basis": [
+            "DB",
+            "NL_ASSERTION"
+          ]
+        },
+        "id": "76",
+        "initial_state": null,
+        "user_scenario": {
+          "instructions": {
+            "domain": "retail",
+            "known_info": "You name is Ava Nguyen and your zip code is 94128.",
+            "reason_for_call": "You ordered a fleece jacket by mistake and want to remove it from your pending order. If removing one item is not possible, cancel the whole order since you ordered it by mistake. You also want to modify the skateboard to maple material, 34 inch, graphic. If that is not possible, cancel the order since you no longer need this one. \nFinally, you also want to know the total price for all the grills you have bought in previous orders.",
+            "task_instructions": "You are polite, optimistic, busy.",
+            "unknown_info": "You do not remember your email address"
+          },
+          "persona": null
+        }
+      },
+      "title": "tau3 Retail task 76",
+      "upstream_task_id": "76"
+    },
+    {
+      "expected": {
+        "actions": [
+          {
+            "action_id": "82_0",
+            "arguments": {
+              "item_ids": [
+                "5952720925",
+                "9973034634",
+                "7381052709",
+                "6065192424"
+              ],
+              "order_id": "#W9571698",
+              "payment_method_id": "gift_card_7250692"
+            },
+            "info": null,
+            "name": "return_delivered_order_items"
+          }
+        ],
+        "communicate_info": []
+      },
+      "id": "tau3.retail.82",
+      "initial_state": null,
+      "messages": [
+        {
+          "content": "You received two tablets and you only need one. You want to return the more expensive one and refund to credit card. If refund to credit card is not possible, you become angry and return everything on that order and refund to GC.",
+          "role": "user"
+        }
+      ],
+      "provenance": {
+        "selector": "id=82",
+        "source": "tau3-retail-v1.0.1",
+        "upstream_path": "data/tau2/domains/retail/tasks.json"
+      },
+      "purpose": "You received two tablets and you only need one. You want to return the more expensive one and refund to credit card. If refund to credit card is not possible, you become angry and return everything on that order and refund to GC.",
+      "source_record": {
+        "description": {
+          "notes": null,
+          "purpose": null,
+          "relevant_policies": null
+        },
+        "evaluation_criteria": {
+          "actions": [
+            {
+              "action_id": "82_0",
+              "arguments": {
+                "item_ids": [
+                  "5952720925",
+                  "9973034634",
+                  "7381052709",
+                  "6065192424"
+                ],
+                "order_id": "#W9571698",
+                "payment_method_id": "gift_card_7250692"
+              },
+              "info": null,
+              "name": "return_delivered_order_items"
+            }
+          ],
+          "communicate_info": [],
+          "nl_assertions": null,
+          "reward_basis": [
+            "DB",
+            "NL_ASSERTION"
+          ]
+        },
+        "id": "82",
+        "initial_state": null,
+        "user_scenario": {
+          "instructions": {
+            "domain": "retail",
+            "known_info": "You name is Chen Silva and your zip code is 46281.",
+            "reason_for_call": "You received two tablets and you only need one. You want to return the more expensive one and refund to credit card. If refund to credit card is not possible, you become angry and return everything on that order and refund to GC.",
+            "task_instructions": "You are messy, flexible, outgoing.",
+            "unknown_info": "You do not remember your email address"
+          },
+          "persona": null
+        }
+      },
+      "title": "tau3 Retail task 82",
+      "upstream_task_id": "82"
+    },
+    {
+      "expected": {
+        "actions": [
+          {
+            "action_id": "83_0",
+            "arguments": {
+              "item_ids": [
+                "6065192424"
+              ],
+              "order_id": "#W9571698",
+              "payment_method_id": "gift_card_7250692"
+            },
+            "info": null,
+            "name": "return_delivered_order_items"
+          }
+        ],
+        "communicate_info": []
+      },
+      "id": "tau3.retail.83",
+      "initial_state": null,
+      "messages": [
+        {
+          "content": "You received two tablets and you only need one. You want to return the more expensive one and refund to credit card. If refund to credit card is not possible, you become angry and refund to GC.",
+          "role": "user"
+        }
+      ],
+      "provenance": {
+        "selector": "id=83",
+        "source": "tau3-retail-v1.0.1",
+        "upstream_path": "data/tau2/domains/retail/tasks.json"
+      },
+      "purpose": "You received two tablets and you only need one. You want to return the more expensive one and refund to credit card. If refund to credit card is not possible, you become angry and refund to GC.",
+      "source_record": {
+        "description": {
+          "notes": null,
+          "purpose": null,
+          "relevant_policies": null
+        },
+        "evaluation_criteria": {
+          "actions": [
+            {
+              "action_id": "83_0",
+              "arguments": {
+                "item_ids": [
+                  "6065192424"
+                ],
+                "order_id": "#W9571698",
+                "payment_method_id": "gift_card_7250692"
+              },
+              "info": null,
+              "name": "return_delivered_order_items"
+            }
+          ],
+          "communicate_info": [],
+          "nl_assertions": null,
+          "reward_basis": [
+            "DB",
+            "NL_ASSERTION"
+          ]
+        },
+        "id": "83",
+        "initial_state": null,
+        "user_scenario": {
+          "instructions": {
+            "domain": "retail",
+            "known_info": "You name is Chen Silva and your zip code is 46281.",
+            "reason_for_call": "You received two tablets and you only need one. You want to return the more expensive one and refund to credit card. If refund to credit card is not possible, you become angry and refund to GC.",
+            "task_instructions": "You are messy, flexible, outgoing.",
+            "unknown_info": "You do not remember your email address"
+          },
+          "persona": null
+        }
+      },
+      "title": "tau3 Retail task 83",
+      "upstream_task_id": "83"
+    },
+    {
+      "expected": {
+        "actions": [
+          {
+            "action_id": "84_0",
+            "arguments": {
+              "item_ids": [
+                "6065192424"
+              ],
+              "order_id": "#W9571698",
+              "payment_method_id": "gift_card_7250692"
+            },
+            "info": null,
+            "name": "return_delivered_order_items"
+          }
+        ],
+        "communicate_info": []
+      },
+      "id": "tau3.retail.84",
+      "initial_state": null,
+      "messages": [
+        {
+          "content": "You received two tablets and you only need one. You want to return the less expensive one and refund to credit card. But when the agent asks for confirmation, you change your mind and return the more expensive one and ask for a refund to gift card.",
+          "role": "user"
+        }
+      ],
+      "provenance": {
+        "selector": "id=84",
+        "source": "tau3-retail-v1.0.1",
+        "upstream_path": "data/tau2/domains/retail/tasks.json"
+      },
+      "purpose": "You received two tablets and you only need one. You want to return the less expensive one and refund to credit card. But when the agent asks for confirmation, you change your mind and return the more expensive one and ask for a refund to gift card.",
+      "source_record": {
+        "description": {
+          "notes": null,
+          "purpose": null,
+          "relevant_policies": null
+        },
+        "evaluation_criteria": {
+          "actions": [
+            {
+              "action_id": "84_0",
+              "arguments": {
+                "item_ids": [
+                  "6065192424"
+                ],
+                "order_id": "#W9571698",
+                "payment_method_id": "gift_card_7250692"
+              },
+              "info": null,
+              "name": "return_delivered_order_items"
+            }
+          ],
+          "communicate_info": [],
+          "nl_assertions": null,
+          "reward_basis": [
+            "DB",
+            "NL_ASSERTION"
+          ]
+        },
+        "id": "84",
+        "initial_state": null,
+        "user_scenario": {
+          "instructions": {
+            "domain": "retail",
+            "known_info": "You name is Chen Silva and your zip code is 46281.",
+            "reason_for_call": "You received two tablets and you only need one. You want to return the less expensive one and refund to credit card. But when the agent asks for confirmation, you change your mind and return the more expensive one and ask for a refund to gift card.",
+            "task_instructions": "You are messy, flexible, outgoing.",
+            "unknown_info": "You do not remember your email address"
+          },
+          "persona": null
+        }
+      },
+      "title": "tau3 Retail task 84",
+      "upstream_task_id": "84"
+    }
+  ]
+}

@@ -1,0 +1,46 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: aletheia
+      POSTGRES_USER: aletheia
+      POSTGRES_PASSWORD: local_only_aletheia
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aletheia"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+    volumes: ["postgres_data:/var/lib/postgresql/data"]
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      DATABASE_URL: postgresql+asyncpg://aletheia:local_only_aletheia@db:5432/aletheia
+      WEB_ORIGIN: http://localhost:3000
+      DEMO_MODE: "true"
+      DEMO_INLINE_JOBS: "true"
+    ports: ["8000:8000"]
+    depends_on:
+      db: { condition: service_healthy }
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    ports: ["3000:3000"]
+    depends_on: [api]
+  worker:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    command: ["uv", "run", "aletheia", "worker"]
+    environment:
+      DATABASE_URL: postgresql+asyncpg://aletheia:local_only_aletheia@db:5432/aletheia
+      DEMO_INLINE_JOBS: "false"
+    depends_on:
+      db: { condition: service_healthy }
+volumes:
+  postgres_data:
+
