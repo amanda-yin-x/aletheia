@@ -32,9 +32,9 @@ ci:
 	cd apps/api && uv run mypy app
 	cd apps/api && uv run pytest
 	corepack pnpm --filter @aletheia/web lint
+	corepack pnpm --filter @aletheia/web run cf-typegen
 	corepack pnpm --filter @aletheia/web typecheck
 	corepack pnpm --filter @aletheia/web test
-	corepack pnpm --filter @aletheia/web exec wrangler types --env-interface CloudflareEnv --include-runtime false --check cloudflare-env.d.ts
 	corepack pnpm --filter @aletheia/web exec opennextjs-cloudflare build
 	corepack pnpm --filter @aletheia/web exec wrangler deploy --dry-run
 

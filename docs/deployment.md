@@ -34,7 +34,9 @@ mutable workspace is production-ready.
 - `apps/web/open-next.config.ts` selects the default Cloudflare adapter.
 - `apps/web/public/_headers` gives fingerprinted Next.js assets an immutable
   cache policy.
-- `apps/web/cloudflare-env.d.ts` is generated from Wrangler configuration.
+- `apps/web/cloudflare-env.d.ts` is generated from Wrangler configuration and
+  ignored because its optional entrypoint metadata depends on whether an
+  OpenNext build already exists locally.
 - `.open-next/` is generated output and remains ignored by Git.
 
 ## Verified commands

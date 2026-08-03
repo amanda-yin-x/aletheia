@@ -28,10 +28,10 @@ jobs:
       - name: Verify generated API contracts are committed
         run: git diff --exit-code -- apps/api/openapi.json packages/api-client/src/schema.d.ts
       - run: corepack pnpm --filter @aletheia/web lint
+      - name: Generate Cloudflare binding types
+        run: corepack pnpm --filter @aletheia/web run cf-typegen
       - run: corepack pnpm --filter @aletheia/web typecheck
       - run: corepack pnpm --filter @aletheia/web test
-      - name: Verify Cloudflare binding types are current
-        run: corepack pnpm --filter @aletheia/web exec wrangler types --env-interface CloudflareEnv --include-runtime false --check cloudflare-env.d.ts
       - name: Build the Next.js application for Cloudflare Workers
         run: corepack pnpm --filter @aletheia/web exec opennextjs-cloudflare build
       - name: Validate the Cloudflare deployment bundle
