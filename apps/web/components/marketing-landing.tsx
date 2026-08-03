@@ -14,7 +14,7 @@ import {
   ScanSearch,
   ShieldCheck,
 } from "lucide-react";
-import { api } from "@/lib/api";
+import { API_IS_CONFIGURED, api } from "@/lib/api";
 import type { Project, Summary } from "@/lib/types";
 
 const typedDecision = "decision = require_approval";
@@ -71,12 +71,12 @@ const outputs = [
 ] as const;
 
 export function MarketingLanding() {
-  const projects = useQuery({ queryKey: ["projects"], queryFn: () => api<Project[]>("/api/v1/projects") });
+  const projects = useQuery({ queryKey: ["projects"], queryFn: () => api<Project[]>("/api/v1/projects"), enabled: API_IS_CONFIGURED });
   const project = projects.data?.[0];
   const summary = useQuery({
     queryKey: ["summary", project?.id],
     queryFn: () => api<Summary>(`/api/v1/projects/${project!.id}/summary`),
-    enabled: Boolean(project),
+    enabled: API_IS_CONFIGURED && Boolean(project),
   });
   const [scenario, setScenario] = useState<"without" | "with">("with");
   const projectPath = (route: string) => project ? `/projects/${project.id}/${route}` : "/demo";

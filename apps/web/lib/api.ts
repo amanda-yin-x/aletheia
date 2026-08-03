@@ -1,6 +1,9 @@
 import type { APIError } from "./types";
 
-export const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const configuredApiUrl = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "");
+
+export const API_IS_CONFIGURED = process.env.NODE_ENV === "development" || Boolean(configuredApiUrl);
+export const API_URL = configuredApiUrl || (process.env.NODE_ENV === "development" ? "http://localhost:8000" : "");
 
 export class RequestError extends Error {
   constructor(public payload: APIError, public status: number) { super(payload.message); }
@@ -22,4 +25,3 @@ export async function api<T>(path: string, init?: RequestInit): Promise<T> {
 export const shortHash = (value?: string) => value ? `${value.slice(0, 8)}…${value.slice(-4)}` : "N/A";
 export const pct = (value: number | undefined) => typeof value === "number" ? `${Math.round(value * 100)}%` : "N/A";
 export const label = (value: string) => value.replaceAll("_", " ").replace(/\b\w/g, (char) => char.toUpperCase());
-

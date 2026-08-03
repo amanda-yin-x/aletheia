@@ -17,6 +17,8 @@ htmlcov/
 *.db-wal
 node_modules/
 .next/
+.open-next/
+.wrangler/
 .turbo/
 .vercel/
 .idea/

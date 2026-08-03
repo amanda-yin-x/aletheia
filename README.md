@@ -6,6 +6,8 @@
 [![Status: active build](https://img.shields.io/badge/status-active_build-2563eb)](docs/evidence-boundary.md)
 [![License: MIT](https://img.shields.io/badge/license-MIT-0f766e)](LICENSE)
 
+**Website:** [aletheia.aletheia-web.workers.dev](https://aletheia.aletheia-web.workers.dev)
+
 Aletheia turns sprawling agent instructions into source-linked rules, a smaller
 prompt, deterministic tool guards, and repeatable release tests. The included
 Northstar Retail project is a working, API-key-free policy workspace: review two
@@ -171,14 +173,25 @@ See [docs/evidence-boundary.md](docs/evidence-boundary.md).
 
 ## Deployment
 
-- Vercel root: `apps/web`; set `NEXT_PUBLIC_API_URL`.
+- Cloudflare Workers: the Next.js site is deployed with OpenNext at
+  [aletheia.aletheia-web.workers.dev](https://aletheia.aletheia-web.workers.dev).
+  The checked-in `apps/web/wrangler.jsonc` is the deployment source of truth.
+- The public Cloudflare site currently hosts the website only. Set
+  `NEXT_PUBLIC_API_URL` at build time after deploying the FastAPI service to
+  enable the interactive workspace. Until then, `/demo` explains the boundary
+  and points to the verified local quick start.
+- Vercel remains a possible secondary web target: use root `apps/web` and set
+  `NEXT_PUBLIC_API_URL`.
 - Render: one API image with separate web and worker commands, Alembic pre-deploy,
   managed PostgreSQL, and `/healthz`.
 - Docker Compose: intended local web/API/PostgreSQL stack with a
   configuration-driven API data root; startup still awaits a clean-image smoke
   test.
 
-No external deployment is performed by repository scripts.
+GitHub Pages currently renders this repository's Markdown documentation with
+Jekyll; it is not the Next.js application. See [docs/deployment.md](docs/deployment.md)
+for the exact Cloudflare commands, hosting boundary, and remaining API release
+gates.
 
 ## Current limitations
 
@@ -199,6 +212,7 @@ No external deployment is performed by repository scripts.
 - [Design references and decisions](docs/design-references.md)
 - [90-second product walkthrough](docs/demo-script.md)
 - [Build plan and gates](docs/build-plan.md)
+- [Deployment and hosting runbook](docs/deployment.md)
 
 ## License and acknowledgements
 

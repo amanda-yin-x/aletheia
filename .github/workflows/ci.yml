@@ -30,6 +30,11 @@ jobs:
       - run: corepack pnpm --filter @aletheia/web lint
       - run: corepack pnpm --filter @aletheia/web typecheck
       - run: corepack pnpm --filter @aletheia/web test
-      - run: corepack pnpm --filter @aletheia/web build
+      - name: Verify Cloudflare binding types are current
+        run: corepack pnpm --filter @aletheia/web exec wrangler types --env-interface CloudflareEnv --include-runtime false --check cloudflare-env.d.ts
+      - name: Build the Next.js application for Cloudflare Workers
+        run: corepack pnpm --filter @aletheia/web exec opennextjs-cloudflare build
+      - name: Validate the Cloudflare deployment bundle
+        run: corepack pnpm --filter @aletheia/web exec wrangler deploy --dry-run
       - run: corepack pnpm --filter @aletheia/web exec playwright install --with-deps chromium
       - run: corepack pnpm --filter @aletheia/web test:e2e
