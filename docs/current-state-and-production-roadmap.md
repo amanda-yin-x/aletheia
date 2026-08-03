@@ -4,29 +4,29 @@
 **Snapshot date:** 2026-08-03  
 **Repository:** Aletheia Policy CI  
 **Audience:** founders, product/engineering, security reviewers, design partners, and future contributors  
-**Scope:** what is actually working now, what is demo-only or scaffolded, and what should be built to reach a fully functional production system
+**Scope:** what is actually working now, what remains evaluation-limited or scaffolded, and what should be built to reach a fully functional production system
 
-This document is intentionally more conservative than a launch page. It distinguishes tested behavior from interfaces, configuration, and future intent. It does not turn the current fixture results into claims about live models, customer traffic, security certification, or production reliability.
+This document is intentionally more conservative than a launch page. It distinguishes tested behavior from interfaces, configuration, and future intent. It does not turn the current evaluation-suite results into claims about live models, customer traffic, security certification, or production reliability.
 
 ## 1. Executive assessment
 
 Aletheia currently provides a polished and technically coherent vertical slice of a policy-CI product:
 
-1. It ingests a controlled fictional source corpus and preserves source text, line spans, and hashes.
+1. It ingests a controlled Aletheia-authored source corpus and preserves source text, line spans, and hashes.
 2. It represents policy clauses as versioned, source-linked rules.
 3. It exposes conflicts and ambiguities for human review.
 4. It blocks compilation while critical conflicts remain unresolved.
 5. It compiles approved rules into a smaller prompt kernel, workflow, knowledge, deterministic tool policy, regression suite, source map, and manifest.
 6. It evaluates a deterministic 16-case refund suite across three comparison arms.
-7. It shows that a covered `$200.01` refund proposal is intercepted before sandbox state mutation when approval is missing.
+7. It shows that a covered `$200.01` refund proposal is intercepted before state mutation when approval is missing.
 8. It exports a hash-linked Markdown/JSON evidence report with explicit limitations.
 9. It delivers the same domain services through FastAPI, a Typer CLI, a SQL worker, and a responsive Next.js interface.
 10. It is backed by automated backend, frontend, and browser tests plus reproducible dependency locks and deployment configuration.
 
-That is a meaningful prototype, but it is not yet a general production service. The largest gaps are not cosmetic:
+That is a meaningful end-to-end foundation, but it is not yet a general production service. The largest gaps are not cosmetic:
 
 - The extraction, arbitrary-document analysis, and live-agent adapters are interfaces or deliberate stubs, not operating model integrations.
-- Findings and the compiled refund workflow are produced from the known Northstar demo semantics, not a general policy-analysis pipeline.
+- Findings and the compiled refund workflow are produced from the known Northstar semantics, not a general policy-analysis pipeline.
 - The runner replays checked-in scripted trajectories; it does not yet execute a nondeterministic model/tool loop.
 - The τ retail integration imports and verifies pinned data but does not run the benchmark.
 - There is no authentication, organization model, tenant isolation, production approval service, customer runtime SDK, signed artifact distribution, object storage, retention system, or canonical audit ledger.
@@ -49,7 +49,7 @@ These checks establish the state of the local deterministic implementation, not 
 | Label | Meaning |
 |---|---|
 | **Working** | Implemented, reachable through a product/API/CLI path, and covered by automated tests. |
-| **Demo-limited** | Working for the bundled Northstar fixtures, but not generalized or production-safe. |
+| **Evaluation-limited** | Working for the bundled Northstar evaluation suite, but not generalized or production-safe. |
 | **Interface only** | A protocol, configuration seam, endpoint, or command exists, but the substantive external behavior is not implemented. |
 | **Configuration only** | Deployment or integration files exist but were not exercised against a real hosted environment. |
 | **Not built** | No meaningful implementation exists yet. |
@@ -58,11 +58,11 @@ These checks establish the state of the local deterministic implementation, not 
 
 The safe current product claim remains:
 
-> Aletheia turns agent policies into reviewed prompt, guard, and regression-test artifacts, then shows how a candidate behaves on repeatable sandbox scenarios.
+> Aletheia turns agent policies into reviewed prompt, guard, and regression-test artifacts, then shows how a candidate behaves on repeatable release scenarios.
 
 The safe deterministic runtime claim remains:
 
-> Approved, machine-decidable rules can allow, block, or request approval before a covered sandbox tool call executes. Results are limited to the configured rules and calls passing through this adapter.
+> Approved, machine-decidable rules can allow, block, or request approval before a covered tool call executes. Results are limited to the configured rules and calls passing through this adapter.
 
 The current system does **not** establish:
 
@@ -87,9 +87,9 @@ The repository is a Python/TypeScript workspace with:
 - `apps/api`: Python 3.12, FastAPI, Pydantic v2, async SQLAlchemy, Alembic, Typer, and a SQL worker;
 - `apps/web`: Next.js App Router, React, strict TypeScript, React Query, Recharts, Lucide, Vitest, and Playwright;
 - `packages/api-client`: generated OpenAPI TypeScript schema output;
-- `data/demo`: the fictional Northstar Retail corpus and sandbox state;
+- `data/demo`: the Aletheia-authored Northstar Retail corpus and controlled evaluation state;
 - `data/benchmarks/tau3-retail`: provenance-checked benchmark material;
-- `docs`: architecture, evidence, course, build, demo, screenshots, and this roadmap;
+- `docs`: architecture, evidence, course, build, product walkthrough, screenshots, and this roadmap;
 - root Docker Compose, Render, Vercel, Make, CI, and lockfile configuration.
 
 The backend is a modular monolith. Domain services do not import FastAPI. FastAPI, Typer, and the worker call the same service layer. This is the right shape for the next stage: the system does not need microservices merely to become production-capable.
@@ -141,18 +141,18 @@ Limitations:
 - Actors and reviewer identities are not persisted.
 - JSON columns carry several important domain structures without database-level constraints.
 - The web app currently keeps a parallel handwritten type layer instead of using the generated client end to end.
-- Application startup calls `create_schema()` and seeds the demo, which must be removed from production startup behavior in favor of migrations and controlled commands.
+- Application startup calls `create_schema()` and seeds the bundled workspace, which must be removed from production startup behavior in favor of migrations and controlled commands.
 
-### 4.3 Northstar source corpus and ingest — Working for safe local formats; demo-limited as a pipeline
+### 4.3 Northstar source corpus and ingest — Working for safe local formats; evaluation-limited as a pipeline
 
-The bundled corpus contains six fictional files:
+The bundled corpus contains six Aletheia-authored evaluation files:
 
 1. a meaningful 165-line baseline system prompt;
 2. current Refund Policy v3;
 3. a conflicting legacy refund SOP;
 4. a style guide;
-5. a sandbox tool registry;
-6. fictional order data.
+5. a covered-tool registry;
+6. generated order data.
 
 The ingest service accepts UTF-8 `.txt`, `.md`, `.json`, `.yaml`, `.yml`, and text-based `.pdf` files. It:
 
@@ -164,7 +164,7 @@ The ingest service accepts UTF-8 `.txt`, `.md`, `.json`, `.yaml`, `.yml`, and te
 - normalizes newlines;
 - records MIME type, origin, line count, and a SHA-256 digest.
 
-The demo's source references are computed from actual file text. Tests verify that every quote and line range matches the persisted document and hash.
+The bundled workspace's source references are computed from actual file text. Tests verify that every quote and line range matches the persisted document and hash.
 
 Production gaps:
 
@@ -196,7 +196,7 @@ The safe interpreter supports:
 - fact roots limited to `tool`, `state`, `user`, `context`, and `events`;
 - decimal-safe ordered comparisons;
 - precedence among deny, prior-event, approval, and allow effects;
-- matching approval events for the demo refund;
+- matching approval events for the Northstar refund;
 - fail-closed `indeterminate` decisions for high/critical rules with missing or invalid facts;
 - canonical decision hashes and evaluated-fact evidence.
 
@@ -207,9 +207,9 @@ Production gaps:
 - `RulePatch.condition` accepts an untyped dictionary rather than validating the complete AST and fact schema at the API boundary.
 - Fact paths are root-allowlisted but are not backed by a versioned typed fact registry.
 - Tool arguments are not validated against strict JSON Schemas immediately before policy evaluation.
-- Money is represented in some fixtures as floating-point values; production money must use currency plus integer minor units or an equivalent exact type.
+- Money is represented in some evaluation cases as floating-point values; production money must use currency plus integer minor units or an equivalent exact type.
 - Python regular expressions can exhibit pathological backtracking despite input-length limits; use a linear-time engine such as RE2 or remove general regex from enforcement.
-- Approval matching is only a demo check on order ID and amount. It lacks approver identity, tenant, call ID, expiry, state/build binding, revocation, and replay protection.
+- Approval matching is currently limited to order ID and amount. It lacks approver identity, tenant, call ID, expiry, state/build binding, revocation, and replay protection.
 - The global default is `allow`; production needs explicit per-tool/per-risk fail behavior and a distinct `not_applicable` result.
 - Only `pre_tool` enforcement exists.
 - There is no published conformance suite across runtime languages or versions.
@@ -228,7 +228,7 @@ The UI and API support:
 - finding resolution with a recorded note;
 - build blocking while critical findings remain open.
 
-The Northstar fixture includes:
+The Northstar evaluation suite includes:
 
 - a proved 30-day versus 60-day conflict;
 - a proved `$200` approval versus `$250` automatic-refund conflict;
@@ -239,7 +239,7 @@ The Northstar fixture includes:
 Production gaps:
 
 - Findings are seeded from known Northstar facts. There is no general overlap, contradiction, duplicate, missing-fact, temporal-scope, or reachability analyzer for arbitrary policies.
-- Analysis jobs currently acknowledge fixture verification; they do not extract new candidates.
+- Analysis jobs currently acknowledge bundled candidate verification; they do not extract new candidates.
 - Reviewer identity and separation of duties do not exist.
 - Critical changes do not support two-person approval.
 - There are no comments, assignments, queues, notification rules, due dates, escalation, or appeal/override workflow.
@@ -269,7 +269,7 @@ Production gaps:
 - There is no release channel, environment promotion, scheduled activation, canary, rollback, or runtime bundle-distribution protocol.
 - There is no compatibility declaration among compiler, schema, policy runtime, tool registry, and SDK versions.
 
-### 4.7 Declarative test suite and three-arm runner — Working deterministic fixture; not live evaluation
+### 4.7 Declarative test suite and three-arm runner — Working deterministic replay; not live evaluation
 
 The bundled suite contains 16 Aletheia-authored cases covering:
 
@@ -290,18 +290,18 @@ Every case can run from identical deep-copied state in:
 
 The trace distinguishes proposal, policy decision, approval/block, execution, result, and state mutation. For the `$200.01` case, the guarded arm records the proposal and approval requirement without a `tool_executed` or state-change event.
 
-The runner computes task success, attempted violation, executed violation, blocked call, false block, coverage, final-state hash, and first divergence. Tokens and cost remain honestly `N/A` in fixture mode.
+The runner computes task success, attempted violation, executed violation, blocked call, false block, coverage, final-state hash, and first divergence. Tokens and cost remain honestly `N/A` in deterministic replay mode.
 
 Production gaps:
 
 - Trajectories are checked-in scripts, not model-generated behavior.
-- The sandbox tools are in-memory functions, not transactional adapters to real customer staging systems.
+- The covered tools are in-memory functions, not transactional adapters to real customer staging systems.
 - A run executes all cases serially in one worker transaction and cannot resume individual trials.
 - There are no repeated nondeterministic trials, uncertainty intervals, pass@k/pass^k, judge calibration, or human labels.
 - Test generation jobs return the existing count and do not generate cases.
 - No production-log mining, incident-to-regression workflow, or challenge-set lifecycle exists.
 
-### 4.8 Reports and evidence — Working for fixtures
+### 4.8 Reports and evidence — Working for the evaluation suite
 
 Reports persist:
 
@@ -315,7 +315,7 @@ Reports persist:
 - a content hash;
 - Markdown and JSON exports.
 
-The verdict is deliberately restricted to `Changes required` or `Ready for sandbox pilot`.
+The verdict is deliberately restricted to `Changes required` or `Ready for controlled pilot`.
 
 Production gaps:
 
@@ -324,9 +324,9 @@ Production gaps:
 - There is no evidence retention policy, external auditor view, SIEM/GRC export, or revocation status.
 - A report is not yet a complete reproducible safety case for a nondeterministic agent.
 
-### 4.9 HTTP API, CLI, and jobs — Working demo surface; partially durable
+### 4.9 HTTP API, CLI, and jobs — Working evaluation surface; partially durable
 
-The FastAPI surface provides health/readiness, public config, demo reset, projects, documents, analysis jobs, rules, approvals/rejections, findings, builds/artifacts, tests, runs/results/traces, reports/exports, and job polling.
+The FastAPI surface provides health/readiness, public config, workspace reset, projects, documents, analysis jobs, rules, approvals/rejections, findings, builds/artifacts, tests, runs/results/traces, reports/exports, and job polling.
 
 Implemented API qualities include:
 
@@ -336,9 +336,9 @@ Implemented API qualities include:
 - restricted CORS;
 - baseline security headers and CSP;
 - upload limits;
-- `202` job behavior when inline demo jobs are disabled.
+- `202` job behavior when inline execution is disabled.
 
-The Typer CLI can migrate/create schema, seed, analyze fixture data, compile, test, report, run a worker, and synchronize τ retail data.
+The Typer CLI can migrate/create schema, seed, analyze bundled evaluation data, compile, test, report, run a worker, and synchronize τ retail data.
 
 The SQL worker claims PostgreSQL jobs with `FOR UPDATE SKIP LOCKED`, records an owner/lease, and handles compile/run plus placeholder analysis/test-generation jobs.
 
@@ -357,7 +357,7 @@ Production gaps:
 
 `RuleExtractor` and `AgentAdapter` protocols exist, along with classes named `StructuredLLMExtractor` and `OpenAICompatibleAgentAdapter`.
 
-This is a good dependency boundary, but both live classes deliberately fail with a `503`-style service error. Even with credentials, they do not call a provider. This avoids a silent fixture fallback and prevents false claims, but it must be described as an interface rather than an integration.
+This is a good dependency boundary, but both live classes deliberately fail with a `503`-style service error. Even with credentials, they do not call a provider. This avoids a silent deterministic-replay fallback and prevents false claims, but it must be described as an interface rather than an integration.
 
 ### 4.11 τ retail benchmark support — Import working; execution not built
 
@@ -373,12 +373,12 @@ The sync adapter:
 
 The real pinned data is present in the repository. The CLI run command only confirms that synchronized data exists; it does not execute τ. No τ score has been produced or claimed.
 
-### 4.12 Web product — Working polished demo workflow
+### 4.12 Web product — Working polished evaluation workflow
 
 The web app includes:
 
 - a proof-first public landing page with a source-linked policy trace, an interactive with/without-gate scenario, a four-stage release workflow, a keyboard jump palette, and explicit evidence boundaries;
-- demo entry and overview;
+- workspace entry and overview;
 - source viewer with numbered text and linked evidence;
 - rules/findings workbench;
 - condition editor and review actions;
@@ -431,7 +431,7 @@ The repository also contains:
 
 The local environment used to build the MVP did not contain Docker, so Compose/container execution was not verified there. No external deployment was performed.
 
-The prior source-path-depth defect has been removed: demo and benchmark data now resolve through a configurable `DATA_ROOT`, the API image sets it to `/data`, the web image copies the shared root tokens, and `.dockerignore` excludes local dependencies, caches, databases, and environment files from the build context. Docker was unavailable in the verification environment, so image startup remains unverified and needs a clean-image smoke test. Render also enables demo mode on a free database without configuring a reset secret; that is not an acceptable production deployment.
+The prior source-path-depth defect has been removed: bundled and benchmark data now resolve through a configurable `DATA_ROOT`, the API image sets it to `/data`, the web image copies the shared root tokens, and `.dockerignore` excludes local dependencies, caches, databases, and environment files from the build context. Docker was unavailable in the verification environment, so image startup remains unverified and needs a clean-image smoke test. Render also enables public-workspace mode on a free database without configuring a reset secret; that is not an acceptable production deployment.
 
 ### 4.14 Fix-before-feature correctness audit
 
@@ -494,11 +494,11 @@ Current gaps include:
 - equality type mismatches normally become `false` rather than `indeterminate`;
 - trace rule references contain stable keys but not exact revisions/source references.
 
-These are safe to demonstrate within the current fixture, but must be specified and tested before new rule types are advertised.
+These are safe to demonstrate within the current evaluation suite, but must be specified and tested before new rule types are advertised.
 
 #### 4.14.6 Tool execution is not schema-validated
 
-The sandbox `tools.json` defines schemas, but the runner does not load them before proposing/executing calls. Missing or wrong-typed arguments can reach `_execute()`. An unknown tool is recorded as `tool_executed` before returning `invalid_tool`, which corrupts execution semantics.
+The bundled `tools.json` defines schemas, but the runner does not load them before proposing/executing calls. Missing or wrong-typed arguments can reach `_execute()`. An unknown tool is recorded as `tool_executed` before returning `invalid_tool`, which corrupts execution semantics.
 
 Required fix:
 
@@ -519,7 +519,7 @@ Required fix:
 
 #### 4.14.8 Evidence reports are incomplete for release decisions
 
-Current reports omit exact rule revisions, compiler/runner versions, tool-schema digest, detailed test-suite digest, open/accepted findings, source/test coverage, and trace/source links. The verdict checks guarded executed violations and false blocks, but not overall guarded task success or blocking evidence completeness. JSON export returns the evidence body without the report's own content hash.
+Current reports omit exact rule revisions, compiler/runner versions, tool-schema digest, detailed test-suite digest, open/accepted findings, source/test coverage, and trace/source links. The verdict requires complete case coverage, full guarded task success, zero executed violations, and zero false blocks, but it does not yet evaluate blocking evidence completeness. JSON export returns the evidence body without the report's own content hash.
 
 Required fix:
 
@@ -547,7 +547,7 @@ Required fix:
 
 - preserve `original_blob_sha256` and a separate `normalized_content_sha256`;
 - store parser/normalizer versions and complete anchor mapping;
-- migrate existing fixture metadata without relabeling old hashes as byte hashes.
+- migrate existing evaluation metadata without relabeling old hashes as byte hashes.
 
 #### 4.14.11 API, deployment, and documentation drift
 
@@ -564,18 +564,18 @@ Required fix: correct these statements and add contract/deployment smoke tests b
 
 | Capability | Status today | Meaningful next gate |
 |---|---|---|
-| Source-linked Northstar demo | **Working** | Preserve as golden end-to-end regression. |
+| Source-linked Northstar workspace | **Working** | Preserve as golden end-to-end regression. |
 | Safe local file parsing | **Working** | Quarantine, scan, object-store, and process files in a sandbox. |
 | Arbitrary policy extraction | **Interface only** | Real structured provider adapter plus deterministic quote verification and human review. |
-| General finding analysis | **Demo-limited** | Static overlap/conflict/coverage engine over arbitrary reviewed IR. |
+| General finding analysis | **Evaluation-limited** | Static overlap/conflict/coverage engine over arbitrary reviewed IR. |
 | Rule review/revision | **Working, single-user** | Authenticated actors, assignments, two-person critical approval, effective dates. |
 | Bounded policy interpreter | **Working** | Typed facts/tools, exact money, conformance/fuzz/property tests, versioned semantics. |
 | Northstar artifact compiler | **Working** | Domain-neutral routing/templates and signed release bundles. |
-| Deterministic fixture runner | **Working** | Live provider loop, repeated trials, staging tools, evaluator calibration. |
+| Deterministic replay runner | **Working** | Live provider loop, repeated trials, staging tools, evaluator calibration. |
 | τ data import | **Working** | Real adapter execution and version-complete provenance; never mix revisions. |
 | τ benchmark execution | **Not built** | Execute pinned tasks with explicit models/config/trials and publish limitations. |
-| Evidence report | **Working for fixtures** | Signed attestation, full run manifest, actor/deployment provenance, revocation. |
-| Persisted SQL jobs | **Demo-limited** | Lease recovery, heartbeat, retries, DLQ, idempotency, cancellation, observability. |
+| Evidence report | **Working for the evaluation suite** | Signed attestation, full run manifest, actor/deployment provenance, revocation. |
+| Persisted SQL jobs | **Evaluation-limited** | Lease recovery, heartbeat, retries, DLQ, idempotency, cancellation, observability. |
 | API/CLI/web workflow | **Working** | Auth, tenancy, pagination, service accounts, SDKs, webhooks, audit explorer. |
 | Multi-tenant SaaS security | **Not built** | OIDC, organizations, RBAC, PostgreSQL RLS, object isolation, abuse controls. |
 | Runtime customer enforcement | **Not built** | Signed-bundle SDK/gateway, approval service, shadow/canary/rollback. |
@@ -691,7 +691,7 @@ The control plane should not sit synchronously in every tool-call path. This fol
 - Keep the modular monolith until scale or team boundaries justify a split.
 - Keep the constrained Aletheia IR as the human-review and portability contract.
 - Keep deterministic verification after any model-shaped output.
-- Keep fixtures as a required offline test path.
+- Keep deterministic evaluation cases as a required offline test path.
 - Keep proposals, decisions, executions, and state changes as distinct events.
 - Keep source/build/run/report hashes, but add signatures rather than replacing hashes.
 
@@ -714,7 +714,7 @@ The control plane should not sit synchronously in every tool-call path. This fol
 - A full observability backend.
 - A dozen agent-framework integrations before one reference runtime integration is safe.
 - A custom identity provider.
-- A compliance badge generated from fixture results.
+- A compliance badge generated from evaluation results.
 
 ## 8. Production workstreams
 
@@ -789,14 +789,14 @@ Build:
 - schema/fact/tool validation before a candidate enters review;
 - an explicit `unverified` state rather than silently repairing unsupported claims;
 - per-tenant provider-data-retention settings and secret references;
-- evaluation fixtures for malicious source instructions and prompt injection.
+- evaluation cases for malicious source instructions and prompt injection.
 
 Acceptance gate:
 
 - Model output can create candidates but cannot approve or publish rules.
 - Fabricated or shifted quotes are rejected or flagged.
 - Every candidate has model provenance and exact source evidence.
-- Missing provider credentials or outages never switch to fixture output silently.
+- Missing provider credentials or outages never switch to deterministic replay output silently.
 - Provider content retention and telemetry behavior is visible to the organization admin.
 
 ### 8.4 General findings and coverage analysis
@@ -818,7 +818,7 @@ Model suggestions may enrich explanations, but severity/proof labels must distin
 
 Acceptance gate:
 
-- A synthetic corpus with known overlaps has no missed critical proved conflicts.
+- An Aletheia-authored corpus with known overlaps has no missed critical proved conflicts.
 - Heuristic findings never masquerade as proved facts.
 - Every finding includes a machine-readable witness and source/rule links.
 - Coverage is reported by rule, tool, argument, risk tier, fact, and lifecycle stage.
@@ -974,7 +974,7 @@ Acceptance gate:
 
 - Every run has a complete immutable manifest: sources, rules, compiler/runtime, prompts, tools, evaluator, test set, model/user simulator, settings, trial count, seed, limits, dependency locks, container digest, and patches.
 - Results from different benchmark versions are never compared as if equivalent.
-- A live result is never replaced with fixture output after provider failure.
+- A live result is never replaced with deterministic replay output after provider failure.
 - Release gates are explainable, overrideable only by authorized actors, and audited.
 
 ### 8.11 Canonical ledger and operational observability
@@ -1238,11 +1238,11 @@ Goals:
 
 Exit gate:
 
-- Current demo remains green.
+- Current workspace remains green.
 - An old build produces the same run inputs after current project rules/tests change.
 - Two identical builds are byte-identical and share the same content digest.
 - Unsafe or ambiguous policy inputs fail explicitly.
-- Production versus fixture capabilities are machine-visible and documented.
+- Production versus deterministic evaluation capabilities are machine-visible and documented.
 
 ### Phase 1 — Secure private-pilot control plane (4–6 weeks)
 
@@ -1344,7 +1344,7 @@ Only after usage evidence:
 1. **Build-pinned runs:** execute exact build policy/tests/tools, validate project ownership, and prove later edits cannot change an old build's run.
 2. **Reproducible complete bundles:** remove wall-clock data from the root digest, hash every artifact, record real unresolved findings, and test byte identity.
 3. **Safe review transitions:** atomically resolve conflict winner/loser and force every semantic edit back to `needs_review`.
-4. **Production/container invariant:** configuration-driven data roots, Docker startup smoke test, Alembic-only production schema, and explicit demo seed.
+4. **Production/container invariant:** configuration-driven data roots, Docker startup smoke test, Alembic-only production schema, and explicit workspace seed.
 5. **Typed async contract:** explicit operation resource for queued build/run, frontend polling, hosted-worker E2E, and uniform error envelopes.
 6. **Typed policy/tool boundary:** validate conditions, requirements, exceptions, fact/tool schema versions, and unsupported types before persistence.
 7. **Exact value primitives:** migrate money to currency plus integer minor units, add timezone-aware time, and choose linear-time regex semantics.
@@ -1352,7 +1352,7 @@ Only after usage evidence:
 9. **Tenant/auth foundation:** organizations, memberships, environments, OIDC, RBAC, service accounts, and negative authorization tests.
 10. **PostgreSQL RLS and audit:** composite tenant keys, default-deny policies, non-owner app role, worker context, and actor-aware append-only events.
 11. **Object ingestion and durable jobs:** quarantine/scanning/parser limits, original/normalized hashes, lease recovery, retry/cancel/dead-letter/idempotency.
-12. **Real provider and generic analysis:** one strict extraction adapter, quote verification, overlap/coverage findings, generic compiler, and a second domain fixture.
+12. **Real provider and generic analysis:** one strict extraction adapter, quote verification, overlap/coverage findings, generic compiler, and a second domain evaluation suite.
 
 After these, build signed bundles and the shadow runtime rather than adding many low-value UI integrations.
 
@@ -1369,7 +1369,7 @@ After these, build signed bundles and the shadow runtime rather than adding many
 
 ### 13.2 Add before private customer data
 
-- migration upgrade/downgrade and fixture compatibility tests;
+- migration upgrade/downgrade and evaluation-data compatibility tests;
 - PostgreSQL integration tests in CI;
 - tenant-isolation matrix and authorization mutation tests;
 - upload/parser fuzzing, decompression-limit, malicious PDF, and timeout tests;
@@ -1490,7 +1490,7 @@ Conclusion: the current parser allowlist is a good start, but confidential produ
 - As of this document's snapshot, [OpenAI's legacy Evals documentation](https://developers.openai.com/api/docs/guides/evals) announces read-only status on 2026-10-31 and shutdown on 2026-11-30. Aletheia should keep its run/evidence contract provider-neutral rather than depending on that retiring API.
 - [NIST AI RMF Measure playbook](https://airc.nist.gov/airmf-resources/playbook/measure/) emphasizes documented test sets, metrics, limitations, deployment-like conditions, and appropriate independent/domain review.
 
-Conclusion: keep deterministic fixtures, but production evidence needs repeated live trials, complete manifests, separate utility/security metrics, human calibration, deployment-representative cases, and explicit benchmark version boundaries.
+Conclusion: keep deterministic evaluation cases, but production evidence needs repeated live trials, complete manifests, separate utility/security metrics, human calibration, deployment-representative cases, and explicit benchmark version boundaries.
 
 ### 17.5 Runtime approvals and traces
 

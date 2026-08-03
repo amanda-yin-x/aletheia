@@ -31,9 +31,9 @@
   --color-overlay: oklch(14% 0.02 258 / 0.64);
   --color-shadow: oklch(20% 0.02 258 / 0.08);
 
-  --font-display: var(--font-space-grotesk), ui-sans-serif, sans-serif;
-  --font-body: var(--font-ibm-plex-sans), ui-sans-serif, sans-serif;
-  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+  --font-display: var(--font-newsreader), ui-serif, Georgia, serif;
+  --font-body: var(--font-geist-sans), ui-sans-serif, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
   --space-3xs: 0.125rem;
   --space-2xs: 0.25rem;

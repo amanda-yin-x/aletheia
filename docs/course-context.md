@@ -1,7 +1,7 @@
 # Course and product direction
 
 Aletheia is a Summer 2026 University of Toronto CSC454 Business of Software and
-CSC491 Capstone prototype by John Ding, Amanda Yin, and Andrew Xie.
+CSC491 Capstone project by John Ding, Amanda Yin, and Andrew Xie.
 
 The earlier concept began with production traces, controlled replay, comparison,
 and broad policy assurance. Interview feedback shifted the entry point to a
@@ -13,6 +13,5 @@ validation or proof of willingness to pay.
 
 The current build preserves trace, compare, and evidence but begins before
 release: review sources, compile approved rules into the appropriate layers, run
-the same sandbox fixtures, and export evidence. It intentionally defers broad
+the same controlled evaluation cases, and export evidence. It intentionally defers broad
 production instrumentation and universal runtime claims.
-

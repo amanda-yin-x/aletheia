@@ -18,6 +18,8 @@ application.
 | [tengbao/vanta](https://github.com/tengbao/vanta) | `f8b351906688b56f0fc744e53bde81fc3c56f150` | MIT | Lifecycle of animated WebGL backgrounds | Not installed. A full-canvas WebGL/Three.js or p5.js effect is disproportionate for a policy/evidence product and competes with the content. |
 | [greensock/GSAP](https://github.com/greensock/GSAP) | `13e2b790546426a1a2e0e9b409f3f8dc6d6611f2` | GreenSock/Webflow standard no-charge license; not MIT | Timelines, scoped cleanup via `gsap.context()`, `matchMedia`, ScrollTrigger | Not installed. The page needs one type-in and one entrance sequence, both expressible with native React/CSS at lower bundle size and without introducing non-MIT license-compliance and maintenance overhead. Reconsider only for a genuinely complex product-tour timeline. |
 | [darkroomengineering/lenis](https://github.com/darkroomengineering/lenis) | `2a6573775ac7883bd0606963bad04f47ee7eeeba` | MIT | Smooth-scroll lifecycle and anchor handling | Not installed. Native scrolling preserves expected behavior in the product's nested source, trace, table, drawer, and code scrollers. |
+| [Claude Code product page](https://claude.com/product/claude-code) | Live site inspected 2026-08-03 | Anthropic custom webfonts; no redistribution licence observed | Anthropic Serif for display, Anthropic Sans for body/UI, Anthropic Mono for code | Used as typography direction only. No Anthropic font files are copied or hotlinked. |
+| [Newsreader](https://github.com/google/fonts/tree/main/ofl/newsreader) + [Geist](https://github.com/vercel/geist-font) | Current upstream inspected 2026-08-03 | SIL Open Font License 1.1 | Open variable serif with optical sizing plus a precise sans/mono family | Loaded through `next/font`: Newsreader for display, Geist for body/UI, and Geist Mono for code. This is the redistributable approximation of the Claude Code type roles. |
 
 Package versions and licensing can change. Re-check the upstream repository and
 license before adding a dependency or copying source.
@@ -59,7 +61,7 @@ That story aligns with current primary guidance and research:
 - The [τ-bench paper](https://arxiv.org/abs/2406.12045) motivates evaluating agents in stateful tool-and-policy interactions instead of relying only on static question answering.
 
 These sources inform the problem framing; they do not certify Aletheia's design
-or current prototype.
+or current implementation.
 
 ## Design system chosen
 
@@ -68,7 +70,7 @@ Hallmark classification:
 - Genre: modern-minimal
 - Macrostructure: Narrative Workflow
 - Theme: Cobalt adaptation
-- Navigation: visible jump command plus direct demo action
+- Navigation: visible jump command plus direct workspace action
 - Footer: closing product statement rather than a generic four-column sitemap
 - Enrichment: an original policy-decision trace, without fake browser or IDE chrome
 
@@ -76,7 +78,7 @@ Visual system:
 
 - cool near-white paper and cool graphite ink;
 - one electric-cobalt brand signal, plus restrained semantic status colors;
-- Space Grotesk for display, IBM Plex Sans for body copy and labels, and JetBrains Mono only for the policy trace and keyboard/code UI;
+- Newsreader for display, Geist for body copy and UI, and Geist Mono for the policy trace and keyboard/code UI;
 - hairline structure and tight radii instead of glass, large shadows, gradient text, or decorative WebGL;
 - a 4-point semantic spacing scale in the root `tokens.css`.
 

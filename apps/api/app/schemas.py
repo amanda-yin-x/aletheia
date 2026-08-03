@@ -140,7 +140,7 @@ class BuildManifest(APIModel):
 
 class EvidenceReport(APIModel):
     schema_version: Literal["0.1"] = "0.1"
-    verdict: Literal["Changes required", "Ready for sandbox pilot"]
+    verdict: Literal["Changes required", "Ready for controlled pilot"]
     evidence_boundary: str
     deterministic_runtime_boundary: str
     provenance: dict[str, Any]
@@ -296,4 +296,3 @@ class ErrorEnvelope(APIModel):
     message: str
     details: dict[str, Any]
     request_id: str
-

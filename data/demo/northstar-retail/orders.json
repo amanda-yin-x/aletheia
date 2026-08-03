@@ -1,8 +1,10 @@
 {
   "schema_version": "0.1",
+  "data_scope": "evaluation",
+  "contains_customer_records": false,
   "customers": [
-    {"id": "C-104", "name": "Maya Chen", "timezone": "America/Toronto", "fictional": true},
-    {"id": "C-221", "name": "Noah Williams", "timezone": null, "fictional": true}
+    {"id": "C-104", "name": "Maya Chen", "timezone": "America/Toronto"},
+    {"id": "C-221", "name": "Noah Williams", "timezone": null}
   ],
   "orders": [
     {"id": "N-1042", "customer_id": "C-104", "days_since_delivery": 12, "item_id": "I-88", "amount": 200.01, "returnable": true, "refunded": false, "payment_method": "card_ending_4242"},

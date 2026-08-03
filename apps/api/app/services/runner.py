@@ -35,7 +35,7 @@ def _execute(name: str, arguments: dict[str, Any], state: dict[str, Any]) -> tup
         state.setdefault("escalations", []).append(arguments)
         result = {"status": "escalated", "case_id": f"CASE-{len(state['escalations']):04d}"}
     elif name in {"get_order", "get_customer"}:
-        result = {"status": "found", "fictional": True}
+        result = {"status": "found", "data_scope": "evaluation"}
     elif name == "book_callback":
         state.setdefault("callbacks", []).append(arguments)
         result = {"status": "booked"}
@@ -52,7 +52,7 @@ def run_scenario(spec: dict[str, Any], arm: str, policy_rules: list[dict[str, An
     state = deepcopy(spec["initial_state"])
     initial_hash = content_hash(state)
     events: list[dict[str, Any]] = []
-    _event(events, "run_started", {"arm": arm, "adapter": "fixture", "initial_state_hash": initial_hash})
+    _event(events, "run_started", {"arm": arm, "adapter": "deterministic_replay", "initial_state_hash": initial_hash})
     _event(events, "user_message", spec["messages"][0])
     executed: list[str] = []
     proposed: list[str] = []
@@ -107,8 +107,8 @@ def run_scenario(spec: dict[str, Any], arm: str, policy_rules: list[dict[str, An
     _event(events, "run_finished", {"verdict": "passed" if task_success else "failed", "final_state_hash": content_hash(state)})
     divergence = None
     if arm == "compiled_enforced" and attempted_violation:
-        divergence = f"Policy adapter intercepted {proposed[-1]} before sandbox execution; state mutation was prevented."
-    return events, state, metrics, divergence or "No material divergence from the expected fixture trajectory."
+        divergence = f"Policy adapter intercepted {proposed[-1]} before tool execution; state mutation was prevented."
+    return events, state, metrics, divergence or "No material divergence from the expected case trajectory."
 
 
 def _aggregate(results: list[ScenarioResult]) -> dict[str, Any]:
@@ -148,7 +148,7 @@ async def run_comparison(session: AsyncSession, project_id: str, build_id: str |
         requested_arms=ARMS,
         adapter="fixture",
         model=None,
-        dataset_manifest={"name": "Aletheia-authored refund boundary suite", "version": "1", "synthetic": True, "test_count": len(tests), "hash": content_hash([test.spec for test in tests])},
+        dataset_manifest={"name": "Aletheia-authored refund boundary suite", "version": "1", "data_scope": "evaluation", "test_count": len(tests), "hash": content_hash([test.spec for test in tests])},
         status="running",
         metrics={},
     )
@@ -179,4 +179,3 @@ async def run_comparison(session: AsyncSession, project_id: str, build_id: str |
     await session.commit()
     await session.refresh(run)
     return run
-

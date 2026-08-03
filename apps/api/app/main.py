@@ -27,7 +27,7 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
 app = FastAPI(
     title="Aletheia Policy CI API",
     version="0.1.0",
-    description="Source-linked policy compilation and repeatable sandbox release evidence.",
+    description="Source-linked policy compilation and repeatable release evaluation evidence.",
     lifespan=lifespan,
 )
 settings = get_settings()

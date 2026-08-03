@@ -17,7 +17,7 @@ from app.services.seed import seed_demo
 
 cli = typer.Typer(help="Aletheia Policy CI — compile policies and test releases.", no_args_is_help=True)
 db_cli = typer.Typer(help="Create and migrate the application database.")
-demo_cli = typer.Typer(help="Manage the deterministic Northstar demo.")
+demo_cli = typer.Typer(help="Manage the deterministic Northstar workspace.")
 benchmark_cli = typer.Typer(help="Manage the optional pinned tau3 Retail adapter.")
 cli.add_typer(db_cli, name="db")
 cli.add_typer(demo_cli, name="demo")
@@ -41,8 +41,8 @@ def db_upgrade() -> None:
 
 
 @demo_cli.command("seed")
-def demo_seed(reset: bool = typer.Option(False, "--reset", help="Replace the existing synthetic demo."), json_output: bool = typer.Option(False, "--json")) -> None:
-    """Seed the fictional Northstar Retail project."""
+def demo_seed(reset: bool = typer.Option(False, "--reset", help="Replace the existing evaluation workspace."), json_output: bool = typer.Option(False, "--json")) -> None:
+    """Seed the Northstar Retail evaluation workspace."""
     async def run() -> Project:
         await create_schema()
         async with SessionLocal() as session:
@@ -54,12 +54,12 @@ def demo_seed(reset: bool = typer.Option(False, "--reset", help="Replace the exi
 
 @cli.command("analyze")
 def analyze(project: str = typer.Option("northstar-retail"), extractor: str = typer.Option("fixture"), json_output: bool = typer.Option(False, "--json")) -> None:
-    """Verify fixture-extracted candidates and deterministic findings."""
+    """Verify bundled source-linked candidates and deterministic findings."""
     if extractor != "fixture":
-        raise typer.BadParameter("The optional structured LLM extractor is not configured. Use fixture.")
+        raise typer.BadParameter("The optional structured LLM extractor is not configured. Use the deterministic replay adapter (`fixture`).")
     target = asyncio.run(_project(project))
     output = {"project_id": target.id, "extractor": "fixture", "status": "verified", "publication": "human_review_required"}
-    typer.echo(json.dumps(output, sort_keys=True) if json_output else "Fixture candidates verified; model output was not used.")
+    typer.echo(json.dumps(output, sort_keys=True) if json_output else "Evaluation candidates verified; model output was not used.")
 
 
 @cli.command("compile")
@@ -80,9 +80,9 @@ def compile_command(project: str = typer.Option("northstar-retail"), json_output
 
 @cli.command("test")
 def test_command(project: str = typer.Option("northstar-retail"), adapter: str = typer.Option("fixture"), arms: str = typer.Option("all"), json_output: bool = typer.Option(False, "--json")) -> None:
-    """Run the deterministic comparison from identical fixture state."""
+    """Run the deterministic comparison from identical initial state."""
     if adapter != "fixture" or arms != "all":
-        raise typer.BadParameter("The no-key demo supports adapter=fixture and arms=all.")
+        raise typer.BadParameter("The no-key workspace supports adapter=fixture and arms=all.")
     async def run() -> Run:
         target = await _project(project)
         async with SessionLocal() as session:

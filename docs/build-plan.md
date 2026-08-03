@@ -3,7 +3,7 @@
 ## Completed P0 gates
 
 - Scaffold, SQL models/migration, UUIDs/hashes, typed contracts, and seed corpus.
-- Safe allowlisted policy interpreter and money-boundary fixtures.
+- Safe allowlisted policy interpreter and money-boundary evaluation cases.
 - Source-linked rule review, seeded proved findings, and a revisioned approval
   flow. Semantic-edit re-review hardening remains Phase 0 work.
 - Compiler, seven guarded rules, 16 cases, three-arm runner, trace, metrics, and
@@ -26,7 +26,7 @@
 3. Finish a production-quality live tool-calling loop with recorded provider
    usage and bounded timeouts/retries.
 4. Normalize the pinned tau3 task subset into the local declarative contract and
-   run it with an explicitly selected adapter; never publish fixture output as
+   run it with an explicitly selected adapter; never publish deterministic replay output as
    benchmark results.
 5. Add auth, tenant isolation, encrypted storage, and retention controls before
    accepting confidential customer documents.

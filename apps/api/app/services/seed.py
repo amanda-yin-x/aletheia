@@ -127,7 +127,7 @@ def _case(
         "schema_version": "0.1",
         "id": key,
         "title": title,
-        "provenance": "aletheia_demo_v1",
+        "provenance": "aletheia_authored_v1",
         "rule_ids": rule_ids,
         "tags": tags,
         "messages": [{"role": "user", "content": title}],
@@ -205,7 +205,7 @@ async def seed_demo(session: AsyncSession, *, reset: bool = False) -> Project:
         ("refund-sop-legacy.md", "stale_sop", "text/markdown"),
         ("support-style.md", "style_guide", "text/markdown"),
         ("tools.json", "tool_schema", "application/json"),
-        ("orders.json", "fixture_data", "application/json"),
+        ("orders.json", "evaluation_data", "application/json"),
     ]
     documents: dict[str, Document] = {}
     for name, kind, mime in files:
@@ -220,7 +220,7 @@ async def seed_demo(session: AsyncSession, *, reset: bool = False) -> Project:
             mime_type=mime,
             line_count=len(text.splitlines()),
             token_estimate=token_estimate(text),
-            origin={"type": "aletheia_demo", "fictional": True, "path": f"data/demo/northstar-retail/{name}"},
+            origin={"type": "aletheia_authored", "data_scope": "evaluation", "path": f"data/demo/northstar-retail/{name}"},
         )
         session.add(document)
         documents[name] = document
@@ -249,11 +249,11 @@ async def seed_demo(session: AsyncSession, *, reset: bool = False) -> Project:
         Finding(project_id=project.id, type="conflict", severity="critical", related_rule_ids=[by_key["rule.refund.window"], by_key["rule.legacy.window"]], proof_status="proved", message="Conflict: current policy says 30 days; the legacy SOP says 60 days.", witness={"current": 30, "legacy": 60}, resolution_state="open"),
         Finding(project_id=project.id, type="conflict", severity="critical", related_rule_ids=[by_key["rule.refund.approval_threshold"], by_key["rule.legacy.auto_250"]], proof_status="proved", message="Conflict: current policy requires approval above $200; the legacy SOP allows automatic refunds through $250.", witness={"approval_over": 200, "legacy_auto_through": 250}, resolution_state="open"),
         Finding(project_id=project.id, type="duplicate", severity="low", related_rule_ids=[], proof_status="proved", message="Duplicate: identity confirmation appears twice in the legacy SOP and repeatedly in the baseline prompt.", witness={"canonical_clause": "verify identity before order disclosure"}, resolution_state="open"),
-        Finding(project_id=project.id, type="ambiguity", severity="medium", related_rule_ids=[by_key["rule.callback.daylight"]], proof_status="proved", message="Ambiguous: “daylight hours” has no numeric range, and one fixture customer has no timezone fact.", witness={"term": "daylight hours", "missing_fact": "customer.timezone"}, resolution_state="open"),
+        Finding(project_id=project.id, type="ambiguity", severity="medium", related_rule_ids=[by_key["rule.callback.daylight"]], proof_status="proved", message="Ambiguous: “daylight hours” has no numeric range, and one evaluation case has no timezone fact.", witness={"term": "daylight hours", "missing_fact": "customer.timezone"}, resolution_state="open"),
         Finding(project_id=project.id, type="missing_fact", severity="medium", related_rule_ids=[by_key["rule.callback.daylight"]], proof_status="proved", message="Missing runtime fact: callback enforcement needs a trusted customer timezone.", witness={"fact": "user.timezone"}, resolution_state="open"),
     ]
     session.add_all(findings)
     for spec in test_specs():
-        session.add(TestCase(project_id=project.id, stable_key=spec["id"], title=spec["title"], provenance="Aletheia demo", spec=spec, review_status="approved"))
+        session.add(TestCase(project_id=project.id, stable_key=spec["id"], title=spec["title"], provenance="Aletheia-authored", spec=spec, review_status="approved"))
     await session.commit()
     return project

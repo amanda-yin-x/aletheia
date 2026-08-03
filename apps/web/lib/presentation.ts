@@ -35,6 +35,6 @@ export function traceEventSummary(type: string, payload: Record<string, unknown>
   if (type.startsWith("tool_")) return `${String(payload.name || "Tool")} · ${String(payload.status || payload.decision || "recorded")}`;
   if (type === "policy_evaluated") return `${String(payload.decision).replaceAll("_", " ")} · ${String(payload.reason_code)}`;
   if (type === "approval_required") return "Proposal intercepted; approval route returned; state not mutated.";
-  if (type === "state_changed") return "Sandbox state changed after execution.";
+  if (type === "state_changed") return "State changed after execution.";
   return String(payload.verdict || payload.arm || payload.content || "Recorded evidence event");
 }

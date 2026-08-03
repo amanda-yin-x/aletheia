@@ -9,7 +9,7 @@ from app.models import TestCase as CaseModel
 from app.services.compiler import compile_project
 from app.services.errors import ServiceError
 from app.services.ingestion import parse_document
-from app.services.reporting import EVIDENCE_BOUNDARY, create_report
+from app.services.reporting import EVIDENCE_BOUNDARY, create_report, release_gate_ready
 from app.services.review import resolve_finding, revise_rule
 from app.services.runner import run_comparison
 from app.services.seed import seed_demo
@@ -33,7 +33,12 @@ async def test_seed_is_idempotent_and_quotes_are_exact(session: AsyncSession) ->
     second = await seed_demo(session)
     assert first.id == second.id
     assert await session.scalar(select(func.count()).select_from(CaseModel)) == 16
+    cases = list((await session.scalars(select(CaseModel))).all())
+    assert {case.provenance for case in cases} == {"Aletheia-authored"}
+    assert {case.spec["provenance"] for case in cases} == {"aletheia_authored_v1"}
     documents = {doc.id: doc for doc in (await session.scalars(select(Document))).all()}
+    assert {document.origin["data_scope"] for document in documents.values()} == {"evaluation"}
+    assert {document.origin["type"] for document in documents.values()} == {"aletheia_authored"}
     rules = list((await session.scalars(select(Rule).where(Rule.status != "superseded"))).all())
     for rule in rules:
         assert rule.source_refs
@@ -64,6 +69,10 @@ async def test_complete_no_key_workflow_and_boundary_trace(session: AsyncSession
     assert run.metrics["compiled_enforced"]["executed_violation_rate"] == 0
     assert run.metrics["compiled_enforced"]["false_block_rate"] == 0
     assert run.metrics["coverage"]["test_count"] == 16
+    assert run.dataset_manifest["data_scope"] == "evaluation"
+    assert release_gate_ready(run.metrics, run.dataset_manifest)
+    incomplete_metrics = {**run.metrics, "compiled_enforced": {**run.metrics["compiled_enforced"], "task_success_rate": 0.9375}}
+    assert not release_gate_ready(incomplete_metrics, run.dataset_manifest)
     case = await session.scalar(select(CaseModel).where(CaseModel.stable_key == "refund.amount.200_01.no_approval"))
     assert case
     guarded = await session.scalar(select(ScenarioResult).where(ScenarioResult.run_id == run.id, ScenarioResult.test_case_id == case.id, ScenarioResult.arm == "compiled_enforced"))
@@ -73,8 +82,11 @@ async def test_complete_no_key_workflow_and_boundary_trace(session: AsyncSession
     assert guarded.metrics["blocked_calls"] == 1
     assert baseline.metrics["executed_violation"] is True
     report = await create_report(session, run.id)
-    assert report.verdict == "Ready for sandbox pilot"
+    assert report.verdict == "Ready for controlled pilot"
     assert report.evidence["evidence_boundary"] == EVIDENCE_BOUNDARY
+    assert report.evidence["provenance"]["data_scope"] == "Evaluation dataset — no customer records"
+    assert report.evidence["provenance"]["adapter"] == "Deterministic replay"
+    assert "Aletheia-authored refund evaluation suite" in report.rendered_markdown
     assert len(report.content_hash) == 64
     assert "not a safety, security, or compliance certification" in report.rendered_markdown.lower()
 

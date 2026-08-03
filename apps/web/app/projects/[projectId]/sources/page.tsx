@@ -21,10 +21,10 @@ export default function SourcesPage() {
   if (documents.isLoading || rules.isLoading || findings.isLoading) return <PageLoading label="Loading source provenance" />;
   if (documents.error || rules.error || findings.error) return <ErrorState error={documents.error || rules.error || findings.error} onRetry={() => { documents.refetch(); rules.refetch(); findings.refetch(); }} />;
   return <div className="content-wrap">
-    <PageTitle eyebrow="Immutable ingest" title="Sources" detail="Exact text, hashes, and line spans stay attached to every reviewed rule." actions={<Badge tone="amber">Synthetic data—no customer records</Badge>} />
+    <PageTitle eyebrow="Immutable ingest" title="Sources" detail="Exact text, hashes, and line spans stay attached to every reviewed rule." actions={<Badge tone="amber">Evaluation data — no customer records</Badge>} />
     <div className="toolbar">
       <div style={{ position: "relative" }}><Search size={15} style={{ position: "absolute", left: 10, top: 10, color: "#94a3b8" }} /><input className="search" style={{ paddingLeft: 32 }} aria-label="Search exact source text" placeholder="Search exact text" value={search} onChange={(event) => setSearch(event.target.value)} /></div>
-      <Badge>{documents.data!.length} documents</Badge><span style={{ color: "var(--muted)", fontSize: 11 }}>Uploads disabled in public demo mode.</span>
+      <Badge>{documents.data!.length} documents</Badge><span style={{ color: "var(--muted)", fontSize: 11 }}>Uploads are disabled in this public workspace.</span>
     </div>
     <section className="panel source-layout">
       <div className="source-list" aria-label="Source documents">
@@ -34,7 +34,7 @@ export default function SourcesPage() {
         </button>)}
       </div>
       <div className="source-viewer">
-        <div className="source-viewer-head"><div><strong>{selected?.name}</strong> <Badge tone="blue">Aletheia demo</Badge></div><span className="hash-line">SHA-256 {shortHash(selected?.original_sha256)}</span></div>
+        <div className="source-viewer-head"><div><strong>{selected?.name}</strong> <Badge tone="blue">Aletheia-authored</Badge></div><span className="hash-line">SHA-256 {shortHash(selected?.original_sha256)}</span></div>
         <div className="source-code" role="region" aria-label={`Numbered source for ${selected?.name}`}>
           {selected?.normalized_text.split("\n").map((line, index) => {
             const match = search && line.toLowerCase().includes(search.toLowerCase());
@@ -51,4 +51,3 @@ export default function SourcesPage() {
     </section>
   </div>;
 }
-

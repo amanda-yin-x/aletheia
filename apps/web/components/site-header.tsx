@@ -19,7 +19,7 @@ const commands = [
   { label: "Why policy CI matters", detail: "See the failure scenario", href: "#why", icon: ShieldCheck },
   { label: "How Aletheia works", detail: "Follow the four-stage release path", href: "#workflow", icon: Workflow },
   { label: "What the build produces", detail: "Inspect the release evidence", href: "#evidence", icon: FileCheck2 },
-  { label: "Open the Northstar demo", detail: "Run the source-linked refund workflow", href: "/demo", icon: Play },
+  { label: "Open the Northstar workspace", detail: "Run the source-linked refund workflow", href: "/demo", icon: Play },
   {
     label: "Read the production roadmap",
     detail: "Current state, correctness audit, and next steps",
@@ -46,7 +46,7 @@ export function SiteHeader() {
         <span>Aletheia</span>
         <span className="brand-tag">Policy CI</span>
       </Link>
-      <div className="header-note"><span className="status-dot" /> Deterministic demo</div>
+      <div className="header-note"><span className="status-dot" /> Deterministic evaluation</div>
     </header>
   );
 }
@@ -115,12 +115,12 @@ function MarketingHeader() {
           <nav className="marketing-nav" aria-label="Marketing navigation">
             <a href="#why">Why it matters</a>
             <a href="#workflow">Workflow</a>
-            <button className="command-trigger" type="button" onClick={openPalette} aria-haspopup="dialog" aria-expanded={open} aria-controls="jump-dialog" aria-label="Open jump menu">
+            <button className="command-trigger" type="button" onClick={openPalette} aria-haspopup="dialog" aria-expanded={open} aria-controls={open ? "jump-dialog" : undefined} aria-label="Open jump menu">
               <Search size={15} aria-hidden="true" />
               <span aria-hidden="true">Jump to…</span>
               <kbd>⌘K</kbd>
             </button>
-            <Link className="marketing-nav-cta" href="/demo">Open demo <ArrowRight size={15} aria-hidden="true" /></Link>
+            <Link className="marketing-nav-cta" href="/demo">Open workspace <ArrowRight size={15} aria-hidden="true" /></Link>
           </nav>
         </div>
       </header>
@@ -166,7 +166,7 @@ function MarketingHeader() {
               aria-autocomplete="list"
               aria-controls="command-results"
               aria-activedescendant={filtered[selected] ? `command-${selected}` : undefined}
-              placeholder="Try “demo” or “workflow”"
+              placeholder="Try “policy” or “workflow”"
             />
           </div>
           <kbd>Esc</kbd>
@@ -190,7 +190,7 @@ function MarketingHeader() {
                 <ArrowRight size={15} aria-hidden="true" />
               </button>
             );
-          }) : <p className="command-empty">No matching destination. Try “demo” or “workflow”.</p>}
+          }) : <p className="command-empty">No matching destination. Try “policy” or “workflow”.</p>}
         </div>
         <div className="command-hints" aria-hidden="true"><span><kbd>↑</kbd><kbd>↓</kbd> navigate</span><span><kbd>↵</kbd> open</span><span><kbd>esc</kbd> close</span></div>
       </dialog>

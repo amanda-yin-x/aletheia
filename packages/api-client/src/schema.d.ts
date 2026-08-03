@@ -64,8 +64,8 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Reset Demo */
-        post: operations["reset_demo_api_v1_demo_reset_post"];
+        /** Reset workspace */
+        post: operations["reset_workspace"];
         delete?: never;
         options?: never;
         head?: never;
@@ -938,7 +938,7 @@ export interface operations {
             };
         };
     };
-    reset_demo_api_v1_demo_reset_post: {
+    reset_workspace: {
         parameters: {
             query?: never;
             header?: {

@@ -18,7 +18,7 @@ export function ProjectShell({ projectId, children }: { projectId: string; child
   return <div className="workspace-layout">
     <aside className="project-rail" aria-label="Project navigation">
       <div className="rail-context">
-        <span className="demo-label">Demo project</span>
+        <span className="workspace-label">Policy workspace</span>
         <strong>Northstar Retail</strong>
         <small>Refund agent</small>
       </div>
@@ -30,9 +30,8 @@ export function ProjectShell({ projectId, children }: { projectId: string; child
           return <Link key={name} href={href} className={active ? "active" : ""}><Icon size={17} /><span>{name}</span></Link>;
         })}
       </nav>
-      <div className="rail-note"><span className="status-dot" /> Synthetic data<br /><small>No customer records</small></div>
+      <div className="rail-note"><span className="status-dot" /> Evaluation dataset<br /><small>No customer records</small></div>
     </aside>
     <main className="workspace-main">{children}</main>
   </div>;
 }
-

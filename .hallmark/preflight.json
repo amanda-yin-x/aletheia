@@ -1,7 +1,7 @@
 {
   "scanned_at": "2026-08-03",
   "framework": "Next.js 16 App Router",
-  "font_stack": "Space Grotesk display, IBM Plex Sans body and labels, JetBrains Mono policy trace and keyboard/code UI via next/font",
+  "font_stack": "Newsreader display, Geist body and labels, Geist Mono policy trace and keyboard/code UI via next/font; open-font approximation of Claude Code's current serif/sans/mono roles",
   "palette": "Cobalt-on-cool-paper marketing tokens layered over the existing navy/teal product workspace",
   "motion": "Native React and CSS; one-shot type-in, one page-load settle, and control press states",
   "spacing": "4-point semantic token scale",
@@ -13,7 +13,7 @@
   "introduced": [
     "Narrative Workflow marketing macrostructure",
     "Project-scoped Hallmark design skill",
-    "Root design tokens and marketing typography",
+    "Root design tokens and Claude-inspired open-font typography",
     "Concrete Northstar failure scenario and release-evidence story"
   ],
   "source_files": [

@@ -12,7 +12,7 @@ from app.services.canonical import content_hash, token_estimate
 from app.services.errors import ServiceError
 
 COMPILER_VERSION = "0.1.0"
-EVIDENCE_LIMIT = "Artifacts and results cover only reviewed rules and configured sandbox calls."
+EVIDENCE_LIMIT = "Artifacts and results cover the reviewed rules and tool calls routed through this policy adapter."
 
 
 async def compile_project(session: AsyncSession, project_id: str) -> Build:
@@ -56,7 +56,7 @@ async def compile_project(session: AsyncSession, project_id: str) -> Build:
         "3. Check the delivery window, returnability, and duplicate-refund state.",
         "4. Explain amount and original-payment destination; obtain explicit confirmation.",
         "5. Request a matching supervisor approval when the amount is over $200.",
-        "6. Propose the covered sandbox mutation and report the actual tool result.",
+        "6. Propose the covered tool mutation and report the actual tool result.",
         "7. Escalate exceptions with the minimum necessary case context.",
         *[f"- {rule.normative_text}" for rule in workflow_rules],
     ]) + "\n"
@@ -64,7 +64,7 @@ async def compile_project(session: AsyncSession, project_id: str) -> Build:
     policy = {
         "schema_version": "0.1",
         "default_decision": "allow",
-        "scope_statement": "Results are limited to configured rules and covered sandbox calls.",
+        "scope_statement": "Results apply to configured rules and tool calls routed through this policy adapter.",
         "rules": [
             {
                 "stable_key": rule.stable_key,
@@ -115,10 +115,10 @@ async def compile_project(session: AsyncSession, project_id: str) -> Build:
         "test_ids": input_manifest["tests"],
         "estimator": "char_4_estimate",
         "unresolved_findings": [],
-        "limitations": [EVIDENCE_LIMIT, "Fixture runs do not measure live-model quality, latency, tokens, or cost."],
+        "limitations": [EVIDENCE_LIMIT, "Deterministic replay does not measure live-model quality, latency, tokens, or cost."],
     }
     artifacts["manifest.json"] = manifest
-    artifacts["README.md"] = "# Compiled Aletheia bundle\n\nImmutable, source-linked artifacts for sandbox evaluation.\n"
+    artifacts["README.md"] = "# Compiled Aletheia bundle\n\nImmutable, source-linked artifacts for release evaluation.\n"
     stats = {
         "original": {"lines": len(baseline.splitlines()), "characters": len(baseline), "tokens": token_estimate(baseline)},
         "candidate": {"lines": len(prompt.splitlines()), "characters": len(prompt), "tokens": token_estimate(prompt)},

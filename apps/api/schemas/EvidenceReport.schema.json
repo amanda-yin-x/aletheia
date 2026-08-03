@@ -60,7 +60,7 @@
     "verdict": {
       "enum": [
         "Changes required",
-        "Ready for sandbox pilot"
+        "Ready for controlled pilot"
       ],
       "title": "Verdict",
       "type": "string"

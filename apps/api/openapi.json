@@ -760,7 +760,7 @@
     }
   },
   "info": {
-    "description": "Source-linked policy compilation and repeatable sandbox release evidence.",
+    "description": "Source-linked policy compilation and repeatable release evaluation evidence.",
     "title": "Aletheia Policy CI API",
     "version": "0.1.0"
   },
@@ -875,7 +875,7 @@
     },
     "/api/v1/demo/reset": {
       "post": {
-        "operationId": "reset_demo_api_v1_demo_reset_post",
+        "operationId": "reset_workspace",
         "parameters": [
           {
             "in": "header",
@@ -916,7 +916,7 @@
             "description": "Validation Error"
           }
         },
-        "summary": "Reset Demo"
+        "summary": "Reset workspace"
       }
     },
     "/api/v1/documents/{document_id}": {

@@ -24,17 +24,17 @@ export default function TestsPage() {
   const negative = tests.data!.filter((test) => test.spec.tags.includes("negative")).length;
   const boundary = tests.data!.filter((test) => test.spec.tags.includes("boundary")).length;
   return <div className="content-wrap">
-    <PageTitle eyebrow="Declarative release suite" title="Regression tests" detail="Sixteen Aletheia-authored cases run against the baseline, compiled prompt, and compiled prompt with enforcement." actions={<Badge tone="blue">Aletheia demo</Badge>} />
+    <PageTitle eyebrow="Declarative release suite" title="Regression tests" detail="Sixteen Aletheia-authored cases run against the baseline, compiled prompt, and compiled prompt with enforcement." actions={<Badge tone="blue">Aletheia suite</Badge>} />
     <div className="stat-grid">
-      <StatCard label="Reviewed cases" value={tests.data!.length} note="Synthetic refund fixtures" />
+      <StatCard label="Reviewed cases" value={tests.data!.length} note="Reviewed refund cases" />
       <StatCard label="Positive cases" value={positive} note="Allowed operations" tone="teal" />
       <StatCard label="Negative cases" value={negative} note="Denied or routed operations" tone="amber" />
       <StatCard label="Boundary cases" value={boundary} note="x−ε, x, and x+ε" />
     </div>
     <section className="panel" style={{ marginBottom: 16 }}>
-      <div className="panel-header"><div><h2>Run comparison</h2><p>Every arm begins with an independently deep-copied fixture and matching initial-state hash.</p></div></div>
+      <div className="panel-header"><div><h2>Run comparison</h2><p>Every arm begins from an isolated initial state with a matching hash.</p></div></div>
       <div className="panel-body run-controls">
-        <div className="field"><label htmlFor="adapter">Adapter</label><select id="adapter" defaultValue="fixture"><option value="fixture">Fixture agent · deterministic</option></select></div>
+        <div className="field"><label htmlFor="adapter">Adapter</label><select id="adapter" defaultValue="fixture"><option value="fixture">Deterministic replay</option></select></div>
         <div className="field"><label htmlFor="arms">Comparison arms</label><select id="arms" defaultValue="all"><option value="all">All three arms</option></select></div>
         <div className="field"><label htmlFor="cases">Case set</label><select id="cases" defaultValue="demo"><option value="demo">Aletheia refund suite · 16</option></select></div>
         <Button disabled={!summary.data!.current_build || run.isPending} onClick={() => run.mutate()}><Play size={15} /> {run.isPending ? "Running 0 / 48…" : "Run comparison"}</Button>
@@ -45,7 +45,7 @@ export default function TestsPage() {
     <div className="toolbar" aria-label="Test filters">{["all", "refund", "boundary", "approval", "identity", "finding", "style"].map((tag) => <button className={`filter-button ${filter === tag ? "active" : ""}`} key={tag} onClick={() => setFilter(tag)}>{label(tag)} {tag !== "all" && `(${allTags.filter((value) => value === tag).length})`}</button>)}</div>
     <section className="panel" style={{ overflow: "hidden" }}>
       <table className="data-table"><thead><tr><th>Case</th><th>Coverage</th><th>Expected guarded decision</th><th>Provenance</th><th>Review</th></tr></thead><tbody>
-        {filtered.map((test) => <tr key={test.id}><td className="rule-title"><strong>{test.title}</strong><small>{test.stable_key}</small></td><td><div className="tags">{test.spec.tags.map((tag) => <span className="tag" key={tag}>{tag}</span>)}</div></td><td><Badge tone={test.spec.expected.guarded_decision === "allow" ? "teal" : test.spec.expected.guarded_decision === "deny" ? "red" : "amber"}><ShieldCheck size={11} /> {label(String(test.spec.expected.guarded_decision))}</Badge></td><td><Badge tone="blue">Aletheia demo</Badge></td><td><Badge tone="teal">{label(test.review_status)}</Badge></td></tr>)}
+        {filtered.map((test) => <tr key={test.id}><td className="rule-title"><strong>{test.title}</strong><small>{test.stable_key}</small></td><td><div className="tags">{test.spec.tags.map((tag) => <span className="tag" key={tag}>{tag}</span>)}</div></td><td><Badge tone={test.spec.expected.guarded_decision === "allow" ? "teal" : test.spec.expected.guarded_decision === "deny" ? "red" : "amber"}><ShieldCheck size={11} /> {label(String(test.spec.expected.guarded_decision))}</Badge></td><td><Badge tone="blue">Aletheia-authored</Badge></td><td><Badge tone="teal">{label(test.review_status)}</Badge></td></tr>)}
       </tbody></table>
     </section>
   </div>;

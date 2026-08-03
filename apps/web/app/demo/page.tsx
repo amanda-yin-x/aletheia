@@ -12,6 +12,5 @@ export default function DemoPage() {
   const query = useQuery({ queryKey: ["projects"], queryFn: () => api<Project[]>("/api/v1/projects") });
   useEffect(() => { if (query.data?.[0]) router.replace(`/projects/${query.data[0].id}/overview`); }, [query.data, router]);
   if (query.error) return <main className="landing"><ErrorState error={query.error} onRetry={() => query.refetch()} /></main>;
-  return <main className="landing"><PageLoading label="Opening the Northstar refund demo" /></main>;
+  return <main className="landing"><PageLoading label="Opening the Northstar policy workspace" /></main>;
 }
-

@@ -36,7 +36,7 @@ class StructuredLLMExtractor:
         if not self.api_key:
             raise ServiceError(
                 "live_extractor_not_configured",
-                "Set a server-side model key before selecting structured extraction. Fixture extraction remains available.",
+                "Set a server-side model key before selecting structured extraction. Deterministic source verification remains available.",
                 status_code=503,
             )
         raise ServiceError(
@@ -59,7 +59,7 @@ class OpenAICompatibleAgentAdapter:
         if not self.api_key:
             raise ServiceError(
                 "live_agent_not_configured",
-                "Set a server-side model key before selecting a live agent. Fixture runs remain available.",
+                "Set a server-side model key before selecting a live agent. Deterministic replay remains available.",
                 status_code=503,
             )
         raise ServiceError(

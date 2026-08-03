@@ -13,6 +13,12 @@ React Bits, Vanta, GSAP, and Lenis were reviewed as landing-page references but
 are not copied into or installed by Aletheia. See `docs/design-references.md`
 for the pinned source register and design decisions.
 
+Newsreader, Geist, and Geist Mono are loaded through Next.js's font integration
+and self-hosted by the production build. Copyright remains with the respective
+Newsreader contributors and Vercel for Geist; both families are available under
+the SIL Open Font License 1.1. Anthropic's custom website fonts were inspected
+only to understand type roles; their binaries are not copied or hotlinked.
+
 The optional tau3 Retail adapter targets `sierra-research/tau2-bench` tag
 `v1.0.1` (expected short commit `fc0055d`), copyright Sierra Research 2025,
 licensed under MIT. Provenance-checked upstream inputs for the selected 17

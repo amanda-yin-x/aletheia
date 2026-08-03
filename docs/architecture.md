@@ -11,7 +11,7 @@ a thin API client.
 - `app/api`: validation, error envelopes, request IDs, and service orchestration.
 - `app/models.py`: portable SQLAlchemy JSON-backed snapshots for SQLite and
   PostgreSQL.
-- `app/adapters`: optional model/benchmark dependencies; fixture mode has no
+- `app/adapters`: optional model/benchmark dependencies; deterministic replay has no
   network or credential dependency.
 - `apps/web`: product interaction and visualization. Every metric comes from the
   API.
@@ -28,7 +28,7 @@ exact versioned test snapshots; that is also a Phase 0 roadmap requirement. Runs
 deep-copy each case state for each arm. Reports snapshot the completed run and
 content hash.
 
-The sandbox registry is static. Policy JSON is data interpreted by an allowlist;
+The covered-tool registry is static. Policy JSON is data interpreted by an allowlist;
 it cannot import modules or execute user code. Enforced calls mutate state only
 after an `allow` decision.
 

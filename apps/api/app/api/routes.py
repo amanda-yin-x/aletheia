@@ -82,15 +82,15 @@ async def public_config() -> dict[str, Any]:
     }
 
 
-@router.post("/demo/reset", response_model=ProjectOut)
-async def reset_demo(
+@router.post("/demo/reset", response_model=ProjectOut, summary="Reset workspace", operation_id="reset_workspace")
+async def reset_workspace(
     x_demo_reset_secret: str | None = Header(default=None), session: AsyncSession = Depends(get_session)
 ) -> Project:
     settings = get_settings()
     if not settings.demo_mode:
-        raise ServiceError("demo_reset_disabled", "Demo reset is disabled in this environment.", status_code=403)
+        raise ServiceError("demo_reset_disabled", "Workspace reset is disabled in this environment.", status_code=403)
     if settings.demo_reset_secret and x_demo_reset_secret != settings.demo_reset_secret:
-        raise ServiceError("demo_reset_forbidden", "A valid reset secret is required.", status_code=403)
+        raise ServiceError("demo_reset_forbidden", "A valid workspace reset secret is required.", status_code=403)
     return await seed_demo(session, reset=True)
 
 
@@ -151,7 +151,7 @@ async def upload_document(
     await _project(session, project_id)
     settings = get_settings()
     if settings.demo_mode:
-        raise ServiceError("uploads_disabled_in_demo", "Uploads are disabled in the hosted-style demo. Use local mode for non-confidential test documents.", status_code=403)
+        raise ServiceError("uploads_disabled_in_demo", "Uploads are disabled in the public workspace. Use local mode for non-confidential test documents.", status_code=403)
     if file:
         raw = await file.read(settings.upload_max_bytes + 1)
         normalized, mime, provenance = parse_document(file.filename or "upload.txt", raw, max_bytes=settings.upload_max_bytes)

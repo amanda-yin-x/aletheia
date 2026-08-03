@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent } from "react";
+import { useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -70,25 +70,6 @@ const outputs = [
   ["Evidence report", "Build, run, dataset, metrics, and limitations"],
 ] as const;
 
-function useTypedDecision() {
-  const [value, setValue] = useState("");
-  useEffect(() => {
-    const media = window.matchMedia("(prefers-reduced-motion: reduce)");
-    if (media.matches) {
-      const frame = window.requestAnimationFrame(() => setValue(typedDecision));
-      return () => window.cancelAnimationFrame(frame);
-    }
-    let index = 0;
-    const timer = window.setInterval(() => {
-      index += 1;
-      setValue(typedDecision.slice(0, index));
-      if (index >= typedDecision.length) window.clearInterval(timer);
-    }, 32);
-    return () => window.clearInterval(timer);
-  }, []);
-  return value;
-}
-
 export function MarketingLanding() {
   const projects = useQuery({ queryKey: ["projects"], queryFn: () => api<Project[]>("/api/v1/projects") });
   const project = projects.data?.[0];
@@ -98,9 +79,8 @@ export function MarketingLanding() {
     enabled: Boolean(project),
   });
   const [scenario, setScenario] = useState<"without" | "with">("with");
-  const decisionLine = useTypedDecision();
   const projectPath = (route: string) => project ? `/projects/${project.id}/${route}` : "/demo";
-  const demoHref = project ? `/projects/${project.id}/overview` : "/demo";
+  const workspaceHref = project ? `/projects/${project.id}/overview` : "/demo";
   const handleScenarioKeyDown = (event: ReactKeyboardEvent<HTMLButtonElement>) => {
     const order = ["without", "with"] as const;
     const current = order.indexOf(scenario);
@@ -119,29 +99,29 @@ export function MarketingLanding() {
     <main className="marketing-landing">
       <section className="marketing-hero" aria-labelledby="hero-title">
         <div className="marketing-hero-copy">
-          <p className="hero-category marketing-intro" style={{ "--intro-order": 0 } as CSSProperties}>Policy CI for AI agents</p>
-          <h1 id="hero-title" className="marketing-intro" style={{ "--intro-order": 1 } as CSSProperties}>Catch policy drift before your agent acts.</h1>
+          <p className="hero-category marketing-intro" style={{ "--intro-order": 0 } as CSSProperties}>Source-linked policy enforcement</p>
+          <h1 id="hero-title" className="marketing-intro" style={{ "--intro-order": 1 } as CSSProperties}>The policy CI for AI agents.</h1>
           <p className="hero-lede marketing-intro" style={{ "--intro-order": 2 } as CSSProperties}>
-            Find conflicting instructions, review the rule that wins, compile a pre-tool guard, and test the exact boundary—before a model can turn policy drift into a customer-facing side effect.
+            Turn scattered instructions into reviewed rules, enforceable tool guards, and repeatable release tests — before customer-facing actions ship.
           </p>
           <div className="marketing-hero-actions marketing-intro" style={{ "--intro-order": 3 } as CSSProperties}>
-            <Link className="marketing-button marketing-button-primary" href={demoHref}>Run the refund scenario <ArrowRight size={16} aria-hidden="true" /></Link>
+            <Link className="marketing-button marketing-button-primary" href={workspaceHref}>Run the refund scenario <ArrowRight size={16} aria-hidden="true" /></Link>
             <a className="marketing-text-link" href="#why">See the failure path <ArrowRight size={15} aria-hidden="true" /></a>
           </div>
-          <dl className="hero-facts marketing-intro" style={{ "--intro-order": 4 } as CSSProperties} aria-label="Bundled demo facts">
+          <dl className="hero-facts marketing-intro" style={{ "--intro-order": 4 } as CSSProperties} aria-label="Policy evaluation facts">
             <div><dt>Sources</dt><dd>{summary.data?.sources ?? 6}</dd></div>
             <div><dt>Cases</dt><dd>{summary.data?.tests ?? 16}</dd></div>
             <div><dt>Critical open</dt><dd>{summary.data?.critical_findings ?? 2}</dd></div>
           </dl>
           <p className="hero-boundary marketing-intro" style={{ "--intro-order": 5 } as CSSProperties}>
-            <ShieldCheck size={15} aria-hidden="true" /> Deterministic fixture · fictional data · no safety certification
+            <ShieldCheck size={15} aria-hidden="true" /> <span>Deterministic evaluation · no customer records · scoped evidence</span>
           </p>
         </div>
 
-        <div className="policy-console marketing-intro" style={{ "--intro-order": 3 } as CSSProperties} aria-label="Aletheia policy decision preview">
+        <div className="policy-console marketing-intro" style={{ "--intro-order": 3 } as CSSProperties} role="group" aria-label="Aletheia policy decision preview">
           <div className="policy-console-head">
             <div><span>POLICY RUN</span><strong>NORTHSTAR / REFUND-016</strong></div>
-            <span className="console-status"><span aria-hidden="true" /> FIXTURE READY</span>
+            <span className="console-status"><span aria-hidden="true" /> CASE READY</span>
           </div>
           <div className="console-rule">
             <span>reviewed guard</span>
@@ -150,7 +130,7 @@ export function MarketingLanding() {
           <ol className="console-trace">
             <li><span>01</span><div><small>tool.proposed</small><strong>issue_refund($200.01)</strong></div><em>seen</em></li>
             <li><span>02</span><div><small>policy.evaluated</small><strong>rule.refund.approval_threshold</strong></div><em>match</em></li>
-            <li className="console-trace-active"><span>03</span><div><small><span className="typed-decision-visual" aria-hidden="true">{decisionLine}<i /></span><span className="sr-only">{typedDecision}</span></small><strong>Approval must exist first</strong></div><em>hold</em></li>
+            <li className="console-trace-active"><span>03</span><div><small><span className="typed-decision-visual" aria-hidden="true"><span className="typed-decision-text">{typedDecision}</span><i /></span><span className="sr-only">{typedDecision}</span></small><strong>Approval must exist first</strong></div><em>hold</em></li>
             <li><span>04</span><div><small>state.compared</small><strong>No refund mutation recorded</strong></div><em>safe</em></li>
           </ol>
           <div className="console-foot"><span>proposal ≠ execution</span><span>source-linked decision</span></div>
@@ -160,14 +140,14 @@ export function MarketingLanding() {
       <section id="why" className="incident-section" aria-labelledby="incident-title">
         <div className="incident-heading">
           <div>
-            <p className="incident-scenario-label">Bundled customer-support scenario · synthetic</p>
+            <p className="incident-scenario-label">Refund policy failure scenario</p>
             <h2 id="incident-title">One refund. Three documents. Two answers.</h2>
           </div>
           <p>A current policy says 30 days and approval above $200. A legacy SOP says 60 days and allows up to $250. Both look authoritative when they are flattened into one prompt.</p>
         </div>
 
         <div className="incident-workbench">
-          <div className="incident-inputs" aria-label="Conflicting policy inputs">
+          <div className="incident-inputs" role="group" aria-label="Conflicting policy inputs">
             <article><span>REFUND POLICY V3</span><strong>30 days</strong><p>Approval required above $200.</p></article>
             <article><span>LEGACY REFUND SOP</span><strong>60 days</strong><p>Automatic refund allowed up to $250.</p></article>
             <div className="incident-call"><FileWarning size={18} aria-hidden="true" /><span><small>AGENT PROPOSAL</small><strong>Refund $200.01 without prior approval</strong></span></div>
@@ -180,10 +160,10 @@ export function MarketingLanding() {
             </div>
             {scenario === "without" ? (
               <div id="scenario-panel" className="scenario-panel" role="tabpanel" aria-labelledby="scenario-tab-without" aria-live="polite">
-                <p className="scenario-verdict scenario-verdict-danger"><span aria-hidden="true">×</span> The fixture executes the call.</p>
+                <p className="scenario-verdict scenario-verdict-danger"><span aria-hidden="true">×</span> Without the gate, the refund executes.</p>
                 <ol>
                   <li><span>tool.proposed</span><strong>$200.01 refund</strong></li>
-                  <li><span>tool.executed</span><strong>Sandbox accepts call</strong></li>
+                  <li><span>tool.executed</span><strong>Refund operation executes</strong></li>
                   <li><span>state.changed</span><strong>Refund record created</strong></li>
                 </ol>
                 <small>Observation arrives after the side effect.</small>
@@ -234,7 +214,7 @@ export function MarketingLanding() {
         </dl>
         <aside className="evidence-boundary">
           <ShieldCheck size={20} aria-hidden="true" />
-          <div><strong>Evidence with a stated boundary.</strong><p>The current demo proves deterministic behavior for configured fixture rules and sandbox calls. It does not claim universal adherence, formal verification, or live-model performance.</p></div>
+          <div><strong>Evidence with a stated boundary.</strong><p>This evidence establishes deterministic behavior for the reviewed rules and covered tool calls. Its scope is explicit: one versioned build, one evaluation suite, and the calls routed through the policy adapter.</p></div>
         </aside>
       </section>
 
@@ -243,7 +223,7 @@ export function MarketingLanding() {
           <h2 id="closing-title">Put the next policy change through a release gate.</h2>
           <p>Resolve the 30/60-day conflict, approve the $200 boundary, compile the candidate, and inspect the blocked $200.01 trace.</p>
         </div>
-        <Link className="marketing-button marketing-button-primary" href={demoHref}><Play size={16} aria-hidden="true" /> Open the Northstar demo</Link>
+        <Link className="marketing-button marketing-button-primary" href={workspaceHref}><Play size={16} aria-hidden="true" /> Open Northstar workspace</Link>
       </section>
 
       <footer className="marketing-footer">
@@ -255,7 +235,7 @@ export function MarketingLanding() {
             <a href="https://github.com/amanda-yin-x/aletheia/blob/main/docs/current-state-and-production-roadmap.md">Roadmap</a>
             <a href="https://github.com/amanda-yin-x/aletheia/blob/main/LICENSE">MIT License</a>
           </nav>
-          <small>Fictional demo data · open-source prototype · 2026</small>
+          <small>Open source · reproducible evaluation · 2026</small>
         </div>
       </footer>
     </main>
