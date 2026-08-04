@@ -1,6 +1,330 @@
 {
   "components": {
     "schemas": {
+      "AllCondition-Input": {
+        "additionalProperties": false,
+        "properties": {
+          "conditions": {
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "all": "#/components/schemas/AllCondition-Input",
+                  "any": "#/components/schemas/AnyCondition-Input",
+                  "not": "#/components/schemas/NotCondition-Input",
+                  "predicate": "#/components/schemas/Predicate"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/Predicate"
+                },
+                {
+                  "$ref": "#/components/schemas/AllCondition-Input"
+                },
+                {
+                  "$ref": "#/components/schemas/AnyCondition-Input"
+                },
+                {
+                  "$ref": "#/components/schemas/NotCondition-Input"
+                }
+              ]
+            },
+            "minItems": 1,
+            "title": "Conditions",
+            "type": "array"
+          },
+          "kind": {
+            "const": "all",
+            "default": "all",
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "conditions"
+        ],
+        "title": "AllCondition",
+        "type": "object"
+      },
+      "AllCondition-Output": {
+        "additionalProperties": false,
+        "properties": {
+          "conditions": {
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "all": "#/components/schemas/AllCondition-Output",
+                  "any": "#/components/schemas/AnyCondition-Output",
+                  "not": "#/components/schemas/NotCondition-Output",
+                  "predicate": "#/components/schemas/Predicate"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/Predicate"
+                },
+                {
+                  "$ref": "#/components/schemas/AllCondition-Output"
+                },
+                {
+                  "$ref": "#/components/schemas/AnyCondition-Output"
+                },
+                {
+                  "$ref": "#/components/schemas/NotCondition-Output"
+                }
+              ]
+            },
+            "minItems": 1,
+            "title": "Conditions",
+            "type": "array"
+          },
+          "kind": {
+            "const": "all",
+            "default": "all",
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "conditions"
+        ],
+        "title": "AllCondition",
+        "type": "object"
+      },
+      "AnyCondition-Input": {
+        "additionalProperties": false,
+        "properties": {
+          "conditions": {
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "all": "#/components/schemas/AllCondition-Input",
+                  "any": "#/components/schemas/AnyCondition-Input",
+                  "not": "#/components/schemas/NotCondition-Input",
+                  "predicate": "#/components/schemas/Predicate"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/Predicate"
+                },
+                {
+                  "$ref": "#/components/schemas/AllCondition-Input"
+                },
+                {
+                  "$ref": "#/components/schemas/AnyCondition-Input"
+                },
+                {
+                  "$ref": "#/components/schemas/NotCondition-Input"
+                }
+              ]
+            },
+            "minItems": 1,
+            "title": "Conditions",
+            "type": "array"
+          },
+          "kind": {
+            "const": "any",
+            "default": "any",
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "conditions"
+        ],
+        "title": "AnyCondition",
+        "type": "object"
+      },
+      "AnyCondition-Output": {
+        "additionalProperties": false,
+        "properties": {
+          "conditions": {
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "all": "#/components/schemas/AllCondition-Output",
+                  "any": "#/components/schemas/AnyCondition-Output",
+                  "not": "#/components/schemas/NotCondition-Output",
+                  "predicate": "#/components/schemas/Predicate"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/Predicate"
+                },
+                {
+                  "$ref": "#/components/schemas/AllCondition-Output"
+                },
+                {
+                  "$ref": "#/components/schemas/AnyCondition-Output"
+                },
+                {
+                  "$ref": "#/components/schemas/NotCondition-Output"
+                }
+              ]
+            },
+            "minItems": 1,
+            "title": "Conditions",
+            "type": "array"
+          },
+          "kind": {
+            "const": "any",
+            "default": "any",
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "conditions"
+        ],
+        "title": "AnyCondition",
+        "type": "object"
+      },
+      "ArmMetrics": {
+        "additionalProperties": false,
+        "properties": {
+          "attempted_violation_rate": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Attempted Violation Rate",
+            "type": "number"
+          },
+          "cases": {
+            "minimum": 0.0,
+            "title": "Cases",
+            "type": "integer"
+          },
+          "cost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cost"
+          },
+          "executed_violation_rate": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Executed Violation Rate",
+            "type": "number"
+          },
+          "false_block_rate": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "False Block Rate",
+            "type": "number"
+          },
+          "input_tokens": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Input Tokens"
+          },
+          "output_tokens": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Output Tokens"
+          },
+          "task_success_rate": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Task Success Rate",
+            "type": "number"
+          },
+          "tool_validation_error_rate": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Tool Validation Error Rate",
+            "type": "number"
+          }
+        },
+        "required": [
+          "cases",
+          "task_success_rate",
+          "attempted_violation_rate",
+          "executed_violation_rate",
+          "false_block_rate",
+          "tool_validation_error_rate",
+          "input_tokens",
+          "output_tokens",
+          "cost"
+        ],
+        "title": "ArmMetrics",
+        "type": "object"
+      },
+      "ArtifactContainsAssertion": {
+        "additionalProperties": false,
+        "properties": {
+          "artifact": {
+            "minLength": 1,
+            "title": "Artifact",
+            "type": "string"
+          },
+          "kind": {
+            "const": "artifact_contains",
+            "default": "artifact_contains",
+            "title": "Kind",
+            "type": "string"
+          },
+          "text": {
+            "minLength": 1,
+            "title": "Text",
+            "type": "string"
+          }
+        },
+        "required": [
+          "artifact",
+          "text"
+        ],
+        "title": "ArtifactContainsAssertion",
+        "type": "object"
+      },
+      "ArtifactDigestAssertion": {
+        "additionalProperties": false,
+        "properties": {
+          "artifact": {
+            "minLength": 1,
+            "title": "Artifact",
+            "type": "string"
+          },
+          "kind": {
+            "const": "artifact_digest",
+            "default": "artifact_digest",
+            "title": "Kind",
+            "type": "string"
+          },
+          "sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Sha256",
+            "type": "string"
+          }
+        },
+        "required": [
+          "artifact",
+          "sha256"
+        ],
+        "title": "ArtifactDigestAssertion",
+        "type": "object"
+      },
       "Body_upload_document_api_v1_projects__project_id__documents_post": {
         "properties": {
           "file": {
@@ -47,6 +371,7 @@
         "type": "object"
       },
       "BuildOut": {
+        "additionalProperties": false,
         "properties": {
           "artifacts": {
             "additionalProperties": true,
@@ -75,9 +400,7 @@
             "type": "string"
           },
           "input_manifest": {
-            "additionalProperties": true,
-            "title": "Input Manifest",
-            "type": "object"
+            "$ref": "#/components/schemas/InputManifest"
           },
           "project_id": {
             "title": "Project Id",
@@ -114,7 +437,221 @@
         "title": "BuildOut",
         "type": "object"
       },
+      "CoverageDimension": {
+        "additionalProperties": false,
+        "properties": {
+          "covered_count": {
+            "minimum": 0.0,
+            "title": "Covered Count",
+            "type": "integer"
+          },
+          "eligible_count": {
+            "minimum": 0.0,
+            "title": "Eligible Count",
+            "type": "integer"
+          },
+          "ratio": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Ratio",
+            "type": "number"
+          },
+          "uncovered": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Uncovered",
+            "type": "array"
+          }
+        },
+        "required": [
+          "eligible_count",
+          "covered_count",
+          "ratio",
+          "uncovered"
+        ],
+        "title": "CoverageDimension",
+        "type": "object"
+      },
+      "CoverageMetrics": {
+        "additionalProperties": false,
+        "properties": {
+          "arms": {
+            "minimum": 0.0,
+            "title": "Arms",
+            "type": "integer"
+          },
+          "boundary_coverage": {
+            "$ref": "#/components/schemas/CoverageDimension"
+          },
+          "compiler_assertion_case_count": {
+            "minimum": 0.0,
+            "title": "Compiler Assertion Case Count",
+            "type": "integer"
+          },
+          "compiler_assertion_coverage": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Compiler Assertion Coverage",
+            "type": "number"
+          },
+          "critical_unclassified_rules": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Critical Unclassified Rules",
+            "type": "array"
+          },
+          "executable_case_count": {
+            "minimum": 0.0,
+            "title": "Executable Case Count",
+            "type": "integer"
+          },
+          "explicit_assertion_case_count": {
+            "minimum": 0.0,
+            "title": "Explicit Assertion Case Count",
+            "type": "integer"
+          },
+          "explicit_assertion_coverage": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Explicit Assertion Coverage",
+            "type": "number"
+          },
+          "positive_negative_boundary": {
+            "title": "Positive Negative Boundary",
+            "type": "boolean"
+          },
+          "rule_coverage": {
+            "$ref": "#/components/schemas/CoverageDimension"
+          },
+          "source_coverage": {
+            "$ref": "#/components/schemas/CoverageDimension"
+          },
+          "tag_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Tag Counts",
+            "type": "object"
+          },
+          "test_count": {
+            "minimum": 0.0,
+            "title": "Test Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "test_count",
+          "arms",
+          "tag_counts",
+          "positive_negative_boundary",
+          "executable_case_count",
+          "compiler_assertion_case_count",
+          "explicit_assertion_case_count",
+          "explicit_assertion_coverage",
+          "compiler_assertion_coverage",
+          "rule_coverage",
+          "source_coverage",
+          "boundary_coverage",
+          "critical_unclassified_rules"
+        ],
+        "title": "CoverageMetrics",
+        "type": "object"
+      },
+      "DatasetManifest": {
+        "additionalProperties": false,
+        "properties": {
+          "build_root_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Build Root Sha256",
+            "type": "string"
+          },
+          "contains_customer_records": {
+            "title": "Contains Customer Records",
+            "type": "boolean"
+          },
+          "data_scope": {
+            "title": "Data Scope",
+            "type": "string"
+          },
+          "evaluation_timestamp": {
+            "title": "Evaluation Timestamp",
+            "type": "string"
+          },
+          "facts_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Facts Sha256",
+            "type": "string"
+          },
+          "facts_source": {
+            "title": "Facts Source",
+            "type": "string"
+          },
+          "hash": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Hash",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "provenance": {
+            "title": "Provenance",
+            "type": "string"
+          },
+          "runner_version": {
+            "title": "Runner Version",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": "0.3",
+            "default": "0.3",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "test_count": {
+            "minimum": 0.0,
+            "title": "Test Count",
+            "type": "integer"
+          },
+          "tests_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Tests Sha256",
+            "type": "string"
+          },
+          "tools_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Tools Sha256",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "version",
+          "data_scope",
+          "provenance",
+          "test_count",
+          "tests_sha256",
+          "tools_sha256",
+          "facts_sha256",
+          "facts_source",
+          "contains_customer_records",
+          "evaluation_timestamp",
+          "build_root_sha256",
+          "runner_version",
+          "hash"
+        ],
+        "title": "DatasetManifest",
+        "type": "object"
+      },
       "DocumentOut": {
+        "additionalProperties": false,
         "properties": {
           "created_at": {
             "format": "date-time",
@@ -139,6 +676,10 @@
           },
           "name": {
             "title": "Name",
+            "type": "string"
+          },
+          "normalized_sha256": {
+            "title": "Normalized Sha256",
             "type": "string"
           },
           "normalized_text": {
@@ -174,6 +715,7 @@
           "name",
           "version",
           "original_sha256",
+          "normalized_sha256",
           "normalized_text",
           "mime_type",
           "line_count",
@@ -184,7 +726,478 @@
         "title": "DocumentOut",
         "type": "object"
       },
+      "EmptyCondition": {
+        "additionalProperties": false,
+        "description": "Explicitly validates the persisted empty condition used by human-only rules.",
+        "properties": {},
+        "title": "EmptyCondition",
+        "type": "object"
+      },
+      "EvidenceFailure": {
+        "additionalProperties": false,
+        "properties": {
+          "arm": {
+            "title": "Arm",
+            "type": "string"
+          },
+          "first_divergence": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Divergence"
+          },
+          "test_id": {
+            "title": "Test Id",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "test_id",
+          "title",
+          "arm",
+          "first_divergence"
+        ],
+        "title": "EvidenceFailure",
+        "type": "object"
+      },
+      "EvidenceHashes": {
+        "additionalProperties": false,
+        "properties": {
+          "artifacts": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Artifacts",
+            "type": "object"
+          },
+          "build_root_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Build Root Sha256",
+            "type": "string"
+          },
+          "fact_fixture_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Fact Fixture Sha256",
+            "type": "string"
+          },
+          "manifest_bytes_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Manifest Bytes Sha256",
+            "type": "string"
+          },
+          "run_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Run Sha256",
+            "type": "string"
+          },
+          "source_documents": {
+            "items": {
+              "$ref": "#/components/schemas/EvidenceSourceHash"
+            },
+            "title": "Source Documents",
+            "type": "array"
+          },
+          "test_suite_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Test Suite Sha256",
+            "type": "string"
+          },
+          "tests": {
+            "items": {
+              "$ref": "#/components/schemas/EvidenceTestHash"
+            },
+            "title": "Tests",
+            "type": "array"
+          },
+          "tool_registry_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Tool Registry Sha256",
+            "type": "string"
+          }
+        },
+        "required": [
+          "build_root_sha256",
+          "manifest_bytes_sha256",
+          "run_sha256",
+          "test_suite_sha256",
+          "tool_registry_sha256",
+          "fact_fixture_sha256",
+          "source_documents",
+          "tests",
+          "artifacts"
+        ],
+        "title": "EvidenceHashes",
+        "type": "object"
+      },
+      "EvidenceMetrics": {
+        "additionalProperties": false,
+        "properties": {
+          "baseline_unenforced": {
+            "$ref": "#/components/schemas/ArmMetrics"
+          },
+          "compiled_enforced": {
+            "$ref": "#/components/schemas/ArmMetrics"
+          },
+          "compiled_unenforced": {
+            "$ref": "#/components/schemas/ArmMetrics"
+          },
+          "coverage": {
+            "$ref": "#/components/schemas/CoverageMetrics"
+          }
+        },
+        "required": [
+          "baseline_unenforced",
+          "compiled_unenforced",
+          "compiled_enforced",
+          "coverage"
+        ],
+        "title": "EvidenceMetrics",
+        "type": "object"
+      },
+      "EvidenceProvenance": {
+        "additionalProperties": false,
+        "properties": {
+          "adapter": {
+            "title": "Adapter",
+            "type": "string"
+          },
+          "compiler_version": {
+            "title": "Compiler Version",
+            "type": "string"
+          },
+          "contains_customer_records": {
+            "title": "Contains Customer Records",
+            "type": "boolean"
+          },
+          "data_scope": {
+            "title": "Data Scope",
+            "type": "string"
+          },
+          "dataset": {
+            "title": "Dataset",
+            "type": "string"
+          },
+          "dataset_manifest_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Dataset Manifest Sha256",
+            "type": "string"
+          },
+          "evaluation_timestamp": {
+            "title": "Evaluation Timestamp",
+            "type": "string"
+          },
+          "fixture_source": {
+            "title": "Fixture Source",
+            "type": "string"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "runner_version": {
+            "title": "Runner Version",
+            "type": "string"
+          },
+          "test_count": {
+            "minimum": 0.0,
+            "title": "Test Count",
+            "type": "integer"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "dataset",
+          "version",
+          "data_scope",
+          "fixture_source",
+          "contains_customer_records",
+          "evaluation_timestamp",
+          "test_count",
+          "dataset_manifest_sha256",
+          "adapter",
+          "model",
+          "compiler_version",
+          "runner_version"
+        ],
+        "title": "EvidenceProvenance",
+        "type": "object"
+      },
+      "EvidenceReport": {
+        "additionalProperties": false,
+        "properties": {
+          "comparison_arms": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Comparison Arms",
+            "type": "array"
+          },
+          "deterministic_runtime_boundary": {
+            "title": "Deterministic Runtime Boundary",
+            "type": "string"
+          },
+          "digest_definition": {
+            "title": "Digest Definition",
+            "type": "string"
+          },
+          "evidence_boundary": {
+            "title": "Evidence Boundary",
+            "type": "string"
+          },
+          "fixture_provenance": {
+            "$ref": "#/components/schemas/FixtureProvenance"
+          },
+          "hashes": {
+            "$ref": "#/components/schemas/EvidenceHashes"
+          },
+          "limitations": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Limitations",
+            "type": "array"
+          },
+          "metrics": {
+            "$ref": "#/components/schemas/EvidenceMetrics"
+          },
+          "provenance": {
+            "$ref": "#/components/schemas/EvidenceProvenance"
+          },
+          "report_digest": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Report Digest",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": "0.3",
+            "default": "0.3",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "test_count": {
+            "title": "Test Count",
+            "type": "integer"
+          },
+          "top_failures": {
+            "items": {
+              "$ref": "#/components/schemas/EvidenceFailure"
+            },
+            "title": "Top Failures",
+            "type": "array"
+          },
+          "verdict": {
+            "enum": [
+              "Changes required",
+              "Fixture suite passed"
+            ],
+            "title": "Verdict",
+            "type": "string"
+          }
+        },
+        "required": [
+          "verdict",
+          "evidence_boundary",
+          "deterministic_runtime_boundary",
+          "digest_definition",
+          "provenance",
+          "hashes",
+          "fixture_provenance",
+          "comparison_arms",
+          "test_count",
+          "metrics",
+          "top_failures",
+          "limitations",
+          "report_digest"
+        ],
+        "title": "EvidenceReport",
+        "type": "object"
+      },
+      "EvidenceSourceHash": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "normalized_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Normalized Sha256",
+            "type": "string"
+          },
+          "normalizer": {
+            "title": "Normalizer",
+            "type": "string"
+          },
+          "normalizer_version": {
+            "title": "Normalizer Version",
+            "type": "string"
+          },
+          "original_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Original Sha256",
+            "type": "string"
+          },
+          "parser": {
+            "title": "Parser",
+            "type": "string"
+          },
+          "parser_version": {
+            "title": "Parser Version",
+            "type": "string"
+          },
+          "version": {
+            "minimum": 1.0,
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name",
+          "version",
+          "original_sha256",
+          "normalized_sha256",
+          "parser",
+          "parser_version",
+          "normalizer",
+          "normalizer_version"
+        ],
+        "title": "EvidenceSourceHash",
+        "type": "object"
+      },
+      "EvidenceTestHash": {
+        "additionalProperties": false,
+        "properties": {
+          "spec_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Spec Sha256",
+            "type": "string"
+          },
+          "stable_key": {
+            "title": "Stable Key",
+            "type": "string"
+          }
+        },
+        "required": [
+          "stable_key",
+          "spec_sha256"
+        ],
+        "title": "EvidenceTestHash",
+        "type": "object"
+      },
+      "ExpectedOutcome": {
+        "additionalProperties": false,
+        "properties": {
+          "assertions": {
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "artifact_contains": "#/components/schemas/ArtifactContainsAssertion",
+                  "artifact_digest": "#/components/schemas/ArtifactDigestAssertion",
+                  "finding": "#/components/schemas/FindingAssertion"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/ArtifactContainsAssertion"
+                },
+                {
+                  "$ref": "#/components/schemas/FindingAssertion"
+                },
+                {
+                  "$ref": "#/components/schemas/ArtifactDigestAssertion"
+                }
+              ]
+            },
+            "title": "Assertions",
+            "type": "array"
+          },
+          "forbidden_executed_tools": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Forbidden Executed Tools",
+            "type": "array"
+          },
+          "guarded_decision": {
+            "enum": [
+              "allow",
+              "deny",
+              "require_approval",
+              "require_prior_event",
+              "indeterminate",
+              "not_applicable"
+            ],
+            "title": "Guarded Decision",
+            "type": "string"
+          },
+          "task_outcome": {
+            "minLength": 1,
+            "title": "Task Outcome",
+            "type": "string"
+          }
+        },
+        "required": [
+          "guarded_decision",
+          "task_outcome"
+        ],
+        "title": "ExpectedOutcome",
+        "type": "object"
+      },
+      "FindingAssertion": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "const": "finding",
+            "default": "finding",
+            "title": "Kind",
+            "type": "string"
+          },
+          "related_rules": {
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Related Rules",
+            "type": "array"
+          },
+          "resolution_state": {
+            "enum": [
+              "open",
+              "resolved",
+              "accepted_risk"
+            ],
+            "title": "Resolution State",
+            "type": "string"
+          },
+          "type": {
+            "minLength": 1,
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "related_rules",
+          "resolution_state"
+        ],
+        "title": "FindingAssertion",
+        "type": "object"
+      },
       "FindingOut": {
+        "additionalProperties": false,
         "properties": {
           "created_at": {
             "format": "date-time",
@@ -253,9 +1266,44 @@
         "type": "object"
       },
       "FindingPatch": {
+        "additionalProperties": false,
         "properties": {
+          "authority": {
+            "anyOf": [
+              {
+                "maxLength": 500,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Authority"
+          },
+          "expected_resolution_state": {
+            "default": "open",
+            "enum": [
+              "open",
+              "resolved",
+              "accepted_risk"
+            ],
+            "title": "Expected Resolution State",
+            "type": "string"
+          },
+          "loser_rule_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Loser Rule Id"
+          },
           "resolution_note": {
             "default": "",
+            "maxLength": 5000,
             "title": "Resolution Note",
             "type": "string"
           },
@@ -267,12 +1315,73 @@
             ],
             "title": "Resolution State",
             "type": "string"
+          },
+          "winner_rule_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Winner Rule Id"
           }
         },
         "required": [
           "resolution_state"
         ],
         "title": "FindingPatch",
+        "type": "object"
+      },
+      "FixtureProvenance": {
+        "additionalProperties": false,
+        "properties": {
+          "facts": {
+            "$ref": "#/components/schemas/ManifestFactInput"
+          },
+          "tests": {
+            "$ref": "#/components/schemas/FixtureTestProvenance"
+          },
+          "tools": {
+            "$ref": "#/components/schemas/ManifestArtifactInput"
+          }
+        },
+        "required": [
+          "facts",
+          "tools",
+          "tests"
+        ],
+        "title": "FixtureProvenance",
+        "type": "object"
+      },
+      "FixtureTestProvenance": {
+        "additionalProperties": false,
+        "properties": {
+          "data_scope": {
+            "title": "Data Scope",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "provenance": {
+            "title": "Provenance",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "version",
+          "provenance",
+          "data_scope"
+        ],
+        "title": "FixtureTestProvenance",
         "type": "object"
       },
       "HTTPValidationError": {
@@ -288,7 +1397,823 @@
         "title": "HTTPValidationError",
         "type": "object"
       },
+      "InputManifest": {
+        "additionalProperties": false,
+        "properties": {
+          "compiler": {
+            "$ref": "#/components/schemas/ManifestCompiler"
+          },
+          "facts": {
+            "$ref": "#/components/schemas/ManifestFactInput"
+          },
+          "findings": {
+            "$ref": "#/components/schemas/ManifestFindings"
+          },
+          "rules": {
+            "items": {
+              "$ref": "#/components/schemas/ManifestRuleInput"
+            },
+            "title": "Rules",
+            "type": "array"
+          },
+          "runtime": {
+            "$ref": "#/components/schemas/ManifestRuntime"
+          },
+          "schema_version": {
+            "const": "0.3",
+            "default": "0.3",
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/ManifestSourceInput"
+            },
+            "title": "Sources",
+            "type": "array"
+          },
+          "tests": {
+            "items": {
+              "$ref": "#/components/schemas/ManifestTestInput"
+            },
+            "title": "Tests",
+            "type": "array"
+          },
+          "tools": {
+            "$ref": "#/components/schemas/ManifestArtifactInput"
+          }
+        },
+        "required": [
+          "compiler",
+          "runtime",
+          "sources",
+          "rules",
+          "tests",
+          "tools",
+          "facts",
+          "findings"
+        ],
+        "title": "InputManifest",
+        "type": "object"
+      },
+      "ManifestArtifactInput": {
+        "additionalProperties": false,
+        "properties": {
+          "artifact": {
+            "title": "Artifact",
+            "type": "string"
+          },
+          "artifact_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Artifact Sha256",
+            "type": "string"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "source_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Source Sha256",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source",
+          "source_sha256",
+          "artifact",
+          "artifact_sha256"
+        ],
+        "title": "ManifestArtifactInput",
+        "type": "object"
+      },
+      "ManifestCompiler": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "serialization": {
+            "title": "Serialization",
+            "type": "string"
+          },
+          "token_estimator": {
+            "title": "Token Estimator",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "version",
+          "serialization",
+          "token_estimator"
+        ],
+        "title": "ManifestCompiler",
+        "type": "object"
+      },
+      "ManifestFactInput": {
+        "additionalProperties": false,
+        "properties": {
+          "artifact": {
+            "title": "Artifact",
+            "type": "string"
+          },
+          "artifact_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Artifact Sha256",
+            "type": "string"
+          },
+          "contains_customer_records": {
+            "title": "Contains Customer Records",
+            "type": "boolean"
+          },
+          "data_scope": {
+            "title": "Data Scope",
+            "type": "string"
+          },
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "source_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Source Sha256",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source",
+          "source_sha256",
+          "artifact",
+          "artifact_sha256",
+          "data_scope",
+          "contains_customer_records"
+        ],
+        "title": "ManifestFactInput",
+        "type": "object"
+      },
+      "ManifestFinding": {
+        "additionalProperties": false,
+        "properties": {
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "proof_status": {
+            "title": "Proof Status",
+            "type": "string"
+          },
+          "related_rules": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Related Rules",
+            "type": "array"
+          },
+          "resolution_note": {
+            "title": "Resolution Note",
+            "type": "string"
+          },
+          "resolution_state": {
+            "enum": [
+              "open",
+              "resolved",
+              "accepted_risk"
+            ],
+            "title": "Resolution State",
+            "type": "string"
+          },
+          "severity": {
+            "title": "Severity",
+            "type": "string"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          },
+          "witness": {
+            "additionalProperties": true,
+            "title": "Witness",
+            "type": "object"
+          }
+        },
+        "required": [
+          "type",
+          "severity",
+          "proof_status",
+          "message",
+          "witness",
+          "related_rules",
+          "resolution_state",
+          "resolution_note"
+        ],
+        "title": "ManifestFinding",
+        "type": "object"
+      },
+      "ManifestFindings": {
+        "additionalProperties": false,
+        "properties": {
+          "accepted": {
+            "items": {
+              "$ref": "#/components/schemas/ManifestFinding"
+            },
+            "title": "Accepted",
+            "type": "array"
+          },
+          "unresolved": {
+            "items": {
+              "$ref": "#/components/schemas/ManifestFinding"
+            },
+            "title": "Unresolved",
+            "type": "array"
+          }
+        },
+        "required": [
+          "unresolved",
+          "accepted"
+        ],
+        "title": "ManifestFindings",
+        "type": "object"
+      },
+      "ManifestRuleInput": {
+        "additionalProperties": false,
+        "properties": {
+          "category": {
+            "enum": [
+              "style",
+              "workflow",
+              "knowledge",
+              "runtime_fact",
+              "hard_constraint",
+              "handoff",
+              "quality"
+            ],
+            "title": "Category",
+            "type": "string"
+          },
+          "digest": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Digest",
+            "type": "string"
+          },
+          "enforcement": {
+            "enum": [
+              "prompt",
+              "guard",
+              "test_only",
+              "human_review"
+            ],
+            "title": "Enforcement",
+            "type": "string"
+          },
+          "revision": {
+            "minimum": 1.0,
+            "title": "Revision",
+            "type": "integer"
+          },
+          "severity": {
+            "enum": [
+              "low",
+              "medium",
+              "high",
+              "critical"
+            ],
+            "title": "Severity",
+            "type": "string"
+          },
+          "source_documents": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Source Documents",
+            "type": "array"
+          },
+          "stable_key": {
+            "title": "Stable Key",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "stable_key",
+          "revision",
+          "status",
+          "severity",
+          "category",
+          "enforcement",
+          "source_documents",
+          "digest"
+        ],
+        "title": "ManifestRuleInput",
+        "type": "object"
+      },
+      "ManifestRuntime": {
+        "additionalProperties": false,
+        "properties": {
+          "adapter": {
+            "title": "Adapter",
+            "type": "string"
+          },
+          "arms": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Arms",
+            "type": "array"
+          },
+          "domain": {
+            "title": "Domain",
+            "type": "string"
+          },
+          "lifecycle": {
+            "enum": [
+              "pre_tool",
+              "post_tool",
+              "conversation",
+              "offline"
+            ],
+            "title": "Lifecycle",
+            "type": "string"
+          },
+          "policy_schema_version": {
+            "title": "Policy Schema Version",
+            "type": "string"
+          },
+          "runner_input_version": {
+            "title": "Runner Input Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "adapter",
+          "runner_input_version",
+          "policy_schema_version",
+          "domain",
+          "lifecycle",
+          "arms"
+        ],
+        "title": "ManifestRuntime",
+        "type": "object"
+      },
+      "ManifestSourceInput": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "normalized_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Normalized Sha256",
+            "type": "string"
+          },
+          "normalizer": {
+            "title": "Normalizer",
+            "type": "string"
+          },
+          "normalizer_version": {
+            "title": "Normalizer Version",
+            "type": "string"
+          },
+          "original_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Original Sha256",
+            "type": "string"
+          },
+          "parser": {
+            "title": "Parser",
+            "type": "string"
+          },
+          "parser_version": {
+            "title": "Parser Version",
+            "type": "string"
+          },
+          "version": {
+            "minimum": 1.0,
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "name",
+          "version",
+          "kind",
+          "original_sha256",
+          "normalized_sha256",
+          "parser",
+          "parser_version",
+          "normalizer",
+          "normalizer_version"
+        ],
+        "title": "ManifestSourceInput",
+        "type": "object"
+      },
+      "ManifestTestInput": {
+        "additionalProperties": false,
+        "properties": {
+          "digest": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Digest",
+            "type": "string"
+          },
+          "provenance": {
+            "title": "Provenance",
+            "type": "string"
+          },
+          "rule_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Rule Ids",
+            "type": "array"
+          },
+          "stable_key": {
+            "title": "Stable Key",
+            "type": "string"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "stable_key",
+          "title",
+          "provenance",
+          "rule_ids",
+          "tags",
+          "digest"
+        ],
+        "title": "ManifestTestInput",
+        "type": "object"
+      },
+      "MeOut": {
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "workspaces": {
+            "items": {
+              "$ref": "#/components/schemas/WorkspaceOut"
+            },
+            "title": "Workspaces",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "workspaces"
+        ],
+        "title": "MeOut",
+        "type": "object"
+      },
+      "NotCondition-Input": {
+        "additionalProperties": false,
+        "properties": {
+          "condition": {
+            "discriminator": {
+              "mapping": {
+                "all": "#/components/schemas/AllCondition-Input",
+                "any": "#/components/schemas/AnyCondition-Input",
+                "not": "#/components/schemas/NotCondition-Input",
+                "predicate": "#/components/schemas/Predicate"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Predicate"
+              },
+              {
+                "$ref": "#/components/schemas/AllCondition-Input"
+              },
+              {
+                "$ref": "#/components/schemas/AnyCondition-Input"
+              },
+              {
+                "$ref": "#/components/schemas/NotCondition-Input"
+              }
+            ],
+            "title": "Condition"
+          },
+          "kind": {
+            "const": "not",
+            "default": "not",
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "condition"
+        ],
+        "title": "NotCondition",
+        "type": "object"
+      },
+      "NotCondition-Output": {
+        "additionalProperties": false,
+        "properties": {
+          "condition": {
+            "discriminator": {
+              "mapping": {
+                "all": "#/components/schemas/AllCondition-Output",
+                "any": "#/components/schemas/AnyCondition-Output",
+                "not": "#/components/schemas/NotCondition-Output",
+                "predicate": "#/components/schemas/Predicate"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Predicate"
+              },
+              {
+                "$ref": "#/components/schemas/AllCondition-Output"
+              },
+              {
+                "$ref": "#/components/schemas/AnyCondition-Output"
+              },
+              {
+                "$ref": "#/components/schemas/NotCondition-Output"
+              }
+            ],
+            "title": "Condition"
+          },
+          "kind": {
+            "const": "not",
+            "default": "not",
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "condition"
+        ],
+        "title": "NotCondition",
+        "type": "object"
+      },
+      "OperationError": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "OperationError",
+        "type": "object"
+      },
+      "OperationOut": {
+        "additionalProperties": false,
+        "properties": {
+          "attempt_count": {
+            "title": "Attempt Count",
+            "type": "integer"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/OperationError"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "max_attempts": {
+            "title": "Max Attempts",
+            "type": "integer"
+          },
+          "progress": {
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Progress",
+            "type": "integer"
+          },
+          "resource_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resource Id"
+          },
+          "resource_type": {
+            "anyOf": [
+              {
+                "enum": [
+                  "build",
+                  "run",
+                  "project"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resource Type"
+          },
+          "status": {
+            "enum": [
+              "queued",
+              "running",
+              "succeeded",
+              "failed",
+              "dead_lettered",
+              "cancelled"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "workspace_id": {
+            "title": "Workspace Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "workspace_id",
+          "kind",
+          "status",
+          "progress",
+          "resource_type",
+          "resource_id",
+          "attempt_count",
+          "max_attempts",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "OperationOut",
+        "type": "object"
+      },
+      "PolicyEvent": {
+        "additionalProperties": false,
+        "properties": {
+          "payload": {
+            "additionalProperties": true,
+            "title": "Payload",
+            "type": "object"
+          },
+          "type": {
+            "maxLength": 160,
+            "minLength": 1,
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type"
+        ],
+        "title": "PolicyEvent",
+        "type": "object"
+      },
+      "Predicate": {
+        "additionalProperties": false,
+        "properties": {
+          "fact": {
+            "title": "Fact",
+            "type": "string"
+          },
+          "kind": {
+            "const": "predicate",
+            "default": "predicate",
+            "title": "Kind",
+            "type": "string"
+          },
+          "op": {
+            "enum": [
+              "eq",
+              "ne",
+              "lt",
+              "lte",
+              "gt",
+              "gte",
+              "in",
+              "not_in",
+              "exists",
+              "contains",
+              "regex"
+            ],
+            "title": "Op",
+            "type": "string"
+          },
+          "value": {
+            "title": "Value"
+          }
+        },
+        "required": [
+          "fact",
+          "op"
+        ],
+        "title": "Predicate",
+        "type": "object"
+      },
+      "ProjectCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "description": {
+            "default": "",
+            "maxLength": 5000,
+            "title": "Description",
+            "type": "string"
+          },
+          "domain": {
+            "default": "retail",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Domain",
+            "type": "string"
+          },
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "slug": {
+            "maxLength": 100,
+            "minLength": 1,
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+            "title": "Slug",
+            "type": "string"
+          },
+          "workspace_id": {
+            "title": "Workspace Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "workspace_id",
+          "slug",
+          "name"
+        ],
+        "title": "ProjectCreate",
+        "type": "object"
+      },
       "ProjectOut": {
+        "additionalProperties": false,
         "properties": {
           "created_at": {
             "format": "date-time",
@@ -318,10 +2243,15 @@
           "slug": {
             "title": "Slug",
             "type": "string"
+          },
+          "workspace_id": {
+            "title": "Workspace Id",
+            "type": "string"
           }
         },
         "required": [
           "id",
+          "workspace_id",
           "slug",
           "name",
           "domain",
@@ -333,6 +2263,7 @@
         "type": "object"
       },
       "ReportOut": {
+        "additionalProperties": false,
         "properties": {
           "content_hash": {
             "title": "Content Hash",
@@ -344,9 +2275,7 @@
             "type": "string"
           },
           "evidence": {
-            "additionalProperties": true,
-            "title": "Evidence",
-            "type": "object"
+            "$ref": "#/components/schemas/EvidenceReport"
           },
           "id": {
             "title": "Id",
@@ -377,16 +2306,158 @@
         "title": "ReportOut",
         "type": "object"
       },
+      "RuleException-Input": {
+        "additionalProperties": false,
+        "properties": {
+          "condition": {
+            "discriminator": {
+              "mapping": {
+                "all": "#/components/schemas/AllCondition-Input",
+                "any": "#/components/schemas/AnyCondition-Input",
+                "not": "#/components/schemas/NotCondition-Input",
+                "predicate": "#/components/schemas/Predicate"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Predicate"
+              },
+              {
+                "$ref": "#/components/schemas/AllCondition-Input"
+              },
+              {
+                "$ref": "#/components/schemas/AnyCondition-Input"
+              },
+              {
+                "$ref": "#/components/schemas/NotCondition-Input"
+              }
+            ],
+            "title": "Condition"
+          },
+          "effect": {
+            "default": "not_applicable",
+            "enum": [
+              "allow",
+              "not_applicable"
+            ],
+            "title": "Effect",
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "condition",
+          "reason"
+        ],
+        "title": "RuleException",
+        "type": "object"
+      },
+      "RuleException-Output": {
+        "additionalProperties": false,
+        "properties": {
+          "condition": {
+            "discriminator": {
+              "mapping": {
+                "all": "#/components/schemas/AllCondition-Output",
+                "any": "#/components/schemas/AnyCondition-Output",
+                "not": "#/components/schemas/NotCondition-Output",
+                "predicate": "#/components/schemas/Predicate"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/Predicate"
+              },
+              {
+                "$ref": "#/components/schemas/AllCondition-Output"
+              },
+              {
+                "$ref": "#/components/schemas/AnyCondition-Output"
+              },
+              {
+                "$ref": "#/components/schemas/NotCondition-Output"
+              }
+            ],
+            "title": "Condition"
+          },
+          "effect": {
+            "default": "not_applicable",
+            "enum": [
+              "allow",
+              "not_applicable"
+            ],
+            "title": "Effect",
+            "type": "string"
+          },
+          "reason": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "condition",
+          "reason"
+        ],
+        "title": "RuleException",
+        "type": "object"
+      },
       "RuleOut": {
+        "additionalProperties": false,
         "properties": {
           "category": {
+            "enum": [
+              "style",
+              "workflow",
+              "knowledge",
+              "runtime_fact",
+              "hard_constraint",
+              "handoff",
+              "quality"
+            ],
             "title": "Category",
             "type": "string"
           },
           "condition": {
-            "additionalProperties": true,
-            "title": "Condition",
-            "type": "object"
+            "anyOf": [
+              {
+                "discriminator": {
+                  "mapping": {
+                    "all": "#/components/schemas/AllCondition-Output",
+                    "any": "#/components/schemas/AnyCondition-Output",
+                    "not": "#/components/schemas/NotCondition-Output",
+                    "predicate": "#/components/schemas/Predicate"
+                  },
+                  "propertyName": "kind"
+                },
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/Predicate"
+                  },
+                  {
+                    "$ref": "#/components/schemas/AllCondition-Output"
+                  },
+                  {
+                    "$ref": "#/components/schemas/AnyCondition-Output"
+                  },
+                  {
+                    "$ref": "#/components/schemas/NotCondition-Output"
+                  }
+                ]
+              },
+              {
+                "$ref": "#/components/schemas/EmptyCondition"
+              }
+            ],
+            "title": "Condition"
           },
           "confidence": {
             "title": "Confidence",
@@ -398,21 +2469,38 @@
             "type": "string"
           },
           "decidability": {
+            "enum": [
+              "machine_decidable",
+              "model_judged",
+              "human"
+            ],
             "title": "Decidability",
             "type": "string"
           },
           "effect": {
+            "enum": [
+              "allow",
+              "deny",
+              "require_approval",
+              "require_prior_event",
+              "observe_only"
+            ],
             "title": "Effect",
             "type": "string"
           },
           "enforcement": {
+            "enum": [
+              "prompt",
+              "guard",
+              "test_only",
+              "human_review"
+            ],
             "title": "Enforcement",
             "type": "string"
           },
           "exceptions": {
             "items": {
-              "additionalProperties": true,
-              "type": "object"
+              "$ref": "#/components/schemas/RuleException-Output"
             },
             "title": "Exceptions",
             "type": "array"
@@ -431,8 +2519,7 @@
           },
           "requires": {
             "items": {
-              "additionalProperties": true,
-              "type": "object"
+              "$ref": "#/components/schemas/RuleRequirement"
             },
             "title": "Requires",
             "type": "array"
@@ -446,18 +2533,21 @@
             "type": "integer"
           },
           "scope": {
-            "additionalProperties": true,
-            "title": "Scope",
-            "type": "object"
+            "$ref": "#/components/schemas/RuleScope"
           },
           "severity": {
+            "enum": [
+              "low",
+              "medium",
+              "high",
+              "critical"
+            ],
             "title": "Severity",
             "type": "string"
           },
           "source_refs": {
             "items": {
-              "additionalProperties": true,
-              "type": "object"
+              "$ref": "#/components/schemas/SourceRef"
             },
             "title": "Source Refs",
             "type": "array"
@@ -467,6 +2557,13 @@
             "type": "string"
           },
           "status": {
+            "enum": [
+              "candidate",
+              "needs_review",
+              "approved",
+              "rejected",
+              "superseded"
+            ],
             "title": "Status",
             "type": "string"
           },
@@ -515,12 +2612,37 @@
         "type": "object"
       },
       "RulePatch": {
+        "additionalProperties": false,
         "properties": {
           "condition": {
             "anyOf": [
               {
-                "additionalProperties": true,
-                "type": "object"
+                "discriminator": {
+                  "mapping": {
+                    "all": "#/components/schemas/AllCondition-Input",
+                    "any": "#/components/schemas/AnyCondition-Input",
+                    "not": "#/components/schemas/NotCondition-Input",
+                    "predicate": "#/components/schemas/Predicate"
+                  },
+                  "propertyName": "kind"
+                },
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/Predicate"
+                  },
+                  {
+                    "$ref": "#/components/schemas/AllCondition-Input"
+                  },
+                  {
+                    "$ref": "#/components/schemas/AnyCondition-Input"
+                  },
+                  {
+                    "$ref": "#/components/schemas/NotCondition-Input"
+                  }
+                ]
+              },
+              {
+                "$ref": "#/components/schemas/EmptyCondition"
               },
               {
                 "type": "null"
@@ -528,9 +2650,49 @@
             ],
             "title": "Condition"
           },
+          "decidability": {
+            "anyOf": [
+              {
+                "enum": [
+                  "machine_decidable",
+                  "model_judged",
+                  "human"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Decidability"
+          },
+          "effect": {
+            "anyOf": [
+              {
+                "enum": [
+                  "allow",
+                  "deny",
+                  "require_approval",
+                  "require_prior_event",
+                  "observe_only"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Effect"
+          },
           "enforcement": {
             "anyOf": [
               {
+                "enum": [
+                  "prompt",
+                  "guard",
+                  "test_only",
+                  "human_review"
+                ],
                 "type": "string"
               },
               {
@@ -538,6 +2700,20 @@
               }
             ],
             "title": "Enforcement"
+          },
+          "exceptions": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/RuleException-Input"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Exceptions"
           },
           "expected_revision": {
             "title": "Expected Revision",
@@ -554,6 +2730,20 @@
             ],
             "title": "Normative Text"
           },
+          "requires": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/RuleRequirement"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Requires"
+          },
           "reviewer_note": {
             "anyOf": [
               {
@@ -564,6 +2754,30 @@
               }
             ],
             "title": "Reviewer Note"
+          },
+          "scope": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/RuleScope"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "target_tools": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Target Tools"
           },
           "title": {
             "anyOf": [
@@ -583,7 +2797,162 @@
         "title": "RulePatch",
         "type": "object"
       },
+      "RuleRequirement": {
+        "additionalProperties": false,
+        "properties": {
+          "event_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Type"
+          },
+          "fact": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fact"
+          },
+          "kind": {
+            "enum": [
+              "prior_event",
+              "approval",
+              "fact"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "match_arguments": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Match Arguments",
+            "type": "array"
+          },
+          "op": {
+            "anyOf": [
+              {
+                "enum": [
+                  "eq",
+                  "ne",
+                  "lt",
+                  "lte",
+                  "gt",
+                  "gte",
+                  "in",
+                  "not_in",
+                  "exists",
+                  "contains",
+                  "regex"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Op"
+          },
+          "value": {
+            "title": "Value"
+          }
+        },
+        "required": [
+          "kind"
+        ],
+        "title": "RuleRequirement",
+        "type": "object"
+      },
+      "RuleReview": {
+        "additionalProperties": false,
+        "properties": {
+          "expected_revision": {
+            "minimum": 1.0,
+            "title": "Expected Revision",
+            "type": "integer"
+          },
+          "reviewer_note": {
+            "anyOf": [
+              {
+                "maxLength": 5000,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reviewer Note"
+          }
+        },
+        "required": [
+          "expected_revision"
+        ],
+        "title": "RuleReview",
+        "type": "object"
+      },
+      "RuleScope": {
+        "additionalProperties": false,
+        "properties": {
+          "domain": {
+            "maxLength": 120,
+            "minLength": 1,
+            "title": "Domain",
+            "type": "string"
+          },
+          "lifecycle": {
+            "default": "pre_tool",
+            "enum": [
+              "pre_tool",
+              "post_tool",
+              "conversation",
+              "offline"
+            ],
+            "title": "Lifecycle",
+            "type": "string"
+          },
+          "tools": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tools",
+            "type": "array"
+          }
+        },
+        "required": [
+          "domain"
+        ],
+        "title": "RuleScope",
+        "type": "object"
+      },
+      "RunCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "build_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Build Id"
+          }
+        },
+        "title": "RunCreate",
+        "type": "object"
+      },
       "RunOut": {
+        "additionalProperties": false,
         "properties": {
           "adapter": {
             "title": "Adapter",
@@ -594,9 +2963,7 @@
             "type": "string"
           },
           "dataset_manifest": {
-            "additionalProperties": true,
-            "title": "Dataset Manifest",
-            "type": "object"
+            "$ref": "#/components/schemas/DatasetManifest"
           },
           "finished_at": {
             "anyOf": [
@@ -647,6 +3014,13 @@
             "type": "string"
           },
           "status": {
+            "enum": [
+              "queued",
+              "running",
+              "succeeded",
+              "failed",
+              "cancelled"
+            ],
             "title": "Status",
             "type": "string"
           }
@@ -667,7 +3041,86 @@
         "title": "RunOut",
         "type": "object"
       },
+      "ScriptedTrajectories": {
+        "additionalProperties": false,
+        "properties": {
+          "baseline_unenforced": {
+            "items": {
+              "$ref": "#/components/schemas/ToolCallStep"
+            },
+            "title": "Baseline Unenforced",
+            "type": "array"
+          },
+          "compiled_enforced": {
+            "items": {
+              "$ref": "#/components/schemas/ToolCallStep"
+            },
+            "title": "Compiled Enforced",
+            "type": "array"
+          },
+          "compiled_unenforced": {
+            "items": {
+              "$ref": "#/components/schemas/ToolCallStep"
+            },
+            "title": "Compiled Unenforced",
+            "type": "array"
+          }
+        },
+        "title": "ScriptedTrajectories",
+        "type": "object"
+      },
+      "SourceRef": {
+        "additionalProperties": false,
+        "properties": {
+          "document_id": {
+            "title": "Document Id",
+            "type": "string"
+          },
+          "document_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Document Name"
+          },
+          "line_end": {
+            "minimum": 1.0,
+            "title": "Line End",
+            "type": "integer"
+          },
+          "line_start": {
+            "minimum": 1.0,
+            "title": "Line Start",
+            "type": "integer"
+          },
+          "quote": {
+            "minLength": 1,
+            "title": "Quote",
+            "type": "string"
+          },
+          "source_sha256": {
+            "maxLength": 64,
+            "minLength": 64,
+            "title": "Source Sha256",
+            "type": "string"
+          }
+        },
+        "required": [
+          "document_id",
+          "line_start",
+          "line_end",
+          "quote",
+          "source_sha256"
+        ],
+        "title": "SourceRef",
+        "type": "object"
+      },
       "TestCaseOut": {
+        "additionalProperties": false,
         "properties": {
           "created_at": {
             "format": "date-time",
@@ -687,13 +3140,16 @@
             "type": "string"
           },
           "review_status": {
+            "enum": [
+              "approved",
+              "needs_review",
+              "rejected"
+            ],
             "title": "Review Status",
             "type": "string"
           },
           "spec": {
-            "additionalProperties": true,
-            "title": "Spec",
-            "type": "object"
+            "$ref": "#/components/schemas/TestCaseSpec"
           },
           "stable_key": {
             "title": "Stable Key",
@@ -715,6 +3171,156 @@
           "created_at"
         ],
         "title": "TestCaseOut",
+        "type": "object"
+      },
+      "TestCasePatch": {
+        "additionalProperties": false,
+        "properties": {
+          "review_status": {
+            "enum": [
+              "approved",
+              "needs_review",
+              "rejected"
+            ],
+            "title": "Review Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "review_status"
+        ],
+        "title": "TestCasePatch",
+        "type": "object"
+      },
+      "TestCaseSpec": {
+        "additionalProperties": false,
+        "properties": {
+          "events": {
+            "items": {
+              "$ref": "#/components/schemas/PolicyEvent"
+            },
+            "title": "Events",
+            "type": "array"
+          },
+          "expected": {
+            "$ref": "#/components/schemas/ExpectedOutcome"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "initial_state": {
+            "additionalProperties": true,
+            "title": "Initial State",
+            "type": "object"
+          },
+          "messages": {
+            "items": {
+              "$ref": "#/components/schemas/TestMessage"
+            },
+            "title": "Messages",
+            "type": "array"
+          },
+          "provenance": {
+            "title": "Provenance",
+            "type": "string"
+          },
+          "rule_ids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Rule Ids",
+            "type": "array"
+          },
+          "schema_version": {
+            "default": "0.2",
+            "enum": [
+              "0.1",
+              "0.2"
+            ],
+            "title": "Schema Version",
+            "type": "string"
+          },
+          "scripted_trajectories": {
+            "$ref": "#/components/schemas/ScriptedTrajectories"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "provenance",
+          "rule_ids",
+          "tags",
+          "messages",
+          "initial_state",
+          "expected",
+          "scripted_trajectories"
+        ],
+        "title": "TestCaseSpec",
+        "type": "object"
+      },
+      "TestMessage": {
+        "additionalProperties": false,
+        "properties": {
+          "content": {
+            "title": "Content",
+            "type": "string"
+          },
+          "role": {
+            "enum": [
+              "system",
+              "user",
+              "assistant",
+              "tool"
+            ],
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "required": [
+          "role",
+          "content"
+        ],
+        "title": "TestMessage",
+        "type": "object"
+      },
+      "ToolCallStep": {
+        "additionalProperties": false,
+        "properties": {
+          "arguments": {
+            "additionalProperties": true,
+            "title": "Arguments",
+            "type": "object"
+          },
+          "name": {
+            "maxLength": 160,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "type": {
+            "const": "tool_call",
+            "default": "tool_call",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "arguments"
+        ],
+        "title": "ToolCallStep",
         "type": "object"
       },
       "ValidationError": {
@@ -756,6 +3362,96 @@
         ],
         "title": "ValidationError",
         "type": "object"
+      },
+      "WorkspaceBootstrap": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "default": "My workspace",
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "slug": {
+            "anyOf": [
+              {
+                "maxLength": 100,
+                "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slug"
+          }
+        },
+        "title": "WorkspaceBootstrap",
+        "type": "object"
+      },
+      "WorkspaceBootstrapOut": {
+        "additionalProperties": false,
+        "properties": {
+          "created": {
+            "title": "Created",
+            "type": "boolean"
+          },
+          "project": {
+            "$ref": "#/components/schemas/ProjectOut"
+          },
+          "workspace": {
+            "$ref": "#/components/schemas/WorkspaceOut"
+          }
+        },
+        "required": [
+          "workspace",
+          "project",
+          "created"
+        ],
+        "title": "WorkspaceBootstrapOut",
+        "type": "object"
+      },
+      "WorkspaceOut": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "role": {
+            "title": "Role",
+            "type": "string"
+          },
+          "slug": {
+            "title": "Slug",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "name",
+          "role",
+          "created_at"
+        ],
+        "title": "WorkspaceOut",
+        "type": "object"
+      }
+    },
+    "securitySchemes": {
+      "HTTPBearer": {
+        "scheme": "bearer",
+        "type": "http"
       }
     }
   },
@@ -777,6 +3473,22 @@
             "schema": {
               "title": "Build Id",
               "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-aletheia-origin-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Aletheia-Origin-Token"
             }
           }
         ],
@@ -802,6 +3514,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Get Build"
       }
     },
@@ -825,6 +3542,22 @@
             "schema": {
               "title": "Artifact Path",
               "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-aletheia-origin-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Aletheia-Origin-Token"
             }
           }
         ],
@@ -850,12 +3583,35 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Get Artifact"
       }
     },
     "/api/v1/config/public": {
       "get": {
         "operationId": "public_config_api_v1_config_public_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-aletheia-origin-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Aletheia-Origin-Token"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -868,8 +3624,23 @@
               }
             },
             "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Public Config"
       }
     },
@@ -891,6 +3662,22 @@
                 }
               ],
               "title": "X-Demo-Reset-Secret"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-aletheia-origin-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Aletheia-Origin-Token"
             }
           }
         ],
@@ -916,7 +3703,12 @@
             "description": "Validation Error"
           }
         },
-        "summary": "Reset workspace"
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Reset local workspace"
       }
     },
     "/api/v1/documents/{document_id}": {
@@ -930,6 +3722,22 @@
             "schema": {
               "title": "Document Id",
               "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-aletheia-origin-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Aletheia-Origin-Token"
             }
           }
         ],
@@ -955,6 +3763,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Get Document"
       }
     },
@@ -969,6 +3782,22 @@
             "schema": {
               "title": "Finding Id",
               "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-aletheia-origin-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Aletheia-Origin-Token"
             }
           }
         ],
@@ -1004,6 +3833,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Patch Finding"
       }
     },
@@ -1019,6 +3853,22 @@
               "title": "Job Id",
               "type": "string"
             }
+          },
+          {
+            "in": "header",
+            "name": "x-aletheia-origin-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Aletheia-Origin-Token"
+            }
           }
         ],
         "responses": {
@@ -1026,9 +3876,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Get Job Api V1 Jobs  Job Id  Get",
-                  "type": "object"
+                  "$ref": "#/components/schemas/OperationOut"
                 }
               }
             },
@@ -1045,12 +3893,86 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Get Job"
+      }
+    },
+    "/api/v1/me": {
+      "get": {
+        "operationId": "get_me_api_v1_me_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-aletheia-origin-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Aletheia-Origin-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Get Me"
       }
     },
     "/api/v1/projects": {
       "get": {
         "operationId": "list_projects_api_v1_projects_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-aletheia-origin-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Aletheia-Origin-Token"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -1065,19 +3987,50 @@
               }
             },
             "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "List Projects"
       },
       "post": {
         "operationId": "create_project_api_v1_projects_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-aletheia-origin-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Aletheia-Origin-Token"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "additionalProperties": true,
-                "title": "Payload",
-                "type": "object"
+                "$ref": "#/components/schemas/ProjectCreate"
               }
             }
           },
@@ -1105,6 +4058,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Create Project"
       }
     },
@@ -1119,6 +4077,22 @@
             "schema": {
               "title": "Project Id",
               "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-aletheia-origin-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Aletheia-Origin-Token"
             }
           }
         ],
@@ -1144,6 +4118,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Get Project"
       }
     },
@@ -1159,16 +4138,46 @@
               "title": "Project Id",
               "type": "string"
             }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-aletheia-origin-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Aletheia-Origin-Token"
+            }
           }
         ],
         "responses": {
-          "200": {
+          "202": {
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Analyze Project Api V1 Projects  Project Id  Analysis Jobs Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/OperationOut"
                 }
               }
             },
@@ -1185,6 +4194,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Analyze Project"
       }
     },
@@ -1199,6 +4213,22 @@
             "schema": {
               "title": "Project Id",
               "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-aletheia-origin-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Aletheia-Origin-Token"
             }
           }
         ],
@@ -1228,6 +4258,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "List Builds"
       },
       "post": {
@@ -1241,14 +4276,46 @@
               "title": "Project Id",
               "type": "string"
             }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-aletheia-origin-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Aletheia-Origin-Token"
+            }
           }
         ],
         "responses": {
-          "201": {
+          "202": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BuildOut"
+                  "$ref": "#/components/schemas/OperationOut"
                 }
               }
             },
@@ -1265,6 +4332,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Create Build"
       }
     },
@@ -1279,6 +4351,22 @@
             "schema": {
               "title": "Project Id",
               "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-aletheia-origin-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Aletheia-Origin-Token"
             }
           }
         ],
@@ -1308,6 +4396,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "List Documents"
       },
       "post": {
@@ -1320,6 +4413,22 @@
             "schema": {
               "title": "Project Id",
               "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-aletheia-origin-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Aletheia-Origin-Token"
             }
           }
         ],
@@ -1354,6 +4463,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Upload Document"
       }
     },
@@ -1368,6 +4482,22 @@
             "schema": {
               "title": "Project Id",
               "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-aletheia-origin-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Aletheia-Origin-Token"
             }
           }
         ],
@@ -1397,7 +4527,72 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "List Findings"
+      }
+    },
+    "/api/v1/projects/{project_id}/reset": {
+      "post": {
+        "operationId": "reset_project_api_v1_projects__project_id__reset_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "project_id",
+            "required": true,
+            "schema": {
+              "title": "Project Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-aletheia-origin-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Aletheia-Origin-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Reset Project"
       }
     },
     "/api/v1/projects/{project_id}/rules": {
@@ -1411,6 +4606,22 @@
             "schema": {
               "title": "Project Id",
               "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-aletheia-origin-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Aletheia-Origin-Token"
             }
           }
         ],
@@ -1440,6 +4651,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "List Rules"
       }
     },
@@ -1455,6 +4671,38 @@
               "title": "Project Id",
               "type": "string"
             }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-aletheia-origin-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Aletheia-Origin-Token"
+            }
           }
         ],
         "requestBody": {
@@ -1463,8 +4711,7 @@
               "schema": {
                 "anyOf": [
                   {
-                    "additionalProperties": true,
-                    "type": "object"
+                    "$ref": "#/components/schemas/RunCreate"
                   },
                   {
                     "type": "null"
@@ -1476,11 +4723,11 @@
           }
         },
         "responses": {
-          "201": {
+          "202": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/RunOut"
+                  "$ref": "#/components/schemas/OperationOut"
                 }
               }
             },
@@ -1497,6 +4744,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Create Run"
       }
     },
@@ -1511,6 +4763,22 @@
             "schema": {
               "title": "Project Id",
               "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-aletheia-origin-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Aletheia-Origin-Token"
             }
           }
         ],
@@ -1538,6 +4806,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Project Summary"
       }
     },
@@ -1552,6 +4825,22 @@
             "schema": {
               "title": "Project Id",
               "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-aletheia-origin-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Aletheia-Origin-Token"
             }
           }
         ],
@@ -1581,6 +4870,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "List Tests"
       }
     },
@@ -1596,16 +4890,46 @@
               "title": "Project Id",
               "type": "string"
             }
+          },
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Idempotency-Key"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-aletheia-origin-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Aletheia-Origin-Token"
+            }
           }
         ],
         "responses": {
-          "200": {
+          "202": {
             "content": {
               "application/json": {
                 "schema": {
-                  "additionalProperties": true,
-                  "title": "Response Generate Tests Api V1 Projects  Project Id  Test Generation Jobs Post",
-                  "type": "object"
+                  "$ref": "#/components/schemas/OperationOut"
                 }
               }
             },
@@ -1622,6 +4946,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Generate Tests"
       }
     },
@@ -1636,6 +4965,22 @@
             "schema": {
               "title": "Report Id",
               "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-aletheia-origin-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Aletheia-Origin-Token"
             }
           }
         ],
@@ -1661,6 +5006,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Get Report"
       }
     },
@@ -1686,6 +5036,22 @@
               "title": "Format",
               "type": "string"
             }
+          },
+          {
+            "in": "header",
+            "name": "x-aletheia-origin-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Aletheia-Origin-Token"
+            }
           }
         ],
         "responses": {
@@ -1710,6 +5076,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Export Report"
       }
     },
@@ -1724,6 +5095,22 @@
             "schema": {
               "title": "Rule Id",
               "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-aletheia-origin-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Aletheia-Origin-Token"
             }
           }
         ],
@@ -1749,6 +5136,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Get Rule"
       },
       "patch": {
@@ -1761,6 +5153,22 @@
             "schema": {
               "title": "Rule Id",
               "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-aletheia-origin-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Aletheia-Origin-Token"
             }
           }
         ],
@@ -1796,6 +5204,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Patch Rule"
       }
     },
@@ -1811,25 +5224,33 @@
               "title": "Rule Id",
               "type": "string"
             }
+          },
+          {
+            "in": "header",
+            "name": "x-aletheia-origin-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Aletheia-Origin-Token"
+            }
           }
         ],
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "anyOf": [
-                  {
-                    "additionalProperties": true,
-                    "type": "object"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ],
-                "title": "Payload"
+                "$ref": "#/components/schemas/RuleReview"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -1853,6 +5274,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Approve Rule"
       }
     },
@@ -1868,25 +5294,33 @@
               "title": "Rule Id",
               "type": "string"
             }
+          },
+          {
+            "in": "header",
+            "name": "x-aletheia-origin-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Aletheia-Origin-Token"
+            }
           }
         ],
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "anyOf": [
-                  {
-                    "additionalProperties": true,
-                    "type": "object"
-                  },
-                  {
-                    "type": "null"
-                  }
-                ],
-                "title": "Payload"
+                "$ref": "#/components/schemas/RuleReview"
               }
             }
-          }
+          },
+          "required": true
         },
         "responses": {
           "200": {
@@ -1910,6 +5344,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Reject Rule"
       }
     },
@@ -1924,6 +5363,22 @@
             "schema": {
               "title": "Run Id",
               "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-aletheia-origin-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Aletheia-Origin-Token"
             }
           }
         ],
@@ -1949,6 +5404,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Get Run"
       }
     },
@@ -1963,6 +5423,22 @@
             "schema": {
               "title": "Run Id",
               "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-aletheia-origin-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Aletheia-Origin-Token"
             }
           }
         ],
@@ -1992,6 +5468,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "List Reports"
       },
       "post": {
@@ -2004,6 +5485,22 @@
             "schema": {
               "title": "Run Id",
               "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-aletheia-origin-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Aletheia-Origin-Token"
             }
           }
         ],
@@ -2029,6 +5526,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Make Report"
       }
     },
@@ -2043,6 +5545,22 @@
             "schema": {
               "title": "Run Id",
               "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-aletheia-origin-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Aletheia-Origin-Token"
             }
           }
         ],
@@ -2073,6 +5591,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Get Results"
       }
     },
@@ -2087,6 +5610,22 @@
             "schema": {
               "title": "Result Id",
               "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-aletheia-origin-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Aletheia-Origin-Token"
             }
           }
         ],
@@ -2114,6 +5653,11 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Get Trace"
       }
     },
@@ -2129,15 +5673,29 @@
               "title": "Test Case Id",
               "type": "string"
             }
+          },
+          {
+            "in": "header",
+            "name": "x-aletheia-origin-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Aletheia-Origin-Token"
+            }
           }
         ],
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "additionalProperties": true,
-                "title": "Payload",
-                "type": "object"
+                "$ref": "#/components/schemas/TestCasePatch"
               }
             }
           },
@@ -2165,7 +5723,133 @@
             "description": "Validation Error"
           }
         },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
         "summary": "Patch Test"
+      }
+    },
+    "/api/v1/workspaces/bootstrap": {
+      "post": {
+        "operationId": "bootstrap_workspace_api_v1_workspaces_bootstrap_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-aletheia-origin-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Aletheia-Origin-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkspaceBootstrap"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceBootstrapOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Bootstrap Workspace"
+      }
+    },
+    "/api/v1/workspaces/{workspace_id}/reset": {
+      "post": {
+        "operationId": "reset_personal_workspace_api_v1_workspaces__workspace_id__reset_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspace_id",
+            "required": true,
+            "schema": {
+              "title": "Workspace Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "x-aletheia-origin-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Aletheia-Origin-Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Reset Personal Workspace"
       }
     },
     "/healthz": {

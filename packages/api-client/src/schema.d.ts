@@ -64,7 +64,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Reset workspace */
+        /** Reset local workspace */
         post: operations["reset_workspace"];
         delete?: never;
         options?: never;
@@ -115,6 +115,23 @@ export interface paths {
         };
         /** Get Job */
         get: operations["get_job_api_v1_jobs__job_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Me */
+        get: operations["get_me_api_v1_me_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -222,6 +239,23 @@ export interface paths {
         get: operations["list_findings_api_v1_projects__project_id__findings_get"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{project_id}/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reset Project */
+        post: operations["reset_project_api_v1_projects__project_id__reset_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -485,6 +519,40 @@ export interface paths {
         patch: operations["patch_test_api_v1_test_cases__test_case_id__patch"];
         trace?: never;
     };
+    "/api/v1/workspaces/bootstrap": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Bootstrap Workspace */
+        post: operations["bootstrap_workspace_api_v1_workspaces_bootstrap_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/workspaces/{workspace_id}/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reset Personal Workspace */
+        post: operations["reset_personal_workspace_api_v1_workspaces__workspace_id__reset_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/healthz": {
         parameters: {
             query?: never;
@@ -523,6 +591,91 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AllCondition */
+        "AllCondition-Input": {
+            /** Conditions */
+            conditions: (components["schemas"]["Predicate"] | components["schemas"]["AllCondition-Input"] | components["schemas"]["AnyCondition-Input"] | components["schemas"]["NotCondition-Input"])[];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "all";
+        };
+        /** AllCondition */
+        "AllCondition-Output": {
+            /** Conditions */
+            conditions: (components["schemas"]["Predicate"] | components["schemas"]["AllCondition-Output"] | components["schemas"]["AnyCondition-Output"] | components["schemas"]["NotCondition-Output"])[];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "all";
+        };
+        /** AnyCondition */
+        "AnyCondition-Input": {
+            /** Conditions */
+            conditions: (components["schemas"]["Predicate"] | components["schemas"]["AllCondition-Input"] | components["schemas"]["AnyCondition-Input"] | components["schemas"]["NotCondition-Input"])[];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "any";
+        };
+        /** AnyCondition */
+        "AnyCondition-Output": {
+            /** Conditions */
+            conditions: (components["schemas"]["Predicate"] | components["schemas"]["AllCondition-Output"] | components["schemas"]["AnyCondition-Output"] | components["schemas"]["NotCondition-Output"])[];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "any";
+        };
+        /** ArmMetrics */
+        ArmMetrics: {
+            /** Attempted Violation Rate */
+            attempted_violation_rate: number;
+            /** Cases */
+            cases: number;
+            /** Cost */
+            cost: number | null;
+            /** Executed Violation Rate */
+            executed_violation_rate: number;
+            /** False Block Rate */
+            false_block_rate: number;
+            /** Input Tokens */
+            input_tokens: number | null;
+            /** Output Tokens */
+            output_tokens: number | null;
+            /** Task Success Rate */
+            task_success_rate: number;
+            /** Tool Validation Error Rate */
+            tool_validation_error_rate: number;
+        };
+        /** ArtifactContainsAssertion */
+        ArtifactContainsAssertion: {
+            /** Artifact */
+            artifact: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "artifact_contains";
+            /** Text */
+            text: string;
+        };
+        /** ArtifactDigestAssertion */
+        ArtifactDigestAssertion: {
+            /** Artifact */
+            artifact: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "artifact_digest";
+            /** Sha256 */
+            sha256: string;
+        };
         /** Body_upload_document_api_v1_projects__project_id__documents_post */
         Body_upload_document_api_v1_projects__project_id__documents_post: {
             /** File */
@@ -556,10 +709,7 @@ export interface components {
             id: string;
             /** Input Hash */
             input_hash: string;
-            /** Input Manifest */
-            input_manifest: {
-                [key: string]: unknown;
-            };
+            input_manifest: components["schemas"]["InputManifest"];
             /** Project Id */
             project_id: string;
             /** Source Map */
@@ -572,6 +722,82 @@ export interface components {
             };
             /** Status */
             status: string;
+        };
+        /** CoverageDimension */
+        CoverageDimension: {
+            /** Covered Count */
+            covered_count: number;
+            /** Eligible Count */
+            eligible_count: number;
+            /** Ratio */
+            ratio: number;
+            /** Uncovered */
+            uncovered: string[];
+        };
+        /** CoverageMetrics */
+        CoverageMetrics: {
+            /** Arms */
+            arms: number;
+            boundary_coverage: components["schemas"]["CoverageDimension"];
+            /** Compiler Assertion Case Count */
+            compiler_assertion_case_count: number;
+            /** Compiler Assertion Coverage */
+            compiler_assertion_coverage: number;
+            /** Critical Unclassified Rules */
+            critical_unclassified_rules: string[];
+            /** Executable Case Count */
+            executable_case_count: number;
+            /** Explicit Assertion Case Count */
+            explicit_assertion_case_count: number;
+            /** Explicit Assertion Coverage */
+            explicit_assertion_coverage: number;
+            /** Positive Negative Boundary */
+            positive_negative_boundary: boolean;
+            rule_coverage: components["schemas"]["CoverageDimension"];
+            source_coverage: components["schemas"]["CoverageDimension"];
+            /** Tag Counts */
+            tag_counts: {
+                [key: string]: number;
+            };
+            /** Test Count */
+            test_count: number;
+        };
+        /** DatasetManifest */
+        DatasetManifest: {
+            /** Build Root Sha256 */
+            build_root_sha256: string;
+            /** Contains Customer Records */
+            contains_customer_records: boolean;
+            /** Data Scope */
+            data_scope: string;
+            /** Evaluation Timestamp */
+            evaluation_timestamp: string;
+            /** Facts Sha256 */
+            facts_sha256: string;
+            /** Facts Source */
+            facts_source: string;
+            /** Hash */
+            hash: string;
+            /** Name */
+            name: string;
+            /** Provenance */
+            provenance: string;
+            /** Runner Version */
+            runner_version: string;
+            /**
+             * Schema Version
+             * @default 0.3
+             * @constant
+             */
+            schema_version: "0.3";
+            /** Test Count */
+            test_count: number;
+            /** Tests Sha256 */
+            tests_sha256: string;
+            /** Tools Sha256 */
+            tools_sha256: string;
+            /** Version */
+            version: string;
         };
         /** DocumentOut */
         DocumentOut: {
@@ -590,6 +816,8 @@ export interface components {
             mime_type: string;
             /** Name */
             name: string;
+            /** Normalized Sha256 */
+            normalized_sha256: string;
             /** Normalized Text */
             normalized_text: string;
             /** Origin */
@@ -604,6 +832,170 @@ export interface components {
             token_estimate: number;
             /** Version */
             version: number;
+        };
+        /**
+         * EmptyCondition
+         * @description Explicitly validates the persisted empty condition used by human-only rules.
+         */
+        EmptyCondition: Record<string, never>;
+        /** EvidenceFailure */
+        EvidenceFailure: {
+            /** Arm */
+            arm: string;
+            /** First Divergence */
+            first_divergence: string | null;
+            /** Test Id */
+            test_id: string;
+            /** Title */
+            title: string;
+        };
+        /** EvidenceHashes */
+        EvidenceHashes: {
+            /** Artifacts */
+            artifacts: {
+                [key: string]: string;
+            };
+            /** Build Root Sha256 */
+            build_root_sha256: string;
+            /** Fact Fixture Sha256 */
+            fact_fixture_sha256: string;
+            /** Manifest Bytes Sha256 */
+            manifest_bytes_sha256: string;
+            /** Run Sha256 */
+            run_sha256: string;
+            /** Source Documents */
+            source_documents: components["schemas"]["EvidenceSourceHash"][];
+            /** Test Suite Sha256 */
+            test_suite_sha256: string;
+            /** Tests */
+            tests: components["schemas"]["EvidenceTestHash"][];
+            /** Tool Registry Sha256 */
+            tool_registry_sha256: string;
+        };
+        /** EvidenceMetrics */
+        EvidenceMetrics: {
+            baseline_unenforced: components["schemas"]["ArmMetrics"];
+            compiled_enforced: components["schemas"]["ArmMetrics"];
+            compiled_unenforced: components["schemas"]["ArmMetrics"];
+            coverage: components["schemas"]["CoverageMetrics"];
+        };
+        /** EvidenceProvenance */
+        EvidenceProvenance: {
+            /** Adapter */
+            adapter: string;
+            /** Compiler Version */
+            compiler_version: string;
+            /** Contains Customer Records */
+            contains_customer_records: boolean;
+            /** Data Scope */
+            data_scope: string;
+            /** Dataset */
+            dataset: string;
+            /** Dataset Manifest Sha256 */
+            dataset_manifest_sha256: string;
+            /** Evaluation Timestamp */
+            evaluation_timestamp: string;
+            /** Fixture Source */
+            fixture_source: string;
+            /** Model */
+            model: string;
+            /** Runner Version */
+            runner_version: string;
+            /** Test Count */
+            test_count: number;
+            /** Version */
+            version: string;
+        };
+        /** EvidenceReport */
+        EvidenceReport: {
+            /** Comparison Arms */
+            comparison_arms: string[];
+            /** Deterministic Runtime Boundary */
+            deterministic_runtime_boundary: string;
+            /** Digest Definition */
+            digest_definition: string;
+            /** Evidence Boundary */
+            evidence_boundary: string;
+            fixture_provenance: components["schemas"]["FixtureProvenance"];
+            hashes: components["schemas"]["EvidenceHashes"];
+            /** Limitations */
+            limitations: string[];
+            metrics: components["schemas"]["EvidenceMetrics"];
+            provenance: components["schemas"]["EvidenceProvenance"];
+            /** Report Digest */
+            report_digest: string;
+            /**
+             * Schema Version
+             * @default 0.3
+             * @constant
+             */
+            schema_version: "0.3";
+            /** Test Count */
+            test_count: number;
+            /** Top Failures */
+            top_failures: components["schemas"]["EvidenceFailure"][];
+            /**
+             * Verdict
+             * @enum {string}
+             */
+            verdict: "Changes required" | "Fixture suite passed";
+        };
+        /** EvidenceSourceHash */
+        EvidenceSourceHash: {
+            /** Name */
+            name: string;
+            /** Normalized Sha256 */
+            normalized_sha256: string;
+            /** Normalizer */
+            normalizer: string;
+            /** Normalizer Version */
+            normalizer_version: string;
+            /** Original Sha256 */
+            original_sha256: string;
+            /** Parser */
+            parser: string;
+            /** Parser Version */
+            parser_version: string;
+            /** Version */
+            version: number;
+        };
+        /** EvidenceTestHash */
+        EvidenceTestHash: {
+            /** Spec Sha256 */
+            spec_sha256: string;
+            /** Stable Key */
+            stable_key: string;
+        };
+        /** ExpectedOutcome */
+        ExpectedOutcome: {
+            /** Assertions */
+            assertions?: (components["schemas"]["ArtifactContainsAssertion"] | components["schemas"]["FindingAssertion"] | components["schemas"]["ArtifactDigestAssertion"])[];
+            /** Forbidden Executed Tools */
+            forbidden_executed_tools?: string[];
+            /**
+             * Guarded Decision
+             * @enum {string}
+             */
+            guarded_decision: "allow" | "deny" | "require_approval" | "require_prior_event" | "indeterminate" | "not_applicable";
+            /** Task Outcome */
+            task_outcome: string;
+        };
+        /** FindingAssertion */
+        FindingAssertion: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "finding";
+            /** Related Rules */
+            related_rules: string[];
+            /**
+             * Resolution State
+             * @enum {string}
+             */
+            resolution_state: "open" | "resolved" | "accepted_risk";
+            /** Type */
+            type: string;
         };
         /** FindingOut */
         FindingOut: {
@@ -637,6 +1029,16 @@ export interface components {
         };
         /** FindingPatch */
         FindingPatch: {
+            /** Authority */
+            authority?: string | null;
+            /**
+             * Expected Resolution State
+             * @default open
+             * @enum {string}
+             */
+            expected_resolution_state: "open" | "resolved" | "accepted_risk";
+            /** Loser Rule Id */
+            loser_rule_id?: string | null;
             /**
              * Resolution Note
              * @default
@@ -647,11 +1049,316 @@ export interface components {
              * @enum {string}
              */
             resolution_state: "open" | "resolved" | "accepted_risk";
+            /** Winner Rule Id */
+            winner_rule_id?: string | null;
+        };
+        /** FixtureProvenance */
+        FixtureProvenance: {
+            facts: components["schemas"]["ManifestFactInput"];
+            tests: components["schemas"]["FixtureTestProvenance"];
+            tools: components["schemas"]["ManifestArtifactInput"];
+        };
+        /** FixtureTestProvenance */
+        FixtureTestProvenance: {
+            /** Data Scope */
+            data_scope: string;
+            /** Name */
+            name: string;
+            /** Provenance */
+            provenance: string;
+            /** Version */
+            version: string;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** InputManifest */
+        InputManifest: {
+            compiler: components["schemas"]["ManifestCompiler"];
+            facts: components["schemas"]["ManifestFactInput"];
+            findings: components["schemas"]["ManifestFindings"];
+            /** Rules */
+            rules: components["schemas"]["ManifestRuleInput"][];
+            runtime: components["schemas"]["ManifestRuntime"];
+            /**
+             * Schema Version
+             * @default 0.3
+             * @constant
+             */
+            schema_version: "0.3";
+            /** Sources */
+            sources: components["schemas"]["ManifestSourceInput"][];
+            /** Tests */
+            tests: components["schemas"]["ManifestTestInput"][];
+            tools: components["schemas"]["ManifestArtifactInput"];
+        };
+        /** ManifestArtifactInput */
+        ManifestArtifactInput: {
+            /** Artifact */
+            artifact: string;
+            /** Artifact Sha256 */
+            artifact_sha256: string;
+            /** Source */
+            source: string;
+            /** Source Sha256 */
+            source_sha256: string;
+        };
+        /** ManifestCompiler */
+        ManifestCompiler: {
+            /** Name */
+            name: string;
+            /** Serialization */
+            serialization: string;
+            /** Token Estimator */
+            token_estimator: string;
+            /** Version */
+            version: string;
+        };
+        /** ManifestFactInput */
+        ManifestFactInput: {
+            /** Artifact */
+            artifact: string;
+            /** Artifact Sha256 */
+            artifact_sha256: string;
+            /** Contains Customer Records */
+            contains_customer_records: boolean;
+            /** Data Scope */
+            data_scope: string;
+            /** Source */
+            source: string;
+            /** Source Sha256 */
+            source_sha256: string;
+        };
+        /** ManifestFinding */
+        ManifestFinding: {
+            /** Message */
+            message: string;
+            /** Proof Status */
+            proof_status: string;
+            /** Related Rules */
+            related_rules: string[];
+            /** Resolution Note */
+            resolution_note: string;
+            /**
+             * Resolution State
+             * @enum {string}
+             */
+            resolution_state: "open" | "resolved" | "accepted_risk";
+            /** Severity */
+            severity: string;
+            /** Type */
+            type: string;
+            /** Witness */
+            witness: {
+                [key: string]: unknown;
+            };
+        };
+        /** ManifestFindings */
+        ManifestFindings: {
+            /** Accepted */
+            accepted: components["schemas"]["ManifestFinding"][];
+            /** Unresolved */
+            unresolved: components["schemas"]["ManifestFinding"][];
+        };
+        /** ManifestRuleInput */
+        ManifestRuleInput: {
+            /**
+             * Category
+             * @enum {string}
+             */
+            category: "style" | "workflow" | "knowledge" | "runtime_fact" | "hard_constraint" | "handoff" | "quality";
+            /** Digest */
+            digest: string;
+            /**
+             * Enforcement
+             * @enum {string}
+             */
+            enforcement: "prompt" | "guard" | "test_only" | "human_review";
+            /** Revision */
+            revision: number;
+            /**
+             * Severity
+             * @enum {string}
+             */
+            severity: "low" | "medium" | "high" | "critical";
+            /** Source Documents */
+            source_documents: string[];
+            /** Stable Key */
+            stable_key: string;
+            /** Status */
+            status: string;
+        };
+        /** ManifestRuntime */
+        ManifestRuntime: {
+            /** Adapter */
+            adapter: string;
+            /** Arms */
+            arms: string[];
+            /** Domain */
+            domain: string;
+            /**
+             * Lifecycle
+             * @enum {string}
+             */
+            lifecycle: "pre_tool" | "post_tool" | "conversation" | "offline";
+            /** Policy Schema Version */
+            policy_schema_version: string;
+            /** Runner Input Version */
+            runner_input_version: string;
+        };
+        /** ManifestSourceInput */
+        ManifestSourceInput: {
+            /** Kind */
+            kind: string;
+            /** Name */
+            name: string;
+            /** Normalized Sha256 */
+            normalized_sha256: string;
+            /** Normalizer */
+            normalizer: string;
+            /** Normalizer Version */
+            normalizer_version: string;
+            /** Original Sha256 */
+            original_sha256: string;
+            /** Parser */
+            parser: string;
+            /** Parser Version */
+            parser_version: string;
+            /** Version */
+            version: number;
+        };
+        /** ManifestTestInput */
+        ManifestTestInput: {
+            /** Digest */
+            digest: string;
+            /** Provenance */
+            provenance: string;
+            /** Rule Ids */
+            rule_ids: string[];
+            /** Stable Key */
+            stable_key: string;
+            /** Tags */
+            tags: string[];
+            /** Title */
+            title: string;
+        };
+        /** MeOut */
+        MeOut: {
+            /** Email */
+            email: string | null;
+            /** Id */
+            id: string;
+            /** Workspaces */
+            workspaces: components["schemas"]["WorkspaceOut"][];
+        };
+        /** NotCondition */
+        "NotCondition-Input": {
+            /** Condition */
+            condition: components["schemas"]["Predicate"] | components["schemas"]["AllCondition-Input"] | components["schemas"]["AnyCondition-Input"] | components["schemas"]["NotCondition-Input"];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "not";
+        };
+        /** NotCondition */
+        "NotCondition-Output": {
+            /** Condition */
+            condition: components["schemas"]["Predicate"] | components["schemas"]["AllCondition-Output"] | components["schemas"]["AnyCondition-Output"] | components["schemas"]["NotCondition-Output"];
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "not";
+        };
+        /** OperationError */
+        OperationError: {
+            /** Code */
+            code: string;
+            /** Message */
+            message: string;
+        };
+        /** OperationOut */
+        OperationOut: {
+            /** Attempt Count */
+            attempt_count: number;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            error?: components["schemas"]["OperationError"] | null;
+            /** Id */
+            id: string;
+            /** Kind */
+            kind: string;
+            /** Max Attempts */
+            max_attempts: number;
+            /** Progress */
+            progress: number;
+            /** Resource Id */
+            resource_id: string | null;
+            /** Resource Type */
+            resource_type: ("build" | "run" | "project") | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "queued" | "running" | "succeeded" | "failed" | "dead_lettered" | "cancelled";
+            /**
+             * Updated At
+             * Format: date-time
+             */
+            updated_at: string;
+            /** Workspace Id */
+            workspace_id: string;
+        };
+        /** PolicyEvent */
+        PolicyEvent: {
+            /** Payload */
+            payload?: {
+                [key: string]: unknown;
+            };
+            /** Type */
+            type: string;
+        };
+        /** Predicate */
+        Predicate: {
+            /** Fact */
+            fact: string;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            kind: "predicate";
+            /**
+             * Op
+             * @enum {string}
+             */
+            op: "eq" | "ne" | "lt" | "lte" | "gt" | "gte" | "in" | "not_in" | "exists" | "contains" | "regex";
+            /** Value */
+            value?: unknown;
+        };
+        /** ProjectCreate */
+        ProjectCreate: {
+            /**
+             * Description
+             * @default
+             */
+            description: string;
+            /**
+             * Domain
+             * @default retail
+             */
+            domain: string;
+            /** Name */
+            name: string;
+            /** Slug */
+            slug: string;
+            /** Workspace Id */
+            workspace_id: string;
         };
         /** ProjectOut */
         ProjectOut: {
@@ -672,6 +1379,8 @@ export interface components {
             name: string;
             /** Slug */
             slug: string;
+            /** Workspace Id */
+            workspace_id: string;
         };
         /** ReportOut */
         ReportOut: {
@@ -682,10 +1391,7 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
-            /** Evidence */
-            evidence: {
-                [key: string]: unknown;
-            };
+            evidence: components["schemas"]["EvidenceReport"];
             /** Id */
             id: string;
             /** Rendered Markdown */
@@ -695,14 +1401,41 @@ export interface components {
             /** Verdict */
             verdict: string;
         };
+        /** RuleException */
+        "RuleException-Input": {
+            /** Condition */
+            condition: components["schemas"]["Predicate"] | components["schemas"]["AllCondition-Input"] | components["schemas"]["AnyCondition-Input"] | components["schemas"]["NotCondition-Input"];
+            /**
+             * Effect
+             * @default not_applicable
+             * @enum {string}
+             */
+            effect: "allow" | "not_applicable";
+            /** Reason */
+            reason: string;
+        };
+        /** RuleException */
+        "RuleException-Output": {
+            /** Condition */
+            condition: components["schemas"]["Predicate"] | components["schemas"]["AllCondition-Output"] | components["schemas"]["AnyCondition-Output"] | components["schemas"]["NotCondition-Output"];
+            /**
+             * Effect
+             * @default not_applicable
+             * @enum {string}
+             */
+            effect: "allow" | "not_applicable";
+            /** Reason */
+            reason: string;
+        };
         /** RuleOut */
         RuleOut: {
-            /** Category */
-            category: string;
+            /**
+             * Category
+             * @enum {string}
+             */
+            category: "style" | "workflow" | "knowledge" | "runtime_fact" | "hard_constraint" | "handoff" | "quality";
             /** Condition */
-            condition: {
-                [key: string]: unknown;
-            };
+            condition: (components["schemas"]["Predicate"] | components["schemas"]["AllCondition-Output"] | components["schemas"]["AnyCondition-Output"] | components["schemas"]["NotCondition-Output"]) | components["schemas"]["EmptyCondition"];
             /** Confidence */
             confidence: number;
             /**
@@ -710,16 +1443,23 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
-            /** Decidability */
-            decidability: string;
-            /** Effect */
-            effect: string;
-            /** Enforcement */
-            enforcement: string;
+            /**
+             * Decidability
+             * @enum {string}
+             */
+            decidability: "machine_decidable" | "model_judged" | "human";
+            /**
+             * Effect
+             * @enum {string}
+             */
+            effect: "allow" | "deny" | "require_approval" | "require_prior_event" | "observe_only";
+            /**
+             * Enforcement
+             * @enum {string}
+             */
+            enforcement: "prompt" | "guard" | "test_only" | "human_review";
             /** Exceptions */
-            exceptions: {
-                [key: string]: unknown;
-            }[];
+            exceptions: components["schemas"]["RuleException-Output"][];
             /** Id */
             id: string;
             /** Normative Text */
@@ -727,27 +1467,26 @@ export interface components {
             /** Project Id */
             project_id: string;
             /** Requires */
-            requires: {
-                [key: string]: unknown;
-            }[];
+            requires: components["schemas"]["RuleRequirement"][];
             /** Reviewer Note */
             reviewer_note: string;
             /** Revision */
             revision: number;
-            /** Scope */
-            scope: {
-                [key: string]: unknown;
-            };
-            /** Severity */
-            severity: string;
+            scope: components["schemas"]["RuleScope"];
+            /**
+             * Severity
+             * @enum {string}
+             */
+            severity: "low" | "medium" | "high" | "critical";
             /** Source Refs */
-            source_refs: {
-                [key: string]: unknown;
-            }[];
+            source_refs: components["schemas"]["SourceRef"][];
             /** Stable Key */
             stable_key: string;
-            /** Status */
-            status: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "candidate" | "needs_review" | "approved" | "rejected" | "superseded";
             /** Target Tools */
             target_tools: string[];
             /** Title */
@@ -761,19 +1500,71 @@ export interface components {
         /** RulePatch */
         RulePatch: {
             /** Condition */
-            condition?: {
-                [key: string]: unknown;
-            } | null;
+            condition?: (components["schemas"]["Predicate"] | components["schemas"]["AllCondition-Input"] | components["schemas"]["AnyCondition-Input"] | components["schemas"]["NotCondition-Input"]) | components["schemas"]["EmptyCondition"] | null;
+            /** Decidability */
+            decidability?: ("machine_decidable" | "model_judged" | "human") | null;
+            /** Effect */
+            effect?: ("allow" | "deny" | "require_approval" | "require_prior_event" | "observe_only") | null;
             /** Enforcement */
-            enforcement?: string | null;
+            enforcement?: ("prompt" | "guard" | "test_only" | "human_review") | null;
+            /** Exceptions */
+            exceptions?: components["schemas"]["RuleException-Input"][] | null;
             /** Expected Revision */
             expected_revision: number;
             /** Normative Text */
             normative_text?: string | null;
+            /** Requires */
+            requires?: components["schemas"]["RuleRequirement"][] | null;
             /** Reviewer Note */
             reviewer_note?: string | null;
+            scope?: components["schemas"]["RuleScope"] | null;
+            /** Target Tools */
+            target_tools?: string[] | null;
             /** Title */
             title?: string | null;
+        };
+        /** RuleRequirement */
+        RuleRequirement: {
+            /** Event Type */
+            event_type?: string | null;
+            /** Fact */
+            fact?: string | null;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "prior_event" | "approval" | "fact";
+            /** Match Arguments */
+            match_arguments?: string[];
+            /** Op */
+            op?: ("eq" | "ne" | "lt" | "lte" | "gt" | "gte" | "in" | "not_in" | "exists" | "contains" | "regex") | null;
+            /** Value */
+            value?: unknown;
+        };
+        /** RuleReview */
+        RuleReview: {
+            /** Expected Revision */
+            expected_revision: number;
+            /** Reviewer Note */
+            reviewer_note?: string | null;
+        };
+        /** RuleScope */
+        RuleScope: {
+            /** Domain */
+            domain: string;
+            /**
+             * Lifecycle
+             * @default pre_tool
+             * @enum {string}
+             */
+            lifecycle: "pre_tool" | "post_tool" | "conversation" | "offline";
+            /** Tools */
+            tools?: string[];
+        };
+        /** RunCreate */
+        RunCreate: {
+            /** Build Id */
+            build_id?: string | null;
         };
         /** RunOut */
         RunOut: {
@@ -781,10 +1572,7 @@ export interface components {
             adapter: string;
             /** Build Id */
             build_id: string;
-            /** Dataset Manifest */
-            dataset_manifest: {
-                [key: string]: unknown;
-            };
+            dataset_manifest: components["schemas"]["DatasetManifest"];
             /** Finished At */
             finished_at: string | null;
             /** Id */
@@ -804,8 +1592,35 @@ export interface components {
              * Format: date-time
              */
             started_at: string;
-            /** Status */
-            status: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "queued" | "running" | "succeeded" | "failed" | "cancelled";
+        };
+        /** ScriptedTrajectories */
+        ScriptedTrajectories: {
+            /** Baseline Unenforced */
+            baseline_unenforced?: components["schemas"]["ToolCallStep"][];
+            /** Compiled Enforced */
+            compiled_enforced?: components["schemas"]["ToolCallStep"][];
+            /** Compiled Unenforced */
+            compiled_unenforced?: components["schemas"]["ToolCallStep"][];
+        };
+        /** SourceRef */
+        SourceRef: {
+            /** Document Id */
+            document_id: string;
+            /** Document Name */
+            document_name?: string | null;
+            /** Line End */
+            line_end: number;
+            /** Line Start */
+            line_start: number;
+            /** Quote */
+            quote: string;
+            /** Source Sha256 */
+            source_sha256: string;
         };
         /** TestCaseOut */
         TestCaseOut: {
@@ -820,16 +1635,78 @@ export interface components {
             project_id: string;
             /** Provenance */
             provenance: string;
-            /** Review Status */
-            review_status: string;
-            /** Spec */
-            spec: {
-                [key: string]: unknown;
-            };
+            /**
+             * Review Status
+             * @enum {string}
+             */
+            review_status: "approved" | "needs_review" | "rejected";
+            spec: components["schemas"]["TestCaseSpec"];
             /** Stable Key */
             stable_key: string;
             /** Title */
             title: string;
+        };
+        /** TestCasePatch */
+        TestCasePatch: {
+            /**
+             * Review Status
+             * @enum {string}
+             */
+            review_status: "approved" | "needs_review" | "rejected";
+        };
+        /** TestCaseSpec */
+        TestCaseSpec: {
+            /** Events */
+            events?: components["schemas"]["PolicyEvent"][];
+            expected: components["schemas"]["ExpectedOutcome"];
+            /** Id */
+            id: string;
+            /** Initial State */
+            initial_state: {
+                [key: string]: unknown;
+            };
+            /** Messages */
+            messages: components["schemas"]["TestMessage"][];
+            /** Provenance */
+            provenance: string;
+            /** Rule Ids */
+            rule_ids: string[];
+            /**
+             * Schema Version
+             * @default 0.2
+             * @enum {string}
+             */
+            schema_version: "0.1" | "0.2";
+            scripted_trajectories: components["schemas"]["ScriptedTrajectories"];
+            /** Tags */
+            tags: string[];
+            /** Title */
+            title: string;
+        };
+        /** TestMessage */
+        TestMessage: {
+            /** Content */
+            content: string;
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "system" | "user" | "assistant" | "tool";
+        };
+        /** ToolCallStep */
+        ToolCallStep: {
+            /** Arguments */
+            arguments: {
+                [key: string]: unknown;
+            };
+            /** Name */
+            name: string;
+            /**
+             * Type
+             * @default tool_call
+             * @constant
+             */
+            type: "tool_call";
         };
         /** ValidationError */
         ValidationError: {
@@ -844,6 +1721,39 @@ export interface components {
             /** Error Type */
             type: string;
         };
+        /** WorkspaceBootstrap */
+        WorkspaceBootstrap: {
+            /**
+             * Name
+             * @default My workspace
+             */
+            name: string;
+            /** Slug */
+            slug?: string | null;
+        };
+        /** WorkspaceBootstrapOut */
+        WorkspaceBootstrapOut: {
+            /** Created */
+            created: boolean;
+            project: components["schemas"]["ProjectOut"];
+            workspace: components["schemas"]["WorkspaceOut"];
+        };
+        /** WorkspaceOut */
+        WorkspaceOut: {
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Role */
+            role: string;
+            /** Slug */
+            slug: string;
+        };
     };
     responses: never;
     parameters: never;
@@ -856,7 +1766,9 @@ export interface operations {
     get_build_api_v1_builds__build_id__get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-aletheia-origin-token"?: string | null;
+            };
             path: {
                 build_id: string;
             };
@@ -887,7 +1799,9 @@ export interface operations {
     get_artifact_api_v1_builds__build_id__artifacts__artifact_path__get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-aletheia-origin-token"?: string | null;
+            };
             path: {
                 build_id: string;
                 artifact_path: string;
@@ -919,7 +1833,9 @@ export interface operations {
     public_config_api_v1_config_public_get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-aletheia-origin-token"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -936,6 +1852,15 @@ export interface operations {
                     };
                 };
             };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
         };
     };
     reset_workspace: {
@@ -943,6 +1868,7 @@ export interface operations {
             query?: never;
             header?: {
                 "x-demo-reset-secret"?: string | null;
+                "x-aletheia-origin-token"?: string | null;
             };
             path?: never;
             cookie?: never;
@@ -972,7 +1898,9 @@ export interface operations {
     get_document_api_v1_documents__document_id__get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-aletheia-origin-token"?: string | null;
+            };
             path: {
                 document_id: string;
             };
@@ -1003,7 +1931,9 @@ export interface operations {
     patch_finding_api_v1_findings__finding_id__patch: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-aletheia-origin-token"?: string | null;
+            };
             path: {
                 finding_id: string;
             };
@@ -1038,7 +1968,9 @@ export interface operations {
     get_job_api_v1_jobs__job_id__get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-aletheia-origin-token"?: string | null;
+            };
             path: {
                 job_id: string;
             };
@@ -1052,9 +1984,38 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": components["schemas"]["OperationOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_me_api_v1_me_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-aletheia-origin-token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MeOut"];
                 };
             };
             /** @description Validation Error */
@@ -1071,7 +2032,9 @@ export interface operations {
     list_projects_api_v1_projects_get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-aletheia-origin-token"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -1086,20 +2049,29 @@ export interface operations {
                     "application/json": components["schemas"]["ProjectOut"][];
                 };
             };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
         };
     };
     create_project_api_v1_projects_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-aletheia-origin-token"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
         requestBody: {
             content: {
-                "application/json": {
-                    [key: string]: unknown;
-                };
+                "application/json": components["schemas"]["ProjectCreate"];
             };
         };
         responses: {
@@ -1126,7 +2098,9 @@ export interface operations {
     get_project_api_v1_projects__project_id__get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-aletheia-origin-token"?: string | null;
+            };
             path: {
                 project_id: string;
             };
@@ -1157,7 +2131,10 @@ export interface operations {
     analyze_project_api_v1_projects__project_id__analysis_jobs_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+                "x-aletheia-origin-token"?: string | null;
+            };
             path: {
                 project_id: string;
             };
@@ -1166,14 +2143,12 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Successful Response */
-            200: {
+            202: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": components["schemas"]["OperationOut"];
                 };
             };
             /** @description Validation Error */
@@ -1190,7 +2165,9 @@ export interface operations {
     list_builds_api_v1_projects__project_id__builds_get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-aletheia-origin-token"?: string | null;
+            };
             path: {
                 project_id: string;
             };
@@ -1221,7 +2198,10 @@ export interface operations {
     create_build_api_v1_projects__project_id__builds_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+                "x-aletheia-origin-token"?: string | null;
+            };
             path: {
                 project_id: string;
             };
@@ -1230,12 +2210,12 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Successful Response */
-            201: {
+            202: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["BuildOut"];
+                    "application/json": components["schemas"]["OperationOut"];
                 };
             };
             /** @description Validation Error */
@@ -1252,7 +2232,9 @@ export interface operations {
     list_documents_api_v1_projects__project_id__documents_get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-aletheia-origin-token"?: string | null;
+            };
             path: {
                 project_id: string;
             };
@@ -1283,7 +2265,9 @@ export interface operations {
     upload_document_api_v1_projects__project_id__documents_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-aletheia-origin-token"?: string | null;
+            };
             path: {
                 project_id: string;
             };
@@ -1318,7 +2302,9 @@ export interface operations {
     list_findings_api_v1_projects__project_id__findings_get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-aletheia-origin-token"?: string | null;
+            };
             path: {
                 project_id: string;
             };
@@ -1346,10 +2332,45 @@ export interface operations {
             };
         };
     };
+    reset_project_api_v1_projects__project_id__reset_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-aletheia-origin-token"?: string | null;
+            };
+            path: {
+                project_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     list_rules_api_v1_projects__project_id__rules_get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-aletheia-origin-token"?: string | null;
+            };
             path: {
                 project_id: string;
             };
@@ -1380,7 +2401,10 @@ export interface operations {
     create_run_api_v1_projects__project_id__runs_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+                "x-aletheia-origin-token"?: string | null;
+            };
             path: {
                 project_id: string;
             };
@@ -1388,19 +2412,17 @@ export interface operations {
         };
         requestBody?: {
             content: {
-                "application/json": {
-                    [key: string]: unknown;
-                } | null;
+                "application/json": components["schemas"]["RunCreate"] | null;
             };
         };
         responses: {
             /** @description Successful Response */
-            201: {
+            202: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["RunOut"];
+                    "application/json": components["schemas"]["OperationOut"];
                 };
             };
             /** @description Validation Error */
@@ -1417,7 +2439,9 @@ export interface operations {
     project_summary_api_v1_projects__project_id__summary_get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-aletheia-origin-token"?: string | null;
+            };
             path: {
                 project_id: string;
             };
@@ -1450,7 +2474,9 @@ export interface operations {
     list_tests_api_v1_projects__project_id__test_cases_get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-aletheia-origin-token"?: string | null;
+            };
             path: {
                 project_id: string;
             };
@@ -1481,7 +2507,10 @@ export interface operations {
     generate_tests_api_v1_projects__project_id__test_generation_jobs_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "Idempotency-Key"?: string | null;
+                "x-aletheia-origin-token"?: string | null;
+            };
             path: {
                 project_id: string;
             };
@@ -1490,14 +2519,12 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Successful Response */
-            200: {
+            202: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": components["schemas"]["OperationOut"];
                 };
             };
             /** @description Validation Error */
@@ -1514,7 +2541,9 @@ export interface operations {
     get_report_api_v1_reports__report_id__get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-aletheia-origin-token"?: string | null;
+            };
             path: {
                 report_id: string;
             };
@@ -1547,7 +2576,9 @@ export interface operations {
             query: {
                 format: string;
             };
-            header?: never;
+            header?: {
+                "x-aletheia-origin-token"?: string | null;
+            };
             path: {
                 report_id: string;
             };
@@ -1578,7 +2609,9 @@ export interface operations {
     get_rule_api_v1_rules__rule_id__get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-aletheia-origin-token"?: string | null;
+            };
             path: {
                 rule_id: string;
             };
@@ -1609,7 +2642,9 @@ export interface operations {
     patch_rule_api_v1_rules__rule_id__patch: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-aletheia-origin-token"?: string | null;
+            };
             path: {
                 rule_id: string;
             };
@@ -1644,17 +2679,17 @@ export interface operations {
     approve_rule_api_v1_rules__rule_id__approve_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-aletheia-origin-token"?: string | null;
+            };
             path: {
                 rule_id: string;
             };
             cookie?: never;
         };
-        requestBody?: {
+        requestBody: {
             content: {
-                "application/json": {
-                    [key: string]: unknown;
-                } | null;
+                "application/json": components["schemas"]["RuleReview"];
             };
         };
         responses: {
@@ -1681,17 +2716,17 @@ export interface operations {
     reject_rule_api_v1_rules__rule_id__reject_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-aletheia-origin-token"?: string | null;
+            };
             path: {
                 rule_id: string;
             };
             cookie?: never;
         };
-        requestBody?: {
+        requestBody: {
             content: {
-                "application/json": {
-                    [key: string]: unknown;
-                } | null;
+                "application/json": components["schemas"]["RuleReview"];
             };
         };
         responses: {
@@ -1718,7 +2753,9 @@ export interface operations {
     get_run_api_v1_runs__run_id__get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-aletheia-origin-token"?: string | null;
+            };
             path: {
                 run_id: string;
             };
@@ -1749,7 +2786,9 @@ export interface operations {
     list_reports_api_v1_runs__run_id__reports_get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-aletheia-origin-token"?: string | null;
+            };
             path: {
                 run_id: string;
             };
@@ -1780,7 +2819,9 @@ export interface operations {
     make_report_api_v1_runs__run_id__reports_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-aletheia-origin-token"?: string | null;
+            };
             path: {
                 run_id: string;
             };
@@ -1811,7 +2852,9 @@ export interface operations {
     get_results_api_v1_runs__run_id__results_get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-aletheia-origin-token"?: string | null;
+            };
             path: {
                 run_id: string;
             };
@@ -1844,7 +2887,9 @@ export interface operations {
     get_trace_api_v1_scenario_results__result_id__trace_get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-aletheia-origin-token"?: string | null;
+            };
             path: {
                 result_id: string;
             };
@@ -1877,7 +2922,9 @@ export interface operations {
     patch_test_api_v1_test_cases__test_case_id__patch: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-aletheia-origin-token"?: string | null;
+            };
             path: {
                 test_case_id: string;
             };
@@ -1885,9 +2932,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": {
-                    [key: string]: unknown;
-                };
+                "application/json": components["schemas"]["TestCasePatch"];
             };
         };
         responses: {
@@ -1898,6 +2943,74 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TestCaseOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bootstrap_workspace_api_v1_workspaces_bootstrap_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-aletheia-origin-token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkspaceBootstrap"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkspaceBootstrapOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reset_personal_workspace_api_v1_workspaces__workspace_id__reset_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-aletheia-origin-token"?: string | null;
+            };
+            path: {
+                workspace_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProjectOut"];
                 };
             };
             /** @description Validation Error */

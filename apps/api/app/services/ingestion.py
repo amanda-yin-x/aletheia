@@ -19,6 +19,8 @@ MIME_TYPES = {
     ".yml": "application/yaml",
     ".pdf": "application/pdf",
 }
+PARSER_VERSION = "1.0.0"
+NORMALIZER_VERSION = "1.0.0"
 
 
 def parse_document(filename: str, payload: bytes, *, max_bytes: int = 2 * 1024 * 1024) -> tuple[str, str, dict[str, Any]]:
@@ -36,10 +38,23 @@ def parse_document(filename: str, payload: bytes, *, max_bytes: int = 2 * 1024 *
             text = "\n\n".join(pages).strip()
             if len(text) < 20:
                 raise ServiceError("pdf_has_no_text", "This PDF has no usable text. OCR and scanned PDFs are not supported.")
-            provenance = {"pages": len(pages), "locator": "page_and_normalized_line"}
+            provenance = {
+                "pages": len(pages),
+                "locator": "page_and_normalized_line",
+                "parser": "pypdf",
+                "parser_version": PARSER_VERSION,
+                "normalizer": "aletheia_text",
+                "normalizer_version": NORMALIZER_VERSION,
+            }
         else:
             text = payload.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n")
-            provenance = {"locator": "normalized_line"}
+            provenance = {
+                "locator": "normalized_line",
+                "parser": "utf8_text",
+                "parser_version": PARSER_VERSION,
+                "normalizer": "aletheia_text",
+                "normalizer_version": NORMALIZER_VERSION,
+            }
             if suffix == ".json":
                 json.loads(text)
             elif suffix in {".yaml", ".yml"}:
@@ -49,4 +64,3 @@ def parse_document(filename: str, payload: bytes, *, max_bytes: int = 2 * 1024 *
     except (json.JSONDecodeError, yaml.YAMLError) as error:
         raise ServiceError("invalid_structured_document", f"The file could not be parsed safely: {error}") from error
     return text, MIME_TYPES[suffix], provenance
-

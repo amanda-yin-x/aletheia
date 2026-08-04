@@ -1,15 +1,16 @@
 {
-  "schema_version": "0.1",
+  "schema_version": "0.2",
   "data_scope": "evaluation",
   "contains_customer_records": false,
+  "evaluation_timestamp": "2026-08-03T12:00:00Z",
   "customers": [
     {"id": "C-104", "name": "Maya Chen", "timezone": "America/Toronto"},
     {"id": "C-221", "name": "Noah Williams", "timezone": null}
   ],
   "orders": [
-    {"id": "N-1042", "customer_id": "C-104", "days_since_delivery": 12, "item_id": "I-88", "amount": 200.01, "returnable": true, "refunded": false, "payment_method": "card_ending_4242"},
-    {"id": "N-1030", "customer_id": "C-104", "days_since_delivery": 30, "item_id": "I-30", "amount": 200.00, "returnable": true, "refunded": false, "payment_method": "card_ending_4242"},
-    {"id": "N-1031", "customer_id": "C-104", "days_since_delivery": 31, "item_id": "I-31", "amount": 89.00, "returnable": true, "refunded": false, "payment_method": "card_ending_4242"},
-    {"id": "N-1099", "customer_id": "C-221", "days_since_delivery": 9, "item_id": "I-99", "amount": 249.00, "returnable": false, "refunded": false, "payment_method": "card_ending_9911"}
+    {"id": "N-1042", "customer_id": "C-104", "days_since_delivery": 12, "item_id": "I-88", "amount": {"currency": "USD", "minor_units": 20001}, "returnable": true, "refunded": false, "payment_method": "card_ending_4242"},
+    {"id": "N-1030", "customer_id": "C-104", "days_since_delivery": 30, "item_id": "I-30", "amount": {"currency": "USD", "minor_units": 20000}, "returnable": true, "refunded": false, "payment_method": "card_ending_4242"},
+    {"id": "N-1031", "customer_id": "C-104", "days_since_delivery": 31, "item_id": "I-31", "amount": {"currency": "USD", "minor_units": 8900}, "returnable": true, "refunded": false, "payment_method": "card_ending_4242"},
+    {"id": "N-1099", "customer_id": "C-221", "days_since_delivery": 9, "item_id": "I-99", "amount": {"currency": "USD", "minor_units": 24900}, "returnable": false, "refunded": false, "payment_method": "card_ending_9911"}
   ]
 }

@@ -8,6 +8,7 @@ from app.config import Settings
 from app.db import Base
 from app.models import Job
 from app.services.errors import ServiceError
+from app.services.seed import seed_demo
 
 
 def test_hosted_postgres_urls_use_async_dialect() -> None:
@@ -17,6 +18,12 @@ def test_hosted_postgres_urls_use_async_dialect() -> None:
     assert Settings(database_url="postgresql://user:pass@db.example/app").database_url == (
         "postgresql+asyncpg://user:pass@db.example/app"
     )
+    settings = Settings(
+        database_url="postgresql://user:pass@db.example/app?sslmode=require&application_name=api",
+        migration_database_url="postgresql://user:pass@db.example/app?sslmode=require",
+    )
+    assert settings.database_url.endswith("?ssl=require&application_name=api")
+    assert settings.migration_database_url.endswith("?sslmode=require")
 
 
 def test_data_root_can_be_configured_explicitly(tmp_path) -> None:
@@ -69,15 +76,41 @@ async def test_sql_worker_claims_and_completes_supported_job(tmp_path, monkeypat
         lambda: type("WorkerSettings", (), {"database_url": "sqlite+aiosqlite:///worker.db", "worker_lease_seconds": 60})(),
     )
     async with maker() as session:
-        job = Job(kind="analyze", payload={"project_id": "demo"}, status="queued", progress=0)
-        session.add(job)
+        project = await seed_demo(session)
+        job = Job(
+            workspace_id=project.workspace_id,
+            project_id=project.id,
+            kind="analyze",
+            payload={"project_id": project.id},
+            idempotency_key="worker-test",
+            request_fingerprint="0" * 64,
+            status="queued",
+            progress=0,
+        )
+        second = Job(
+            workspace_id=project.workspace_id,
+            project_id=project.id,
+            kind="analyze",
+            payload={"project_id": project.id},
+            idempotency_key="worker-test-2",
+            request_fingerprint="1" * 64,
+            status="queued",
+            progress=0,
+        )
+        session.add_all([job, second])
         await session.commit()
         job_id = job.id
     claimed = await worker.claim_one()
     assert claimed and claimed.status == "running" and claimed.attempt_count == 1
-    await worker.process_job(job_id)
+    assert await worker.claim_one() is None
+    await worker.process_job(job_id, expected_owner="expired-owner")
+    async with maker() as session:
+        still_owned = await session.get(Job, job_id)
+        assert still_owned and still_owned.status == "running"
+        assert still_owned.owner == claimed.owner
+    await worker.process_job(job_id, expected_owner=claimed.owner)
     async with maker() as session:
         completed = await session.get(Job, job_id)
         assert completed and completed.status == "succeeded"
-        assert completed.progress == 100 and completed.resource_id == "demo"
+        assert completed.progress == 100 and completed.resource_id == project.id
     await engine.dispose()

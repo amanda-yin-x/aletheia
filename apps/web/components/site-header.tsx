@@ -11,9 +11,15 @@ import {
   Play,
   Search,
   ShieldCheck,
+  LogOut,
+  UserRound,
   Workflow,
   X,
 } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { api, ensureCsrfToken } from "@/lib/api";
+import { CSRF_HEADER_NAME } from "@/lib/security";
+import type { Account } from "@/lib/types";
 
 const commands = [
   { label: "Why policy CI matters", detail: "See the failure scenario", href: "#why", icon: ShieldCheck },
@@ -39,6 +45,7 @@ const commands = [
 export function SiteHeader() {
   const pathname = usePathname();
   if (pathname === "/") return <MarketingHeader />;
+  const protectedPath = pathname === "/demo" || ["/projects/", "/runs/", "/reports/", "/scenario-results/"].some((prefix) => pathname.startsWith(prefix));
   return (
     <header className="site-header">
       <Link href="/" className="brand" aria-label="Aletheia home">
@@ -46,8 +53,56 @@ export function SiteHeader() {
         <span>Aletheia</span>
         <span className="brand-tag">Policy CI</span>
       </Link>
-      <div className="header-note"><span className="status-dot" /> Deterministic evaluation</div>
+      {protectedPath ? <AccountMenu /> : <div className="header-note"><span className="status-dot" /> Deterministic evaluation</div>}
     </header>
+  );
+}
+
+function AccountMenu() {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const [loggingOut, setLoggingOut] = useState(false);
+  const [logoutError, setLogoutError] = useState<string | null>(null);
+  const account = useQuery({
+    queryKey: ["account"],
+    queryFn: () => api<Account>("/api/v1/me"),
+    retry: false,
+    refetchInterval: 10 * 60 * 1_000,
+  });
+  const label = account.data?.email || "Account";
+
+  async function logout() {
+    setLoggingOut(true);
+    setLogoutError(null);
+    try {
+      const token = await ensureCsrfToken();
+      const response = await fetch("/auth/logout", { method: "POST", credentials: "same-origin", headers: { [CSRF_HEADER_NAME]: token } });
+      if (!response.ok) throw new Error("Logout failed.");
+      queryClient.clear();
+      if ("caches" in window) {
+        const names = await window.caches.keys();
+        await Promise.all(names.map((name) => window.caches.delete(name)));
+      }
+      router.replace("/login");
+      router.refresh();
+    } catch {
+      setLogoutError("Could not sign out. Please try again.");
+    } finally {
+      setLoggingOut(false);
+    }
+  }
+
+  return (
+    <details className="account-menu">
+      <summary><UserRound size={16} /><span>{label}</span></summary>
+      <div className="account-popover">
+        <small>Signed in</small>
+        <strong>{label}</strong>
+        {account.data?.workspaces?.[0] && <span>{account.data.workspaces[0].name} · {account.data.workspaces[0].role}</span>}
+        <button type="button" onClick={logout} disabled={loggingOut}><LogOut size={15} /> {loggingOut ? "Signing out…" : "Sign out"}</button>
+        {logoutError && <span role="alert" className="account-error">{logoutError}</span>}
+      </div>
+    </details>
   );
 }
 

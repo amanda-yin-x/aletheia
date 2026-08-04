@@ -1,5 +1,12 @@
 # Copy/paste build prompt: Aletheia Policy CI
 
+> **Historical and superseded.** This greenfield prompt describes the repository
+> before the current implementation and must not be used as a current capability
+> statement or parallel build specification. Use [README.md](README.md),
+> [docs/capabilities.json](docs/capabilities.json), and
+> [docs/current-state-and-production-roadmap.md](docs/current-state-and-production-roadmap.md)
+> for the operating boundary and next work.
+
 You are the lead product engineer and product designer for a new repository. Build the application described below end to end. The repository is empty at the start.
 
 Do not stop after proposing a plan. Inspect the environment, make a short implementation plan, then create the complete working repository, run it, test it, inspect the rendered product, and fix defects you find. Work autonomously unless a genuine permission, credential, or irreversible-choice blocker requires the user. Do not ask the user to choose routine libraries or design details; those decisions are already fixed below.

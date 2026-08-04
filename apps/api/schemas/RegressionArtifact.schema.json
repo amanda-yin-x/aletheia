@@ -1,0 +1,430 @@
+{
+  "$defs": {
+    "ArtifactContainsAssertion": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact": {
+          "minLength": 1,
+          "title": "Artifact",
+          "type": "string"
+        },
+        "kind": {
+          "const": "artifact_contains",
+          "default": "artifact_contains",
+          "title": "Kind",
+          "type": "string"
+        },
+        "text": {
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "artifact",
+        "text"
+      ],
+      "title": "ArtifactContainsAssertion",
+      "type": "object"
+    },
+    "ArtifactDigestAssertion": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact": {
+          "minLength": 1,
+          "title": "Artifact",
+          "type": "string"
+        },
+        "kind": {
+          "const": "artifact_digest",
+          "default": "artifact_digest",
+          "title": "Kind",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "artifact",
+        "sha256"
+      ],
+      "title": "ArtifactDigestAssertion",
+      "type": "object"
+    },
+    "CompiledTestRecord": {
+      "additionalProperties": false,
+      "properties": {
+        "provenance": {
+          "title": "Provenance",
+          "type": "string"
+        },
+        "review_status": {
+          "enum": [
+            "approved",
+            "needs_review",
+            "rejected"
+          ],
+          "title": "Review Status",
+          "type": "string"
+        },
+        "spec": {
+          "$ref": "#/$defs/TestCaseSpec"
+        },
+        "stable_key": {
+          "title": "Stable Key",
+          "type": "string"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        }
+      },
+      "required": [
+        "stable_key",
+        "title",
+        "provenance",
+        "review_status",
+        "spec"
+      ],
+      "title": "CompiledTestRecord",
+      "type": "object"
+    },
+    "ExpectedOutcome": {
+      "additionalProperties": false,
+      "properties": {
+        "assertions": {
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "artifact_contains": "#/$defs/ArtifactContainsAssertion",
+                "artifact_digest": "#/$defs/ArtifactDigestAssertion",
+                "finding": "#/$defs/FindingAssertion"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/ArtifactContainsAssertion"
+              },
+              {
+                "$ref": "#/$defs/FindingAssertion"
+              },
+              {
+                "$ref": "#/$defs/ArtifactDigestAssertion"
+              }
+            ]
+          },
+          "title": "Assertions",
+          "type": "array"
+        },
+        "forbidden_executed_tools": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Forbidden Executed Tools",
+          "type": "array"
+        },
+        "guarded_decision": {
+          "enum": [
+            "allow",
+            "deny",
+            "require_approval",
+            "require_prior_event",
+            "indeterminate",
+            "not_applicable"
+          ],
+          "title": "Guarded Decision",
+          "type": "string"
+        },
+        "task_outcome": {
+          "minLength": 1,
+          "title": "Task Outcome",
+          "type": "string"
+        }
+      },
+      "required": [
+        "guarded_decision",
+        "task_outcome"
+      ],
+      "title": "ExpectedOutcome",
+      "type": "object"
+    },
+    "FindingAssertion": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "finding",
+          "default": "finding",
+          "title": "Kind",
+          "type": "string"
+        },
+        "related_rules": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Related Rules",
+          "type": "array"
+        },
+        "resolution_state": {
+          "enum": [
+            "open",
+            "resolved",
+            "accepted_risk"
+          ],
+          "title": "Resolution State",
+          "type": "string"
+        },
+        "type": {
+          "minLength": 1,
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "related_rules",
+        "resolution_state"
+      ],
+      "title": "FindingAssertion",
+      "type": "object"
+    },
+    "PolicyEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "payload": {
+          "additionalProperties": true,
+          "title": "Payload",
+          "type": "object"
+        },
+        "type": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "PolicyEvent",
+      "type": "object"
+    },
+    "RegressionSuiteDescriptor": {
+      "additionalProperties": false,
+      "properties": {
+        "data_scope": {
+          "title": "Data Scope",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "provenance": {
+          "title": "Provenance",
+          "type": "string"
+        },
+        "version": {
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version",
+        "data_scope",
+        "provenance"
+      ],
+      "title": "RegressionSuiteDescriptor",
+      "type": "object"
+    },
+    "ScriptedTrajectories": {
+      "additionalProperties": false,
+      "properties": {
+        "baseline_unenforced": {
+          "items": {
+            "$ref": "#/$defs/ToolCallStep"
+          },
+          "title": "Baseline Unenforced",
+          "type": "array"
+        },
+        "compiled_enforced": {
+          "items": {
+            "$ref": "#/$defs/ToolCallStep"
+          },
+          "title": "Compiled Enforced",
+          "type": "array"
+        },
+        "compiled_unenforced": {
+          "items": {
+            "$ref": "#/$defs/ToolCallStep"
+          },
+          "title": "Compiled Unenforced",
+          "type": "array"
+        }
+      },
+      "title": "ScriptedTrajectories",
+      "type": "object"
+    },
+    "TestCaseSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "events": {
+          "items": {
+            "$ref": "#/$defs/PolicyEvent"
+          },
+          "title": "Events",
+          "type": "array"
+        },
+        "expected": {
+          "$ref": "#/$defs/ExpectedOutcome"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "initial_state": {
+          "additionalProperties": true,
+          "title": "Initial State",
+          "type": "object"
+        },
+        "messages": {
+          "items": {
+            "$ref": "#/$defs/TestMessage"
+          },
+          "title": "Messages",
+          "type": "array"
+        },
+        "provenance": {
+          "title": "Provenance",
+          "type": "string"
+        },
+        "rule_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Rule Ids",
+          "type": "array"
+        },
+        "schema_version": {
+          "default": "0.2",
+          "enum": [
+            "0.1",
+            "0.2"
+          ],
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "scripted_trajectories": {
+          "$ref": "#/$defs/ScriptedTrajectories"
+        },
+        "tags": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Tags",
+          "type": "array"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "title",
+        "provenance",
+        "rule_ids",
+        "tags",
+        "messages",
+        "initial_state",
+        "expected",
+        "scripted_trajectories"
+      ],
+      "title": "TestCaseSpec",
+      "type": "object"
+    },
+    "TestMessage": {
+      "additionalProperties": false,
+      "properties": {
+        "content": {
+          "title": "Content",
+          "type": "string"
+        },
+        "role": {
+          "enum": [
+            "system",
+            "user",
+            "assistant",
+            "tool"
+          ],
+          "title": "Role",
+          "type": "string"
+        }
+      },
+      "required": [
+        "role",
+        "content"
+      ],
+      "title": "TestMessage",
+      "type": "object"
+    },
+    "ToolCallStep": {
+      "additionalProperties": false,
+      "properties": {
+        "arguments": {
+          "additionalProperties": true,
+          "title": "Arguments",
+          "type": "object"
+        },
+        "name": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "type": {
+          "const": "tool_call",
+          "default": "tool_call",
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "arguments"
+      ],
+      "title": "ToolCallStep",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "0.2",
+      "default": "0.2",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "suite": {
+      "$ref": "#/$defs/RegressionSuiteDescriptor"
+    },
+    "tests": {
+      "items": {
+        "$ref": "#/$defs/CompiledTestRecord"
+      },
+      "title": "Tests",
+      "type": "array"
+    }
+  },
+  "required": [
+    "suite",
+    "tests"
+  ],
+  "title": "RegressionArtifact",
+  "type": "object"
+}

@@ -1,0 +1,617 @@
+{
+  "$defs": {
+    "AllCondition": {
+      "additionalProperties": false,
+      "properties": {
+        "conditions": {
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "all": "#/$defs/AllCondition",
+                "any": "#/$defs/AnyCondition",
+                "not": "#/$defs/NotCondition",
+                "predicate": "#/$defs/Predicate"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/Predicate"
+              },
+              {
+                "$ref": "#/$defs/AllCondition"
+              },
+              {
+                "$ref": "#/$defs/AnyCondition"
+              },
+              {
+                "$ref": "#/$defs/NotCondition"
+              }
+            ]
+          },
+          "minItems": 1,
+          "title": "Conditions",
+          "type": "array"
+        },
+        "kind": {
+          "const": "all",
+          "default": "all",
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "conditions"
+      ],
+      "title": "AllCondition",
+      "type": "object"
+    },
+    "AnyCondition": {
+      "additionalProperties": false,
+      "properties": {
+        "conditions": {
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "all": "#/$defs/AllCondition",
+                "any": "#/$defs/AnyCondition",
+                "not": "#/$defs/NotCondition",
+                "predicate": "#/$defs/Predicate"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/Predicate"
+              },
+              {
+                "$ref": "#/$defs/AllCondition"
+              },
+              {
+                "$ref": "#/$defs/AnyCondition"
+              },
+              {
+                "$ref": "#/$defs/NotCondition"
+              }
+            ]
+          },
+          "minItems": 1,
+          "title": "Conditions",
+          "type": "array"
+        },
+        "kind": {
+          "const": "any",
+          "default": "any",
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "conditions"
+      ],
+      "title": "AnyCondition",
+      "type": "object"
+    },
+    "CompiledSourceRef": {
+      "additionalProperties": false,
+      "properties": {
+        "document_name": {
+          "title": "Document Name",
+          "type": "string"
+        },
+        "document_version": {
+          "minimum": 1,
+          "title": "Document Version",
+          "type": "integer"
+        },
+        "line_end": {
+          "minimum": 1,
+          "title": "Line End",
+          "type": "integer"
+        },
+        "line_start": {
+          "minimum": 1,
+          "title": "Line Start",
+          "type": "integer"
+        },
+        "quote": {
+          "minLength": 1,
+          "title": "Quote",
+          "type": "string"
+        },
+        "source_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Source Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "document_name",
+        "document_version",
+        "line_start",
+        "line_end",
+        "quote",
+        "source_sha256"
+      ],
+      "title": "CompiledSourceRef",
+      "type": "object"
+    },
+    "EmptyCondition": {
+      "additionalProperties": false,
+      "description": "Explicitly validates the persisted empty condition used by human-only rules.",
+      "properties": {},
+      "title": "EmptyCondition",
+      "type": "object"
+    },
+    "NotCondition": {
+      "additionalProperties": false,
+      "properties": {
+        "condition": {
+          "discriminator": {
+            "mapping": {
+              "all": "#/$defs/AllCondition",
+              "any": "#/$defs/AnyCondition",
+              "not": "#/$defs/NotCondition",
+              "predicate": "#/$defs/Predicate"
+            },
+            "propertyName": "kind"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Predicate"
+            },
+            {
+              "$ref": "#/$defs/AllCondition"
+            },
+            {
+              "$ref": "#/$defs/AnyCondition"
+            },
+            {
+              "$ref": "#/$defs/NotCondition"
+            }
+          ],
+          "title": "Condition"
+        },
+        "kind": {
+          "const": "not",
+          "default": "not",
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "condition"
+      ],
+      "title": "NotCondition",
+      "type": "object"
+    },
+    "Predicate": {
+      "additionalProperties": false,
+      "properties": {
+        "fact": {
+          "title": "Fact",
+          "type": "string"
+        },
+        "kind": {
+          "const": "predicate",
+          "default": "predicate",
+          "title": "Kind",
+          "type": "string"
+        },
+        "op": {
+          "enum": [
+            "eq",
+            "ne",
+            "lt",
+            "lte",
+            "gt",
+            "gte",
+            "in",
+            "not_in",
+            "exists",
+            "contains",
+            "regex"
+          ],
+          "title": "Op",
+          "type": "string"
+        },
+        "value": {
+          "default": null,
+          "title": "Value"
+        }
+      },
+      "required": [
+        "fact",
+        "op"
+      ],
+      "title": "Predicate",
+      "type": "object"
+    },
+    "RuleException": {
+      "additionalProperties": false,
+      "properties": {
+        "condition": {
+          "discriminator": {
+            "mapping": {
+              "all": "#/$defs/AllCondition",
+              "any": "#/$defs/AnyCondition",
+              "not": "#/$defs/NotCondition",
+              "predicate": "#/$defs/Predicate"
+            },
+            "propertyName": "kind"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Predicate"
+            },
+            {
+              "$ref": "#/$defs/AllCondition"
+            },
+            {
+              "$ref": "#/$defs/AnyCondition"
+            },
+            {
+              "$ref": "#/$defs/NotCondition"
+            }
+          ],
+          "title": "Condition"
+        },
+        "effect": {
+          "default": "not_applicable",
+          "enum": [
+            "allow",
+            "not_applicable"
+          ],
+          "title": "Effect",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 1000,
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "condition",
+        "reason"
+      ],
+      "title": "RuleException",
+      "type": "object"
+    },
+    "RuleIR": {
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "enum": [
+            "style",
+            "workflow",
+            "knowledge",
+            "runtime_fact",
+            "hard_constraint",
+            "handoff",
+            "quality"
+          ],
+          "title": "Category",
+          "type": "string"
+        },
+        "condition": {
+          "anyOf": [
+            {
+              "discriminator": {
+                "mapping": {
+                  "all": "#/$defs/AllCondition",
+                  "any": "#/$defs/AnyCondition",
+                  "not": "#/$defs/NotCondition",
+                  "predicate": "#/$defs/Predicate"
+                },
+                "propertyName": "kind"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/$defs/Predicate"
+                },
+                {
+                  "$ref": "#/$defs/AllCondition"
+                },
+                {
+                  "$ref": "#/$defs/AnyCondition"
+                },
+                {
+                  "$ref": "#/$defs/NotCondition"
+                }
+              ]
+            },
+            {
+              "$ref": "#/$defs/EmptyCondition"
+            }
+          ],
+          "title": "Condition"
+        },
+        "confidence": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "decidability": {
+          "enum": [
+            "machine_decidable",
+            "model_judged",
+            "human"
+          ],
+          "title": "Decidability",
+          "type": "string"
+        },
+        "effect": {
+          "enum": [
+            "allow",
+            "deny",
+            "require_approval",
+            "require_prior_event",
+            "observe_only"
+          ],
+          "title": "Effect",
+          "type": "string"
+        },
+        "enforcement": {
+          "enum": [
+            "prompt",
+            "guard",
+            "test_only",
+            "human_review"
+          ],
+          "title": "Enforcement",
+          "type": "string"
+        },
+        "exceptions": {
+          "items": {
+            "$ref": "#/$defs/RuleException"
+          },
+          "title": "Exceptions",
+          "type": "array"
+        },
+        "normative_text": {
+          "title": "Normative Text",
+          "type": "string"
+        },
+        "requires": {
+          "items": {
+            "$ref": "#/$defs/RuleRequirement"
+          },
+          "title": "Requires",
+          "type": "array"
+        },
+        "reviewer_note": {
+          "default": "",
+          "title": "Reviewer Note",
+          "type": "string"
+        },
+        "revision": {
+          "minimum": 1,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "schema_version": {
+          "const": "0.2",
+          "default": "0.2",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "scope": {
+          "$ref": "#/$defs/RuleScope"
+        },
+        "severity": {
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "critical"
+          ],
+          "title": "Severity",
+          "type": "string"
+        },
+        "source_refs": {
+          "items": {
+            "$ref": "#/$defs/CompiledSourceRef"
+          },
+          "title": "Source Refs",
+          "type": "array"
+        },
+        "stable_key": {
+          "title": "Stable Key",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "candidate",
+            "needs_review",
+            "approved",
+            "rejected",
+            "superseded"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "target_tools": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Target Tools",
+          "type": "array"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        }
+      },
+      "required": [
+        "stable_key",
+        "revision",
+        "title",
+        "normative_text",
+        "category",
+        "effect",
+        "severity",
+        "status",
+        "confidence",
+        "scope",
+        "condition",
+        "enforcement",
+        "decidability",
+        "source_refs"
+      ],
+      "title": "RuleIR",
+      "type": "object"
+    },
+    "RuleRequirement": {
+      "additionalProperties": false,
+      "properties": {
+        "event_type": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Event Type"
+        },
+        "fact": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fact"
+        },
+        "kind": {
+          "enum": [
+            "prior_event",
+            "approval",
+            "fact"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "match_arguments": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Match Arguments",
+          "type": "array"
+        },
+        "op": {
+          "anyOf": [
+            {
+              "enum": [
+                "eq",
+                "ne",
+                "lt",
+                "lte",
+                "gt",
+                "gte",
+                "in",
+                "not_in",
+                "exists",
+                "contains",
+                "regex"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Op"
+        },
+        "value": {
+          "default": null,
+          "title": "Value"
+        }
+      },
+      "required": [
+        "kind"
+      ],
+      "title": "RuleRequirement",
+      "type": "object"
+    },
+    "RuleScope": {
+      "additionalProperties": false,
+      "properties": {
+        "domain": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Domain",
+          "type": "string"
+        },
+        "lifecycle": {
+          "default": "pre_tool",
+          "enum": [
+            "pre_tool",
+            "post_tool",
+            "conversation",
+            "offline"
+          ],
+          "title": "Lifecycle",
+          "type": "string"
+        },
+        "tools": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Tools",
+          "type": "array"
+        }
+      },
+      "required": [
+        "domain"
+      ],
+      "title": "RuleScope",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "default_decision": {
+      "enum": [
+        "allow",
+        "deny",
+        "indeterminate"
+      ],
+      "title": "Default Decision",
+      "type": "string"
+    },
+    "rules": {
+      "items": {
+        "$ref": "#/$defs/RuleIR"
+      },
+      "title": "Rules",
+      "type": "array"
+    },
+    "schema_version": {
+      "const": "0.2",
+      "default": "0.2",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "scope_statement": {
+      "title": "Scope Statement",
+      "type": "string"
+    }
+  },
+  "required": [
+    "default_decision",
+    "scope_statement",
+    "rules"
+  ],
+  "title": "PolicyArtifact",
+  "type": "object"
+}

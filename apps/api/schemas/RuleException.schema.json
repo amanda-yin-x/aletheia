@@ -1,0 +1,230 @@
+{
+  "$defs": {
+    "AllCondition": {
+      "additionalProperties": false,
+      "properties": {
+        "conditions": {
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "all": "#/$defs/AllCondition",
+                "any": "#/$defs/AnyCondition",
+                "not": "#/$defs/NotCondition",
+                "predicate": "#/$defs/Predicate"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/Predicate"
+              },
+              {
+                "$ref": "#/$defs/AllCondition"
+              },
+              {
+                "$ref": "#/$defs/AnyCondition"
+              },
+              {
+                "$ref": "#/$defs/NotCondition"
+              }
+            ]
+          },
+          "minItems": 1,
+          "title": "Conditions",
+          "type": "array"
+        },
+        "kind": {
+          "const": "all",
+          "default": "all",
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "conditions"
+      ],
+      "title": "AllCondition",
+      "type": "object"
+    },
+    "AnyCondition": {
+      "additionalProperties": false,
+      "properties": {
+        "conditions": {
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "all": "#/$defs/AllCondition",
+                "any": "#/$defs/AnyCondition",
+                "not": "#/$defs/NotCondition",
+                "predicate": "#/$defs/Predicate"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/Predicate"
+              },
+              {
+                "$ref": "#/$defs/AllCondition"
+              },
+              {
+                "$ref": "#/$defs/AnyCondition"
+              },
+              {
+                "$ref": "#/$defs/NotCondition"
+              }
+            ]
+          },
+          "minItems": 1,
+          "title": "Conditions",
+          "type": "array"
+        },
+        "kind": {
+          "const": "any",
+          "default": "any",
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "conditions"
+      ],
+      "title": "AnyCondition",
+      "type": "object"
+    },
+    "NotCondition": {
+      "additionalProperties": false,
+      "properties": {
+        "condition": {
+          "discriminator": {
+            "mapping": {
+              "all": "#/$defs/AllCondition",
+              "any": "#/$defs/AnyCondition",
+              "not": "#/$defs/NotCondition",
+              "predicate": "#/$defs/Predicate"
+            },
+            "propertyName": "kind"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Predicate"
+            },
+            {
+              "$ref": "#/$defs/AllCondition"
+            },
+            {
+              "$ref": "#/$defs/AnyCondition"
+            },
+            {
+              "$ref": "#/$defs/NotCondition"
+            }
+          ],
+          "title": "Condition"
+        },
+        "kind": {
+          "const": "not",
+          "default": "not",
+          "title": "Kind",
+          "type": "string"
+        }
+      },
+      "required": [
+        "condition"
+      ],
+      "title": "NotCondition",
+      "type": "object"
+    },
+    "Predicate": {
+      "additionalProperties": false,
+      "properties": {
+        "fact": {
+          "title": "Fact",
+          "type": "string"
+        },
+        "kind": {
+          "const": "predicate",
+          "default": "predicate",
+          "title": "Kind",
+          "type": "string"
+        },
+        "op": {
+          "enum": [
+            "eq",
+            "ne",
+            "lt",
+            "lte",
+            "gt",
+            "gte",
+            "in",
+            "not_in",
+            "exists",
+            "contains",
+            "regex"
+          ],
+          "title": "Op",
+          "type": "string"
+        },
+        "value": {
+          "default": null,
+          "title": "Value"
+        }
+      },
+      "required": [
+        "fact",
+        "op"
+      ],
+      "title": "Predicate",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "condition": {
+      "discriminator": {
+        "mapping": {
+          "all": "#/$defs/AllCondition",
+          "any": "#/$defs/AnyCondition",
+          "not": "#/$defs/NotCondition",
+          "predicate": "#/$defs/Predicate"
+        },
+        "propertyName": "kind"
+      },
+      "oneOf": [
+        {
+          "$ref": "#/$defs/Predicate"
+        },
+        {
+          "$ref": "#/$defs/AllCondition"
+        },
+        {
+          "$ref": "#/$defs/AnyCondition"
+        },
+        {
+          "$ref": "#/$defs/NotCondition"
+        }
+      ],
+      "title": "Condition"
+    },
+    "effect": {
+      "default": "not_applicable",
+      "enum": [
+        "allow",
+        "not_applicable"
+      ],
+      "title": "Effect",
+      "type": "string"
+    },
+    "reason": {
+      "maxLength": 1000,
+      "minLength": 1,
+      "title": "Reason",
+      "type": "string"
+    }
+  },
+  "required": [
+    "condition",
+    "reason"
+  ],
+  "title": "RuleException",
+  "type": "object"
+}

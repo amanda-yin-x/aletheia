@@ -1,4 +1,610 @@
 {
+  "$defs": {
+    "ArmMetrics": {
+      "additionalProperties": false,
+      "properties": {
+        "attempted_violation_rate": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Attempted Violation Rate",
+          "type": "number"
+        },
+        "cases": {
+          "minimum": 0,
+          "title": "Cases",
+          "type": "integer"
+        },
+        "cost": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Cost"
+        },
+        "executed_violation_rate": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Executed Violation Rate",
+          "type": "number"
+        },
+        "false_block_rate": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "False Block Rate",
+          "type": "number"
+        },
+        "input_tokens": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Input Tokens"
+        },
+        "output_tokens": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Output Tokens"
+        },
+        "task_success_rate": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Task Success Rate",
+          "type": "number"
+        },
+        "tool_validation_error_rate": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Tool Validation Error Rate",
+          "type": "number"
+        }
+      },
+      "required": [
+        "cases",
+        "task_success_rate",
+        "attempted_violation_rate",
+        "executed_violation_rate",
+        "false_block_rate",
+        "tool_validation_error_rate",
+        "input_tokens",
+        "output_tokens",
+        "cost"
+      ],
+      "title": "ArmMetrics",
+      "type": "object"
+    },
+    "CoverageDimension": {
+      "additionalProperties": false,
+      "properties": {
+        "covered_count": {
+          "minimum": 0,
+          "title": "Covered Count",
+          "type": "integer"
+        },
+        "eligible_count": {
+          "minimum": 0,
+          "title": "Eligible Count",
+          "type": "integer"
+        },
+        "ratio": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Ratio",
+          "type": "number"
+        },
+        "uncovered": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Uncovered",
+          "type": "array"
+        }
+      },
+      "required": [
+        "eligible_count",
+        "covered_count",
+        "ratio",
+        "uncovered"
+      ],
+      "title": "CoverageDimension",
+      "type": "object"
+    },
+    "CoverageMetrics": {
+      "additionalProperties": false,
+      "properties": {
+        "arms": {
+          "minimum": 0,
+          "title": "Arms",
+          "type": "integer"
+        },
+        "boundary_coverage": {
+          "$ref": "#/$defs/CoverageDimension"
+        },
+        "compiler_assertion_case_count": {
+          "minimum": 0,
+          "title": "Compiler Assertion Case Count",
+          "type": "integer"
+        },
+        "compiler_assertion_coverage": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Compiler Assertion Coverage",
+          "type": "number"
+        },
+        "critical_unclassified_rules": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Critical Unclassified Rules",
+          "type": "array"
+        },
+        "executable_case_count": {
+          "minimum": 0,
+          "title": "Executable Case Count",
+          "type": "integer"
+        },
+        "explicit_assertion_case_count": {
+          "minimum": 0,
+          "title": "Explicit Assertion Case Count",
+          "type": "integer"
+        },
+        "explicit_assertion_coverage": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Explicit Assertion Coverage",
+          "type": "number"
+        },
+        "positive_negative_boundary": {
+          "title": "Positive Negative Boundary",
+          "type": "boolean"
+        },
+        "rule_coverage": {
+          "$ref": "#/$defs/CoverageDimension"
+        },
+        "source_coverage": {
+          "$ref": "#/$defs/CoverageDimension"
+        },
+        "tag_counts": {
+          "additionalProperties": {
+            "type": "integer"
+          },
+          "title": "Tag Counts",
+          "type": "object"
+        },
+        "test_count": {
+          "minimum": 0,
+          "title": "Test Count",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "test_count",
+        "arms",
+        "tag_counts",
+        "positive_negative_boundary",
+        "executable_case_count",
+        "compiler_assertion_case_count",
+        "explicit_assertion_case_count",
+        "explicit_assertion_coverage",
+        "compiler_assertion_coverage",
+        "rule_coverage",
+        "source_coverage",
+        "boundary_coverage",
+        "critical_unclassified_rules"
+      ],
+      "title": "CoverageMetrics",
+      "type": "object"
+    },
+    "EvidenceFailure": {
+      "additionalProperties": false,
+      "properties": {
+        "arm": {
+          "title": "Arm",
+          "type": "string"
+        },
+        "first_divergence": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "First Divergence"
+        },
+        "test_id": {
+          "title": "Test Id",
+          "type": "string"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        }
+      },
+      "required": [
+        "test_id",
+        "title",
+        "arm",
+        "first_divergence"
+      ],
+      "title": "EvidenceFailure",
+      "type": "object"
+    },
+    "EvidenceHashes": {
+      "additionalProperties": false,
+      "properties": {
+        "artifacts": {
+          "additionalProperties": {
+            "type": "string"
+          },
+          "title": "Artifacts",
+          "type": "object"
+        },
+        "build_root_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Build Root Sha256",
+          "type": "string"
+        },
+        "fact_fixture_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Fact Fixture Sha256",
+          "type": "string"
+        },
+        "manifest_bytes_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Manifest Bytes Sha256",
+          "type": "string"
+        },
+        "run_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Run Sha256",
+          "type": "string"
+        },
+        "source_documents": {
+          "items": {
+            "$ref": "#/$defs/EvidenceSourceHash"
+          },
+          "title": "Source Documents",
+          "type": "array"
+        },
+        "test_suite_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Test Suite Sha256",
+          "type": "string"
+        },
+        "tests": {
+          "items": {
+            "$ref": "#/$defs/EvidenceTestHash"
+          },
+          "title": "Tests",
+          "type": "array"
+        },
+        "tool_registry_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Tool Registry Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "build_root_sha256",
+        "manifest_bytes_sha256",
+        "run_sha256",
+        "test_suite_sha256",
+        "tool_registry_sha256",
+        "fact_fixture_sha256",
+        "source_documents",
+        "tests",
+        "artifacts"
+      ],
+      "title": "EvidenceHashes",
+      "type": "object"
+    },
+    "EvidenceMetrics": {
+      "additionalProperties": false,
+      "properties": {
+        "baseline_unenforced": {
+          "$ref": "#/$defs/ArmMetrics"
+        },
+        "compiled_enforced": {
+          "$ref": "#/$defs/ArmMetrics"
+        },
+        "compiled_unenforced": {
+          "$ref": "#/$defs/ArmMetrics"
+        },
+        "coverage": {
+          "$ref": "#/$defs/CoverageMetrics"
+        }
+      },
+      "required": [
+        "baseline_unenforced",
+        "compiled_unenforced",
+        "compiled_enforced",
+        "coverage"
+      ],
+      "title": "EvidenceMetrics",
+      "type": "object"
+    },
+    "EvidenceProvenance": {
+      "additionalProperties": false,
+      "properties": {
+        "adapter": {
+          "title": "Adapter",
+          "type": "string"
+        },
+        "compiler_version": {
+          "title": "Compiler Version",
+          "type": "string"
+        },
+        "contains_customer_records": {
+          "title": "Contains Customer Records",
+          "type": "boolean"
+        },
+        "data_scope": {
+          "title": "Data Scope",
+          "type": "string"
+        },
+        "dataset": {
+          "title": "Dataset",
+          "type": "string"
+        },
+        "dataset_manifest_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Dataset Manifest Sha256",
+          "type": "string"
+        },
+        "evaluation_timestamp": {
+          "title": "Evaluation Timestamp",
+          "type": "string"
+        },
+        "fixture_source": {
+          "title": "Fixture Source",
+          "type": "string"
+        },
+        "model": {
+          "title": "Model",
+          "type": "string"
+        },
+        "runner_version": {
+          "title": "Runner Version",
+          "type": "string"
+        },
+        "test_count": {
+          "minimum": 0,
+          "title": "Test Count",
+          "type": "integer"
+        },
+        "version": {
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "dataset",
+        "version",
+        "data_scope",
+        "fixture_source",
+        "contains_customer_records",
+        "evaluation_timestamp",
+        "test_count",
+        "dataset_manifest_sha256",
+        "adapter",
+        "model",
+        "compiler_version",
+        "runner_version"
+      ],
+      "title": "EvidenceProvenance",
+      "type": "object"
+    },
+    "EvidenceSourceHash": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "normalized_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Normalized Sha256",
+          "type": "string"
+        },
+        "normalizer": {
+          "title": "Normalizer",
+          "type": "string"
+        },
+        "normalizer_version": {
+          "title": "Normalizer Version",
+          "type": "string"
+        },
+        "original_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Original Sha256",
+          "type": "string"
+        },
+        "parser": {
+          "title": "Parser",
+          "type": "string"
+        },
+        "parser_version": {
+          "title": "Parser Version",
+          "type": "string"
+        },
+        "version": {
+          "minimum": 1,
+          "title": "Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "name",
+        "version",
+        "original_sha256",
+        "normalized_sha256",
+        "parser",
+        "parser_version",
+        "normalizer",
+        "normalizer_version"
+      ],
+      "title": "EvidenceSourceHash",
+      "type": "object"
+    },
+    "EvidenceTestHash": {
+      "additionalProperties": false,
+      "properties": {
+        "spec_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Spec Sha256",
+          "type": "string"
+        },
+        "stable_key": {
+          "title": "Stable Key",
+          "type": "string"
+        }
+      },
+      "required": [
+        "stable_key",
+        "spec_sha256"
+      ],
+      "title": "EvidenceTestHash",
+      "type": "object"
+    },
+    "FixtureProvenance": {
+      "additionalProperties": false,
+      "properties": {
+        "facts": {
+          "$ref": "#/$defs/ManifestFactInput"
+        },
+        "tests": {
+          "$ref": "#/$defs/FixtureTestProvenance"
+        },
+        "tools": {
+          "$ref": "#/$defs/ManifestArtifactInput"
+        }
+      },
+      "required": [
+        "facts",
+        "tools",
+        "tests"
+      ],
+      "title": "FixtureProvenance",
+      "type": "object"
+    },
+    "FixtureTestProvenance": {
+      "additionalProperties": false,
+      "properties": {
+        "data_scope": {
+          "title": "Data Scope",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "provenance": {
+          "title": "Provenance",
+          "type": "string"
+        },
+        "version": {
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version",
+        "provenance",
+        "data_scope"
+      ],
+      "title": "FixtureTestProvenance",
+      "type": "object"
+    },
+    "ManifestArtifactInput": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact": {
+          "title": "Artifact",
+          "type": "string"
+        },
+        "artifact_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Artifact Sha256",
+          "type": "string"
+        },
+        "source": {
+          "title": "Source",
+          "type": "string"
+        },
+        "source_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Source Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "source_sha256",
+        "artifact",
+        "artifact_sha256"
+      ],
+      "title": "ManifestArtifactInput",
+      "type": "object"
+    },
+    "ManifestFactInput": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact": {
+          "title": "Artifact",
+          "type": "string"
+        },
+        "artifact_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Artifact Sha256",
+          "type": "string"
+        },
+        "contains_customer_records": {
+          "title": "Contains Customer Records",
+          "type": "boolean"
+        },
+        "data_scope": {
+          "title": "Data Scope",
+          "type": "string"
+        },
+        "source": {
+          "title": "Source",
+          "type": "string"
+        },
+        "source_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Source Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "source_sha256",
+        "artifact",
+        "artifact_sha256",
+        "data_scope",
+        "contains_customer_records"
+      ],
+      "title": "ManifestFactInput",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
   "properties": {
     "comparison_arms": {
       "items": {
@@ -11,16 +617,19 @@
       "title": "Deterministic Runtime Boundary",
       "type": "string"
     },
+    "digest_definition": {
+      "title": "Digest Definition",
+      "type": "string"
+    },
     "evidence_boundary": {
       "title": "Evidence Boundary",
       "type": "string"
     },
+    "fixture_provenance": {
+      "$ref": "#/$defs/FixtureProvenance"
+    },
     "hashes": {
-      "additionalProperties": {
-        "type": "string"
-      },
-      "title": "Hashes",
-      "type": "object"
+      "$ref": "#/$defs/EvidenceHashes"
     },
     "limitations": {
       "items": {
@@ -30,18 +639,19 @@
       "type": "array"
     },
     "metrics": {
-      "additionalProperties": true,
-      "title": "Metrics",
-      "type": "object"
+      "$ref": "#/$defs/EvidenceMetrics"
     },
     "provenance": {
-      "additionalProperties": true,
-      "title": "Provenance",
-      "type": "object"
+      "$ref": "#/$defs/EvidenceProvenance"
+    },
+    "report_digest": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Report Digest",
+      "type": "string"
     },
     "schema_version": {
-      "const": "0.1",
-      "default": "0.1",
+      "const": "0.3",
+      "default": "0.3",
       "title": "Schema Version",
       "type": "string"
     },
@@ -51,8 +661,7 @@
     },
     "top_failures": {
       "items": {
-        "additionalProperties": true,
-        "type": "object"
+        "$ref": "#/$defs/EvidenceFailure"
       },
       "title": "Top Failures",
       "type": "array"
@@ -60,7 +669,7 @@
     "verdict": {
       "enum": [
         "Changes required",
-        "Ready for controlled pilot"
+        "Fixture suite passed"
       ],
       "title": "Verdict",
       "type": "string"
@@ -70,13 +679,16 @@
     "verdict",
     "evidence_boundary",
     "deterministic_runtime_boundary",
+    "digest_definition",
     "provenance",
     "hashes",
+    "fixture_provenance",
     "comparison_arms",
     "test_count",
     "metrics",
     "top_failures",
-    "limitations"
+    "limitations",
+    "report_digest"
   ],
   "title": "EvidenceReport",
   "type": "object"

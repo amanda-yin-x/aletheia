@@ -1,10 +1,20 @@
 {
   "$defs": {
     "AllCondition": {
+      "additionalProperties": false,
       "properties": {
         "conditions": {
           "items": {
-            "anyOf": [
+            "discriminator": {
+              "mapping": {
+                "all": "#/$defs/AllCondition",
+                "any": "#/$defs/AnyCondition",
+                "not": "#/$defs/NotCondition",
+                "predicate": "#/$defs/Predicate"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
               {
                 "$ref": "#/$defs/Predicate"
               },
@@ -19,6 +29,7 @@
               }
             ]
           },
+          "minItems": 1,
           "title": "Conditions",
           "type": "array"
         },
@@ -36,10 +47,20 @@
       "type": "object"
     },
     "AnyCondition": {
+      "additionalProperties": false,
       "properties": {
         "conditions": {
           "items": {
-            "anyOf": [
+            "discriminator": {
+              "mapping": {
+                "all": "#/$defs/AllCondition",
+                "any": "#/$defs/AnyCondition",
+                "not": "#/$defs/NotCondition",
+                "predicate": "#/$defs/Predicate"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
               {
                 "$ref": "#/$defs/Predicate"
               },
@@ -54,6 +75,7 @@
               }
             ]
           },
+          "minItems": 1,
           "title": "Conditions",
           "type": "array"
         },
@@ -70,10 +92,71 @@
       "title": "AnyCondition",
       "type": "object"
     },
+    "CompiledSourceRef": {
+      "additionalProperties": false,
+      "properties": {
+        "document_name": {
+          "title": "Document Name",
+          "type": "string"
+        },
+        "document_version": {
+          "minimum": 1,
+          "title": "Document Version",
+          "type": "integer"
+        },
+        "line_end": {
+          "minimum": 1,
+          "title": "Line End",
+          "type": "integer"
+        },
+        "line_start": {
+          "minimum": 1,
+          "title": "Line Start",
+          "type": "integer"
+        },
+        "quote": {
+          "minLength": 1,
+          "title": "Quote",
+          "type": "string"
+        },
+        "source_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Source Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "document_name",
+        "document_version",
+        "line_start",
+        "line_end",
+        "quote",
+        "source_sha256"
+      ],
+      "title": "CompiledSourceRef",
+      "type": "object"
+    },
+    "EmptyCondition": {
+      "additionalProperties": false,
+      "description": "Explicitly validates the persisted empty condition used by human-only rules.",
+      "properties": {},
+      "title": "EmptyCondition",
+      "type": "object"
+    },
     "NotCondition": {
+      "additionalProperties": false,
       "properties": {
         "condition": {
-          "anyOf": [
+          "discriminator": {
+            "mapping": {
+              "all": "#/$defs/AllCondition",
+              "any": "#/$defs/AnyCondition",
+              "not": "#/$defs/NotCondition",
+              "predicate": "#/$defs/Predicate"
+            },
+            "propertyName": "kind"
+          },
+          "oneOf": [
             {
               "$ref": "#/$defs/Predicate"
             },
@@ -103,6 +186,7 @@
       "type": "object"
     },
     "Predicate": {
+      "additionalProperties": false,
       "properties": {
         "fact": {
           "title": "Fact",
@@ -143,13 +227,62 @@
       "title": "Predicate",
       "type": "object"
     },
-    "SourceRef": {
+    "RuleException": {
+      "additionalProperties": false,
       "properties": {
-        "document_id": {
-          "title": "Document Id",
+        "condition": {
+          "discriminator": {
+            "mapping": {
+              "all": "#/$defs/AllCondition",
+              "any": "#/$defs/AnyCondition",
+              "not": "#/$defs/NotCondition",
+              "predicate": "#/$defs/Predicate"
+            },
+            "propertyName": "kind"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Predicate"
+            },
+            {
+              "$ref": "#/$defs/AllCondition"
+            },
+            {
+              "$ref": "#/$defs/AnyCondition"
+            },
+            {
+              "$ref": "#/$defs/NotCondition"
+            }
+          ],
+          "title": "Condition"
+        },
+        "effect": {
+          "default": "not_applicable",
+          "enum": [
+            "allow",
+            "not_applicable"
+          ],
+          "title": "Effect",
           "type": "string"
         },
-        "document_name": {
+        "reason": {
+          "maxLength": 1000,
+          "minLength": 1,
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "condition",
+        "reason"
+      ],
+      "title": "RuleException",
+      "type": "object"
+    },
+    "RuleRequirement": {
+      "additionalProperties": false,
+      "properties": {
+        "event_type": {
           "anyOf": [
             {
               "type": "string"
@@ -159,41 +292,108 @@
             }
           ],
           "default": null,
-          "title": "Document Name"
+          "title": "Event Type"
         },
-        "line_end": {
-          "minimum": 1,
-          "title": "Line End",
-          "type": "integer"
+        "fact": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Fact"
         },
-        "line_start": {
-          "minimum": 1,
-          "title": "Line Start",
-          "type": "integer"
-        },
-        "quote": {
-          "minLength": 1,
-          "title": "Quote",
+        "kind": {
+          "enum": [
+            "prior_event",
+            "approval",
+            "fact"
+          ],
+          "title": "Kind",
           "type": "string"
         },
-        "source_sha256": {
-          "maxLength": 64,
-          "minLength": 64,
-          "title": "Source Sha256",
-          "type": "string"
+        "match_arguments": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Match Arguments",
+          "type": "array"
+        },
+        "op": {
+          "anyOf": [
+            {
+              "enum": [
+                "eq",
+                "ne",
+                "lt",
+                "lte",
+                "gt",
+                "gte",
+                "in",
+                "not_in",
+                "exists",
+                "contains",
+                "regex"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Op"
+        },
+        "value": {
+          "default": null,
+          "title": "Value"
         }
       },
       "required": [
-        "document_id",
-        "line_start",
-        "line_end",
-        "quote",
-        "source_sha256"
+        "kind"
       ],
-      "title": "SourceRef",
+      "title": "RuleRequirement",
+      "type": "object"
+    },
+    "RuleScope": {
+      "additionalProperties": false,
+      "properties": {
+        "domain": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Domain",
+          "type": "string"
+        },
+        "lifecycle": {
+          "default": "pre_tool",
+          "enum": [
+            "pre_tool",
+            "post_tool",
+            "conversation",
+            "offline"
+          ],
+          "title": "Lifecycle",
+          "type": "string"
+        },
+        "tools": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Tools",
+          "type": "array"
+        }
+      },
+      "required": [
+        "domain"
+      ],
+      "title": "RuleScope",
       "type": "object"
     }
   },
+  "additionalProperties": false,
   "properties": {
     "category": {
       "enum": [
@@ -207,6 +407,39 @@
       ],
       "title": "Category",
       "type": "string"
+    },
+    "condition": {
+      "anyOf": [
+        {
+          "discriminator": {
+            "mapping": {
+              "all": "#/$defs/AllCondition",
+              "any": "#/$defs/AnyCondition",
+              "not": "#/$defs/NotCondition",
+              "predicate": "#/$defs/Predicate"
+            },
+            "propertyName": "kind"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/Predicate"
+            },
+            {
+              "$ref": "#/$defs/AllCondition"
+            },
+            {
+              "$ref": "#/$defs/AnyCondition"
+            },
+            {
+              "$ref": "#/$defs/NotCondition"
+            }
+          ]
+        },
+        {
+          "$ref": "#/$defs/EmptyCondition"
+        }
+      ],
+      "title": "Condition"
     },
     "confidence": {
       "maximum": 1,
@@ -245,27 +478,19 @@
       "type": "string"
     },
     "exceptions": {
-      "default": [],
       "items": {
-        "additionalProperties": true,
-        "type": "object"
+        "$ref": "#/$defs/RuleException"
       },
       "title": "Exceptions",
       "type": "array"
-    },
-    "id": {
-      "title": "Id",
-      "type": "string"
     },
     "normative_text": {
       "title": "Normative Text",
       "type": "string"
     },
     "requires": {
-      "default": [],
       "items": {
-        "additionalProperties": true,
-        "type": "object"
+        "$ref": "#/$defs/RuleRequirement"
       },
       "title": "Requires",
       "type": "array"
@@ -281,15 +506,13 @@
       "type": "integer"
     },
     "schema_version": {
-      "const": "0.1",
-      "default": "0.1",
+      "const": "0.2",
+      "default": "0.2",
       "title": "Schema Version",
       "type": "string"
     },
     "scope": {
-      "additionalProperties": true,
-      "title": "Scope",
-      "type": "object"
+      "$ref": "#/$defs/RuleScope"
     },
     "severity": {
       "enum": [
@@ -303,7 +526,7 @@
     },
     "source_refs": {
       "items": {
-        "$ref": "#/$defs/SourceRef"
+        "$ref": "#/$defs/CompiledSourceRef"
       },
       "title": "Source Refs",
       "type": "array"
@@ -324,7 +547,6 @@
       "type": "string"
     },
     "target_tools": {
-      "default": [],
       "items": {
         "type": "string"
       },
@@ -334,31 +556,9 @@
     "title": {
       "title": "Title",
       "type": "string"
-    },
-    "when": {
-      "anyOf": [
-        {
-          "$ref": "#/$defs/Predicate"
-        },
-        {
-          "$ref": "#/$defs/AllCondition"
-        },
-        {
-          "$ref": "#/$defs/AnyCondition"
-        },
-        {
-          "$ref": "#/$defs/NotCondition"
-        },
-        {
-          "additionalProperties": true,
-          "type": "object"
-        }
-      ],
-      "title": "When"
     }
   },
   "required": [
-    "id",
     "stable_key",
     "revision",
     "title",
@@ -369,7 +569,7 @@
     "status",
     "confidence",
     "scope",
-    "when",
+    "condition",
     "enforcement",
     "decidability",
     "source_refs"

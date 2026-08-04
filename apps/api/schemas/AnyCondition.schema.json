@@ -1,10 +1,20 @@
 {
   "$defs": {
     "AllCondition": {
+      "additionalProperties": false,
       "properties": {
         "conditions": {
           "items": {
-            "anyOf": [
+            "discriminator": {
+              "mapping": {
+                "all": "#/$defs/AllCondition",
+                "any": "#/$defs/AnyCondition",
+                "not": "#/$defs/NotCondition",
+                "predicate": "#/$defs/Predicate"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
               {
                 "$ref": "#/$defs/Predicate"
               },
@@ -19,6 +29,7 @@
               }
             ]
           },
+          "minItems": 1,
           "title": "Conditions",
           "type": "array"
         },
@@ -36,10 +47,20 @@
       "type": "object"
     },
     "AnyCondition": {
+      "additionalProperties": false,
       "properties": {
         "conditions": {
           "items": {
-            "anyOf": [
+            "discriminator": {
+              "mapping": {
+                "all": "#/$defs/AllCondition",
+                "any": "#/$defs/AnyCondition",
+                "not": "#/$defs/NotCondition",
+                "predicate": "#/$defs/Predicate"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
               {
                 "$ref": "#/$defs/Predicate"
               },
@@ -54,6 +75,7 @@
               }
             ]
           },
+          "minItems": 1,
           "title": "Conditions",
           "type": "array"
         },
@@ -71,9 +93,19 @@
       "type": "object"
     },
     "NotCondition": {
+      "additionalProperties": false,
       "properties": {
         "condition": {
-          "anyOf": [
+          "discriminator": {
+            "mapping": {
+              "all": "#/$defs/AllCondition",
+              "any": "#/$defs/AnyCondition",
+              "not": "#/$defs/NotCondition",
+              "predicate": "#/$defs/Predicate"
+            },
+            "propertyName": "kind"
+          },
+          "oneOf": [
             {
               "$ref": "#/$defs/Predicate"
             },
@@ -103,6 +135,7 @@
       "type": "object"
     },
     "Predicate": {
+      "additionalProperties": false,
       "properties": {
         "fact": {
           "title": "Fact",

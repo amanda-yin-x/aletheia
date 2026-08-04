@@ -1,32 +1,36 @@
 # Build plan and gates
 
-## Completed P0 gates
+## Completed Gate 0 implementation
 
 - Scaffold, SQL models/migration, UUIDs/hashes, typed contracts, and seed corpus.
-- Safe allowlisted policy interpreter and money-boundary evaluation cases.
-- Source-linked rule review, seeded proved findings, and a revisioned approval
-  flow. Semantic-edit re-review hardening remains Phase 0 work.
-- Compiler, seven guarded rules, 16 cases, three-arm runner, trace, metrics, and
-  immutable Markdown/JSON report.
-- FastAPI, Typer CLI, inline persisted jobs, worker command, and SQLite WAL.
+- Allowlisted policy interpreter and money-boundary evaluation cases.
+- Source-linked rule review, atomic source-authority conflict decisions,
+  optimistic concurrency, loser retirement, and forced re-review after semantic
+  edits.
+- Compiler, seven guarded rules, a build-pinned regression suite, labelled-arm
+  runner, trace, metrics, and content-digested Markdown/JSON report.
+- FastAPI, Typer CLI, typed/idempotent operations, inline Free-mode execution,
+  lease-aware worker command, and SQLite WAL.
 - Responsive landing/workbench pages with loading, error, empty, and blocked
   states; production web build and automated checks.
-- Docker, Render, and Vercel configuration; CI/evidence docs; and a benchmark
-  provenance sync adapter. The data root is now configuration-driven; a clean
-  container startup smoke test and the hosted async-job contract remain Phase 0
-  work in the production roadmap.
+- Docker, Render, Cloudflare/OpenNext configuration, Supabase authentication and
+  workspace tenancy, CI/evidence docs, and a provenance-checked Retail-17 import
+  adapter. Local SQLite and PostgreSQL gates pass; the external hosted stack is
+  not yet provisioned or verified end to end.
 
-## Next milestones
+## Next approved milestones
 
-1. Fix the build/run truth invariants and hosted async-job contract, then add a
-   clean-image startup smoke test as identified in
-   `current-state-and-production-roadmap.md`.
-2. Run structured extraction against a user-selected provider, keeping exact
-   quote verification and manual approval unchanged.
-3. Finish a production-quality live tool-calling loop with recorded provider
-   usage and bounded timeouts/retries.
-4. Normalize the pinned tau3 task subset into the local declarative contract and
-   run it with an explicitly selected adapter; never publish deterministic replay output as
-   benchmark results.
-5. Add auth, tenant isolation, encrypted storage, and retention controls before
-   accepting confidential customer documents.
+1. Provision and verify the Supabase → Render → Cloudflare staging path,
+   including effective Data API denial, both login methods, Turnstile, two-user
+   isolation, cold starts, and the complete hosted workflow.
+2. Run the locked production container startup/migration smoke once a container
+   runtime is available; keep the free inline mode while retaining the worker
+   for a paid deployment.
+3. Begin Gate 1 only after checkpoint approval: a generic compiler seam plus the
+   appointment-scheduling corpus and genuine side-by-side source-authority
+   review.
+4. Add `aletheia check` and one atomic Python guarded dispatcher before any live
+   tool loop.
+5. Then evaluate bounded Z3 analysis, restricted temporal monitors, mutation
+   testing, local Qwen extraction, and a pinned upstream tau smoke run in that
+   order. Never publish deterministic replay as an upstream benchmark result.

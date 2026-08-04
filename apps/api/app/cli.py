@@ -7,27 +7,31 @@ from pathlib import Path
 import typer
 from sqlalchemy import select
 
-from app.db import SessionLocal, create_schema
+from app.db import SessionLocal
 from app.models import Project, Report, Run
 from app.services.compiler import compile_project
 from app.services.errors import ServiceError
 from app.services.reporting import create_report
 from app.services.runner import run_comparison
 from app.services.seed import seed_demo
+from app.tenancy import LOCAL_WORKSPACE_ID
 
 cli = typer.Typer(help="Aletheia Policy CI — compile policies and test releases.", no_args_is_help=True)
-db_cli = typer.Typer(help="Create and migrate the application database.")
+db_cli = typer.Typer(help="Migrate the application database with Alembic.")
 demo_cli = typer.Typer(help="Manage the deterministic Northstar workspace.")
-benchmark_cli = typer.Typer(help="Manage the optional pinned tau3 Retail adapter.")
+benchmark_cli = typer.Typer(help="Manage the optional pinned Retail-17 import adapter.")
 cli.add_typer(db_cli, name="db")
 cli.add_typer(demo_cli, name="demo")
 cli.add_typer(benchmark_cli, name="benchmark")
 
 
 async def _project(slug: str) -> Project:
-    await create_schema()
     async with SessionLocal() as session:
-        project = await session.scalar(select(Project).where(Project.slug == slug))
+        project = await session.scalar(
+            select(Project).where(
+                Project.workspace_id == LOCAL_WORKSPACE_ID, Project.slug == slug
+            )
+        )
         if not project:
             raise ServiceError("project_not_found", f"Project {slug!r} was not found.")
         return project
@@ -35,8 +39,10 @@ async def _project(slug: str) -> Project:
 
 @db_cli.command("upgrade")
 def db_upgrade() -> None:
-    """Create or upgrade the database schema."""
-    asyncio.run(create_schema())
+    """Upgrade the database to the immutable Alembic head revision."""
+    from app.deploy import migrate_database
+
+    migrate_database()
     typer.echo("Database schema is current.")
 
 
@@ -44,7 +50,6 @@ def db_upgrade() -> None:
 def demo_seed(reset: bool = typer.Option(False, "--reset", help="Replace the existing evaluation workspace."), json_output: bool = typer.Option(False, "--json")) -> None:
     """Seed the Northstar Retail evaluation workspace."""
     async def run() -> Project:
-        await create_schema()
         async with SessionLocal() as session:
             return await seed_demo(session, reset=reset)
     project = asyncio.run(run())
@@ -54,17 +59,17 @@ def demo_seed(reset: bool = typer.Option(False, "--reset", help="Replace the exi
 
 @cli.command("analyze")
 def analyze(project: str = typer.Option("northstar-retail"), extractor: str = typer.Option("fixture"), json_output: bool = typer.Option(False, "--json")) -> None:
-    """Verify bundled source-linked candidates and deterministic findings."""
+    """Load bundled source-linked candidates and deterministic findings."""
     if extractor != "fixture":
         raise typer.BadParameter("The optional structured LLM extractor is not configured. Use the deterministic replay adapter (`fixture`).")
     target = asyncio.run(_project(project))
-    output = {"project_id": target.id, "extractor": "fixture", "status": "verified", "publication": "human_review_required"}
-    typer.echo(json.dumps(output, sort_keys=True) if json_output else "Evaluation candidates verified; model output was not used.")
+    output = {"project_id": target.id, "extractor": "fixture", "status": "fixture_available", "publication": "human_review_required"}
+    typer.echo(json.dumps(output, sort_keys=True) if json_output else "Bundled evaluation candidates loaded; no analyzer or model ran.")
 
 
 @cli.command("compile")
 def compile_command(project: str = typer.Option("northstar-retail"), json_output: bool = typer.Option(False, "--json")) -> None:
-    """Compile approved revisions into an immutable artifact bundle."""
+    """Compile approved revisions into a byte-addressed stored artifact bundle."""
     async def run() -> object:
         target = await _project(project)
         async with SessionLocal() as session:
@@ -93,7 +98,13 @@ def test_command(project: str = typer.Option("northstar-retail"), adapter: str =
         typer.echo(f"{error.code}: {error.message}", err=True)
         raise typer.Exit(1) from error
     output = {"run_id": result.id, "status": result.status, "metrics": result.metrics}
-    typer.echo(json.dumps(output, sort_keys=True) if json_output else f"Run {result.id}: {result.status} (16 cases × 3 arms)")
+    case_count = result.dataset_manifest.get("test_count", "unknown")
+    arm_count = len(result.requested_arms)
+    typer.echo(
+        json.dumps(output, sort_keys=True)
+        if json_output
+        else f"Run {result.id}: {result.status} ({case_count} cases × {arm_count} arms)"
+    )
 
 
 @cli.command("report")
@@ -101,7 +112,15 @@ def report_command(latest: bool = typer.Option(True, "--latest/--no-latest"), fo
     """Render release evidence for the latest completed run."""
     async def run() -> Report:
         async with SessionLocal() as session:
-            current = await session.scalar(select(Run).where(Run.status == "succeeded").order_by(Run.finished_at.desc()))
+            current = await session.scalar(
+                select(Run)
+                .join(Project, Run.project_id == Project.id)
+                .where(
+                    Project.workspace_id == LOCAL_WORKSPACE_ID,
+                    Run.status == "succeeded",
+                )
+                .order_by(Run.finished_at.desc())
+            )
             if not current:
                 raise ServiceError("run_not_found", "No completed run is available.")
             return await create_report(session, current.id)
@@ -123,9 +142,18 @@ def worker_command(once: bool = typer.Option(False, help="Claim at most one queu
     asyncio.run(run_worker(once=once))
 
 
+@cli.command("serve")
+def serve_command() -> None:
+    """Migrate under a PostgreSQL advisory lock, then replace this process with Uvicorn."""
+    from app.deploy import exec_uvicorn, migrate_database
+
+    migrate_database()
+    exec_uvicorn()
+
+
 @benchmark_cli.command("sync-tau-retail")
 def sync_tau_retail() -> None:
-    """Sync the exact pinned 17-task tau3 Retail manifest."""
+    """Sync the pinned tau2-derived Retail-17 smoke-subset manifest."""
     from app.adapters.tau_sync import sync
     try:
         manifest = sync()
@@ -137,7 +165,7 @@ def sync_tau_retail() -> None:
 
 @benchmark_cli.command("run-tau-retail")
 def run_tau_retail(adapter: str = typer.Option("fixture")) -> None:
-    """Validate availability of a synced tau3 Retail dataset."""
+    """Validate availability of the imported Retail-17 smoke subset."""
     provenance = Path("../../data/benchmarks/tau3-retail/provenance.json")
     if not provenance.exists():
         typer.echo("benchmark_not_synced: run benchmark sync-tau-retail first", err=True)

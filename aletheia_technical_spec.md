@@ -1,5 +1,12 @@
 # Aletheia Policy CI — technical product specification
 
+> **Historical and superseded.** This document preserves the original product
+> rationale, but its stack assumptions and capability language are not evidence
+> of the current system. Use [README.md](README.md),
+> [docs/capabilities.json](docs/capabilities.json), and
+> [docs/current-state-and-production-roadmap.md](docs/current-state-and-production-roadmap.md)
+> as the current sources of truth.
+
 **Version:** 1.0  
 **Date:** 2026-08-02  
 **Status:** build-ready MVP specification  

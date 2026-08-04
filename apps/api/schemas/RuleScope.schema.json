@@ -1,0 +1,34 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "domain": {
+      "maxLength": 120,
+      "minLength": 1,
+      "title": "Domain",
+      "type": "string"
+    },
+    "lifecycle": {
+      "default": "pre_tool",
+      "enum": [
+        "pre_tool",
+        "post_tool",
+        "conversation",
+        "offline"
+      ],
+      "title": "Lifecycle",
+      "type": "string"
+    },
+    "tools": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Tools",
+      "type": "array"
+    }
+  },
+  "required": [
+    "domain"
+  ],
+  "title": "RuleScope",
+  "type": "object"
+}

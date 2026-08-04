@@ -1,31 +1,56 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
-import { API_IS_CONFIGURED, api } from "@/lib/api";
-import type { Project } from "@/lib/types";
-import { EmptyState, ErrorState, PageLoading } from "@/components/ui";
+import { useMutation } from "@tanstack/react-query";
+import { api, RequestError } from "@/lib/api";
+import type { BootstrapResult, Project } from "@/lib/types";
+import { ErrorState, PageLoading } from "@/components/ui";
 
-export function DemoEntry() {
-  if (!API_IS_CONFIGURED) {
-    return (
-      <main className="landing">
-        <EmptyState
-          title="The hosted workspace needs its API connection."
-          detail="The website is live on Cloudflare. The interactive Northstar workflow still runs from the checked-in FastAPI service and database; it has not been exposed as a shared anonymous service."
-          action={<div className="page-actions"><a className="button button-primary" href="https://github.com/amanda-yin-x/aletheia#quick-start">Run it locally</a><a className="button button-secondary" href="https://github.com/amanda-yin-x/aletheia/blob/main/docs/deployment.md">Read deployment notes</a></div>}
-        />
-      </main>
-    );
-  }
-  return <ConnectedDemo />;
+type BootstrapCompatibility = BootstrapResult | Project | { project?: Project; project_id?: string };
+
+function projectIdFromBootstrap(value: BootstrapCompatibility): string | null {
+  if ("project" in value && value.project?.id) return value.project.id;
+  if ("project_id" in value && value.project_id) return value.project_id;
+  if ("slug" in value && value.id) return value.id;
+  return null;
 }
 
-function ConnectedDemo() {
+export function DemoEntry() {
   const router = useRouter();
-  const query = useQuery({ queryKey: ["projects"], queryFn: () => api<Project[]>("/api/v1/projects") });
-  useEffect(() => { if (query.data?.[0]) router.replace(`/projects/${query.data[0].id}/overview`); }, [query.data, router]);
-  if (query.error) return <main className="landing"><ErrorState error={query.error} onRetry={() => query.refetch()} /></main>;
-  return <main className="landing"><PageLoading label="Opening the Northstar policy workspace" /></main>;
+  const started = useRef(false);
+  const idempotencyKey = useRef(crypto.randomUUID());
+  const [waking, setWaking] = useState(false);
+  const bootstrap = useMutation({
+    mutationFn: async () => {
+      const value = await api<BootstrapCompatibility>("/api/v1/workspaces/bootstrap", {
+        method: "POST",
+        body: JSON.stringify({ name: "My workspace" }),
+        retryMutation: true,
+        coldStartRetries: 20,
+        coldStartTimeoutMs: 85_000,
+        onRetry: () => setWaking(true),
+        idempotencyKey: idempotencyKey.current,
+      });
+      const projectId = projectIdFromBootstrap(value);
+      if (!projectId) throw new Error("The workspace opened without a project identifier.");
+      return projectId;
+    },
+    onMutate: () => setWaking(false),
+    onSuccess: (projectId) => router.replace(`/projects/${projectId}/overview`),
+    onError: (error) => {
+      if (error instanceof RequestError && error.status === 401) router.replace("/login?next=%2Fdemo");
+    },
+  });
+
+  useEffect(() => {
+    if (started.current) return;
+    started.current = true;
+    bootstrap.mutate();
+  }, [bootstrap]);
+
+  if (bootstrap.error) {
+    return <main className="landing"><ErrorState error={bootstrap.error} onRetry={() => { setWaking(false); idempotencyKey.current = crypto.randomUUID(); bootstrap.reset(); bootstrap.mutate(); }} /></main>;
+  }
+  return <main className="landing"><PageLoading label={waking ? "Waking your workspace…" : "Preparing your Northstar policy workspace"} /></main>;
 }

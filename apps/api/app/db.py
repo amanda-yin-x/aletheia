@@ -17,7 +17,15 @@ class Base(DeclarativeBase):
 
 
 settings = get_settings()
-engine: AsyncEngine = create_async_engine(settings.database_url, future=True)
+engine_options: dict[str, object] = {"future": True}
+if not settings.database_url.startswith("sqlite"):
+    engine_options.update(
+        pool_size=settings.database_pool_size,
+        max_overflow=settings.database_max_overflow,
+        pool_pre_ping=True,
+        pool_recycle=300,
+    )
+engine: AsyncEngine = create_async_engine(settings.database_url, **engine_options)
 SessionLocal = async_sessionmaker(engine, expire_on_commit=False)
 
 
@@ -33,11 +41,3 @@ if settings.database_url.startswith("sqlite"):
 async def get_session() -> AsyncIterator[AsyncSession]:
     async with SessionLocal() as session:
         yield session
-
-
-async def create_schema() -> None:
-    from app import models  # noqa: F401
-
-    async with engine.begin() as connection:
-        await connection.run_sync(Base.metadata.create_all)
-

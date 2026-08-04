@@ -1,32 +1,34 @@
-databases:
-  - name: aletheia-db
-    plan: free
 services:
   - type: web
     name: aletheia-api
     runtime: docker
+    plan: free
+    region: virginia
+    autoDeployTrigger: checksPass
     dockerfilePath: ./apps/api/Dockerfile
     dockerContext: .
-    healthCheckPath: /healthz
-    preDeployCommand: uv run alembic upgrade head
+    healthCheckPath: /readyz
+    maxShutdownDelaySeconds: 60
     envVars:
       - key: DATABASE_URL
-        fromDatabase: { name: aletheia-db, property: connectionString }
+        sync: false
+      - key: MIGRATION_DATABASE_URL
+        sync: false
+      - key: SUPABASE_ISSUER
+        sync: false
+      - key: SUPABASE_JWKS_URL
+        sync: false
+      - key: SUPABASE_AUDIENCE
+        value: authenticated
+      - key: API_ORIGIN_TOKEN
+        sync: false
+      - key: WEB_ORIGIN
+        value: https://aletheia.aletheia-web.workers.dev
+      - key: ENVIRONMENT
+        value: production
       - key: DEMO_MODE
         value: "true"
       - key: DEMO_INLINE_JOBS
-        value: "false"
-      - key: WEB_ORIGIN
-        sync: false
-  - type: worker
-    name: aletheia-worker
-    runtime: docker
-    dockerfilePath: ./apps/api/Dockerfile
-    dockerContext: .
-    dockerCommand: uv run aletheia worker
-    envVars:
-      - key: DATABASE_URL
-        fromDatabase: { name: aletheia-db, property: connectionString }
-      - key: DEMO_INLINE_JOBS
-        value: "false"
-
+        value: "true"
+      - key: LOG_LEVEL
+        value: INFO

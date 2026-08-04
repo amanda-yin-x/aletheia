@@ -5,13 +5,37 @@
   "compatibility_date": "2026-08-03",
   "compatibility_flags": ["nodejs_compat"],
   "workers_dev": true,
+  "preview_urls": false,
+  "keep_vars": true,
+  "vars": {
+    "AUTH_MODE": "supabase",
+    "SITE_URL": "https://aletheia.aletheia-web.workers.dev"
+  },
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
+  },
+  "secrets": {
+    "required": ["API_ORIGIN_URL", "API_ORIGIN_TOKEN"]
   },
   "observability": {
     "enabled": true,
     "head_sampling_rate": 0.1
   },
-  "upload_source_maps": true
+  "upload_source_maps": true,
+  "env": {
+    "staging": {
+      "vars": {
+        "AUTH_MODE": "supabase",
+        "SITE_URL": "https://aletheia-staging.aletheia-web.workers.dev"
+      },
+      "assets": {
+        "directory": ".open-next/assets",
+        "binding": "ASSETS"
+      },
+      "secrets": {
+        "required": ["API_ORIGIN_URL", "API_ORIGIN_TOKEN"]
+      }
+    }
+  }
 }

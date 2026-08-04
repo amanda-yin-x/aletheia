@@ -1,4 +1,5 @@
 {
+  "additionalProperties": false,
   "properties": {
     "decision": {
       "enum": [
@@ -6,7 +7,8 @@
         "deny",
         "require_approval",
         "require_prior_event",
-        "indeterminate"
+        "indeterminate",
+        "not_applicable"
       ],
       "title": "Decision",
       "type": "string"

@@ -1,4 +1,5 @@
 {
+  "additionalProperties": false,
   "properties": {
     "document_id": {
       "title": "Document Id",

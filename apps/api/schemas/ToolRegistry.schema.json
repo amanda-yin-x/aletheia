@@ -1,0 +1,226 @@
+{
+  "$defs": {
+    "ToolDefinition": {
+      "additionalProperties": false,
+      "properties": {
+        "input_schema": {
+          "$ref": "#/$defs/ToolJSONSchema"
+        },
+        "mutating": {
+          "title": "Mutating",
+          "type": "boolean"
+        },
+        "name": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "mutating",
+        "input_schema"
+      ],
+      "title": "ToolDefinition",
+      "type": "object"
+    },
+    "ToolJSONSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "$schema": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "$Schema"
+        },
+        "additionalProperties": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Additionalproperties"
+        },
+        "const": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "integer"
+            },
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Const"
+        },
+        "format": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Format"
+        },
+        "items": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ToolJSONSchema"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "maxLength": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Maxlength"
+        },
+        "maximum": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Maximum"
+        },
+        "minLength": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Minlength"
+        },
+        "minimum": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Minimum"
+        },
+        "pattern": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Pattern"
+        },
+        "properties": {
+          "additionalProperties": {
+            "$ref": "#/$defs/ToolJSONSchema"
+          },
+          "title": "Properties",
+          "type": "object"
+        },
+        "required": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Required",
+          "type": "array"
+        },
+        "type": {
+          "enum": [
+            "object",
+            "string",
+            "integer",
+            "number",
+            "boolean",
+            "array"
+          ],
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "ToolJSONSchema",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "schema_dialect": {
+      "const": "https://json-schema.org/draft/2020-12/schema",
+      "title": "Schema Dialect",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "0.2",
+      "default": "0.2",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "tools": {
+      "items": {
+        "$ref": "#/$defs/ToolDefinition"
+      },
+      "minItems": 1,
+      "title": "Tools",
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema_dialect",
+    "tools"
+  ],
+  "title": "ToolRegistry",
+  "type": "object"
+}

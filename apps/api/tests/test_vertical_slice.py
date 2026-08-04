@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import pytest
@@ -20,7 +21,29 @@ async def prepare(session: AsyncSession) -> Project:
     assert project
     findings = list((await session.scalars(select(Finding).where(Finding.project_id == project.id, Finding.severity == "critical"))).all())
     for finding in findings:
-        await resolve_finding(session, finding.id, "resolved", "Current policy v3 is authoritative.")
+        related = list(
+            (
+                await session.scalars(
+                    select(Rule).where(Rule.id.in_(finding.related_rule_ids))
+                )
+            ).all()
+        )
+        winner = next(
+            rule for rule in related if not rule.stable_key.startswith("rule.legacy.")
+        )
+        loser = next(
+            rule for rule in related if rule.stable_key.startswith("rule.legacy.")
+        )
+        await resolve_finding(
+            session,
+            finding.id,
+            "resolved",
+            "Current policy v3 is authoritative.",
+            winner_rule_id=winner.id,
+            loser_rule_id=loser.id,
+            authority="Refund Policy v3",
+            actor="vertical-slice-test",
+        )
     threshold = await session.scalar(select(Rule).where(Rule.project_id == project.id, Rule.stable_key == "rule.refund.approval_threshold", Rule.status == "needs_review"))
     assert threshold
     await revise_rule(session, threshold.id, expected_revision=threshold.revision, changes={"reviewer_note": "Strict > boundary verified."}, status="approved")
@@ -63,12 +86,16 @@ async def test_complete_no_key_workflow_and_boundary_trace(session: AsyncSession
     project = await prepare(session)
     build = await compile_project(session, project.id)
     assert build.stats["original"]["lines"] > build.stats["candidate"]["lines"]
-    assert len(build.artifacts["policies/tool-policy.json"]["rules"]) == 7
+    assert len(json.loads(build.artifacts["policies/tool-policy.json"])["rules"]) == 7
     assert set(build.source_map) >= {"prompt-kernel.md", "policies/tool-policy.json", "tests/regression.yaml"}
     run = await run_comparison(session, project.id, build.id)
     assert run.metrics["compiled_enforced"]["executed_violation_rate"] == 0
     assert run.metrics["compiled_enforced"]["false_block_rate"] == 0
     assert run.metrics["coverage"]["test_count"] == 16
+    assert run.metrics["coverage"]["rule_coverage"]["ratio"] == 1
+    assert run.metrics["coverage"]["source_coverage"]["ratio"] == 1
+    assert run.metrics["coverage"]["boundary_coverage"]["ratio"] == 1
+    assert run.metrics["coverage"]["critical_unclassified_rules"] == []
     assert run.dataset_manifest["data_scope"] == "evaluation"
     assert release_gate_ready(run.metrics, run.dataset_manifest)
     incomplete_metrics = {**run.metrics, "compiled_enforced": {**run.metrics["compiled_enforced"], "task_success_rate": 0.9375}}
@@ -82,11 +109,13 @@ async def test_complete_no_key_workflow_and_boundary_trace(session: AsyncSession
     assert guarded.metrics["blocked_calls"] == 1
     assert baseline.metrics["executed_violation"] is True
     report = await create_report(session, run.id)
-    assert report.verdict == "Ready for controlled pilot"
+    assert report.verdict == "Fixture suite passed"
     assert report.evidence["evidence_boundary"] == EVIDENCE_BOUNDARY
-    assert report.evidence["provenance"]["data_scope"] == "Evaluation dataset — no customer records"
+    assert report.evidence["provenance"]["data_scope"] == "Evaluation fixture — no customer records"
     assert report.evidence["provenance"]["adapter"] == "Deterministic replay"
-    assert "Aletheia-authored refund evaluation suite" in report.rendered_markdown
+    assert report.evidence["schema_version"] == "0.3"
+    assert report.evidence["provenance"]["evaluation_timestamp"].endswith("Z")
+    assert "Aletheia-authored refund boundary suite" in report.rendered_markdown
     assert len(report.content_hash) == 64
     assert "not a safety, security, or compliance certification" in report.rendered_markdown.lower()
 

@@ -1,7 +1,9 @@
 # Third-party notices
 
-Aletheia uses open-source libraries whose licences are recorded in the Python
-and pnpm lockfiles.
+Aletheia uses open-source libraries resolved by the Python and pnpm lockfiles.
+Those lockfiles pin package versions and integrity data; they are not a complete
+licence inventory. The notices below cover reviewed, directly referenced assets
+and datasets. A generated transitive licence inventory remains a release task.
 
 The project-scoped Hallmark Codex design skill under
 `.codex/skills/hallmark` was copied from `Nutlope/hallmark` revision
@@ -19,12 +21,14 @@ Newsreader contributors and Vercel for Geist; both families are available under
 the SIL Open Font License 1.1. Anthropic's custom website fonts were inspected
 only to understand type roles; their binaries are not copied or hotlinked.
 
-The optional tau3 Retail adapter targets `sierra-research/tau2-bench` tag
-`v1.0.1` (expected short commit `fc0055d`), copyright Sierra Research 2025,
-licensed under MIT. Provenance-checked upstream inputs for the selected 17
-Retail tasks are currently present under `data/benchmarks/tau3-retail`; no
-Aletheia benchmark result is present or claimed. The sync command verifies the
-pinned tag/commit and file hashes before replacing those inputs.
+The optional Retail-17 import adapter derives a bounded Aletheia smoke subset
+from `sierra-research/tau2-bench` tag `v1.0.1` (expected short commit
+`fc0055d`), copyright Sierra Research 2025, licensed under MIT. The legacy
+storage path remains `data/benchmarks/tau3-retail`, but the records are labelled
+as tau2-derived Retail-17 inputs. No upstream runner/evaluator result or
+benchmark score is present or claimed. The sync command verifies the pinned
+tag/commit, then records hashes of the copied files. It does not yet compare
+them with a separately maintained expected-digest allowlist.
 
 Research references: [tau-bench](https://arxiv.org/abs/2406.12045),
 [tau2-bench](https://arxiv.org/abs/2506.07982),

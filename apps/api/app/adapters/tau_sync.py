@@ -15,6 +15,8 @@ REPOSITORY = "https://github.com/sierra-research/tau2-bench"
 TAG = "v1.0.1"
 EXPECTED_SHORT_COMMIT = "fc0055d"
 TASK_IDS = [10, 11, 12, 13, 16, 24, 30, 31, 48, 50, 51, 53, 57, 76, 82, 83, 84]
+# Keep the checked-in storage path stable; public labels identify the upstream
+# tau2 source and the bounded Aletheia Retail-17 selection accurately.
 OUTPUT = get_settings().data_root / "benchmarks" / "tau3-retail"
 
 
@@ -35,12 +37,12 @@ def normalize_retail_tasks(tasks: list[dict[str, Any]]) -> dict[str, Any]:
         criteria = task.get("evaluation_criteria") or {}
         normalized.append(
             {
-                "id": f"tau3.retail.{task_id}",
+                "id": f"retail17.{task_id}",
                 "upstream_task_id": str(task_id),
-                "title": f"tau3 Retail task {task_id}",
+                "title": f"Retail-17 task {task_id}",
                 "purpose": instructions.get("reason_for_call") or "Upstream Retail policy task",
                 "provenance": {
-                    "source": "tau3-retail-v1.0.1",
+                    "source": "tau2-retail-v1.0.1",
                     "upstream_path": "data/tau2/domains/retail/tasks.json",
                     "selector": f"id={task_id}",
                 },
@@ -69,7 +71,7 @@ def normalize_retail_tasks(tasks: list[dict[str, Any]]) -> dict[str, Any]:
 
 def sync() -> dict[str, Any]:
     """Fetch and provenance-check the pinned Retail benchmark without modifying upstream."""
-    with tempfile.TemporaryDirectory(prefix="aletheia-tau3-") as temp:
+    with tempfile.TemporaryDirectory(prefix="aletheia-retail17-") as temp:
         checkout = Path(temp) / "tau2-bench"
         subprocess.run(["git", "clone", "--depth", "1", "--branch", TAG, REPOSITORY, str(checkout)], check=True, capture_output=True, text=True)
         commit = subprocess.run(["git", "rev-parse", "HEAD"], cwd=checkout, check=True, capture_output=True, text=True).stdout.strip()

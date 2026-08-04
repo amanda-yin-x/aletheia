@@ -22,7 +22,8 @@ export function PageLoading({ label = "Loading workspace" }: { label?: string })
 
 export function ErrorState({ error, onRetry }: { error: unknown; onRetry?: () => void }) {
   const request = error instanceof RequestError ? error : null;
-  return <div className="state-panel state-error" role="alert"><AlertCircle size={24} /><strong>{request?.message || "This view could not be loaded."}</strong><span>Request ID: <code>{request?.payload.request_id || "not available"}</code></span>{onRetry && <Button variant="secondary" onClick={onRetry}><RefreshCw size={15} /> Retry</Button>}</div>;
+  const message = request?.message || (error instanceof Error ? error.message : "This view could not be loaded.");
+  return <div className="state-panel state-error" role="alert"><AlertCircle size={24} /><strong>{message}</strong><span>Request ID: <code>{request?.payload.request_id || "not available"}</code></span>{onRetry && <Button variant="secondary" onClick={onRetry}><RefreshCw size={15} /> Retry</Button>}</div>;
 }
 
 export function EmptyState({ title, detail, action }: { title: string; detail: string; action?: React.ReactNode }) {

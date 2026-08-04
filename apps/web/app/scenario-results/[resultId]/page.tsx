@@ -15,16 +15,19 @@ export default function TracePage() {
   const trace = useQuery({ queryKey: ["trace", resultId], queryFn: () => api<Trace>(`/api/v1/scenario-results/${resultId}/trace`) });
   const [selectedIndex, setSelectedIndex] = useState(3);
   if (trace.isLoading) return <main className="landing"><PageLoading label="Loading source-linked trace" /></main>;
-  if (trace.error) return <main className="landing"><ErrorState error={trace.error} onRetry={() => trace.refetch()} /></main>;
-  const data = trace.data!;
+  if (trace.error || !trace.data) return <main className="landing"><ErrorState error={trace.error || new Error("The trace response was empty.")} onRetry={() => trace.refetch()} /></main>;
+  const data = trace.data;
+  if (!data.events.length) return <main className="landing"><ErrorState error={new Error("This result has no persisted trace events.")} onRetry={() => trace.refetch()} /></main>;
   const selected = data.events[selectedIndex] || data.events[0];
-  const firstHash = String(data.test.spec.initial_state ? data.events[0]?.payload.initial_state_hash : "");
+  const assertion = data.events.find((event) => event.type === "assertion_evaluated");
+  const expectedDecision = assertion?.payload.expected_decision;
+  const firstHash = String(data.result.metrics.initial_state_hash || data.events[0]?.payload.initial_state_hash || "");
   return <main className="landing" style={{ maxWidth: 1320, paddingTop: 34 }}>
     <div style={{ marginBottom: 18 }}><Link className="arrow-label" href={`/runs/${data.result.run_id}`}><ArrowLeft size={14} /> Back to run comparison</Link></div>
     <PageTitle eyebrow={`${label(data.result.arm)} · ${data.test.provenance}`} title={data.test.title} detail="The trace separates a proposed call, deterministic policy decision, execution status, and recorded state change." actions={<Badge tone={data.result.verdict === "passed" ? "teal" : "red"}>{label(data.result.verdict)}</Badge>} />
     {data.result.first_divergence && <div className="divergence"><strong>First divergence</strong><br />{data.result.first_divergence}</div>}
     <section className="panel trace-layout">
-      <aside className="trace-summary"><h3>Case evidence</h3><div className="definition"><span>Expected decision</span><strong>{label(String(data.test.spec.expected.guarded_decision))}</strong></div><div className="definition"><span>Initial state</span><strong className="mono">{shortHash(firstHash)}</strong></div><div className="definition"><span>Final state</span><strong className="mono">{shortHash(data.result.final_state_hash)}</strong></div><div className="definition"><span>Linked rules</span>{data.test.spec.rule_ids.map((rule) => <Badge key={rule}>{rule}</Badge>)}</div><div className="definition"><span>Adapter</span><strong>Deterministic replay · no model</strong></div></aside>
+      <aside className="trace-summary"><h3>Case evidence</h3><div className="definition"><span>Expected decision</span><strong>{typeof expectedDecision === "string" ? label(expectedDecision) : "Not recorded"}</strong></div><div className="definition"><span>Initial state</span><strong className="mono">{shortHash(firstHash)}</strong></div><div className="definition"><span>Final state</span><strong className="mono">{shortHash(data.result.final_state_hash)}</strong></div><div className="definition"><span>Linked rules</span>{data.test.rule_ids.map((rule) => <Badge key={rule}>{rule}</Badge>)}</div>{data.test.spec_digest && <div className="definition"><span>Pinned test spec</span><strong className="mono">{shortHash(data.test.spec_digest)}</strong></div>}<div className="definition"><span>Adapter</span><strong>Deterministic replay · no model</strong></div></aside>
       <div className="timeline" aria-label="Ordered trace events">
         {data.events.map((event, index) => <div key={event.id} className={`timeline-event ${traceEventClass(event.type)} ${index === selectedIndex ? "selected" : ""}`} onClick={() => setSelectedIndex(index)} onKeyDown={(input) => { if (input.key === "Enter") setSelectedIndex(index); }} tabIndex={0}>
           <div className="event-head">{event.type === "tool_proposed" ? <CircleDot size={14} /> : event.type === "tool_executed" ? <PlayCircle size={14} /> : event.type === "approval_required" || event.type === "tool_blocked" ? <Ban size={14} /> : event.type === "policy_evaluated" ? <ShieldAlert size={14} /> : <CheckCircle2 size={14} />}<strong>{label(event.type)}</strong><span>#{event.sequence}</span>{event.type === "tool_proposed" && <Badge tone="amber">Proposed</Badge>}{event.type === "tool_executed" && <Badge tone="teal">Executed</Badge>}</div>

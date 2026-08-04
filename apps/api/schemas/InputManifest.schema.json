@@ -1,0 +1,471 @@
+{
+  "$defs": {
+    "ManifestArtifactInput": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact": {
+          "title": "Artifact",
+          "type": "string"
+        },
+        "artifact_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Artifact Sha256",
+          "type": "string"
+        },
+        "source": {
+          "title": "Source",
+          "type": "string"
+        },
+        "source_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Source Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "source_sha256",
+        "artifact",
+        "artifact_sha256"
+      ],
+      "title": "ManifestArtifactInput",
+      "type": "object"
+    },
+    "ManifestCompiler": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "serialization": {
+          "title": "Serialization",
+          "type": "string"
+        },
+        "token_estimator": {
+          "title": "Token Estimator",
+          "type": "string"
+        },
+        "version": {
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version",
+        "serialization",
+        "token_estimator"
+      ],
+      "title": "ManifestCompiler",
+      "type": "object"
+    },
+    "ManifestFactInput": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact": {
+          "title": "Artifact",
+          "type": "string"
+        },
+        "artifact_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Artifact Sha256",
+          "type": "string"
+        },
+        "contains_customer_records": {
+          "title": "Contains Customer Records",
+          "type": "boolean"
+        },
+        "data_scope": {
+          "title": "Data Scope",
+          "type": "string"
+        },
+        "source": {
+          "title": "Source",
+          "type": "string"
+        },
+        "source_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Source Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source",
+        "source_sha256",
+        "artifact",
+        "artifact_sha256",
+        "data_scope",
+        "contains_customer_records"
+      ],
+      "title": "ManifestFactInput",
+      "type": "object"
+    },
+    "ManifestFinding": {
+      "additionalProperties": false,
+      "properties": {
+        "message": {
+          "title": "Message",
+          "type": "string"
+        },
+        "proof_status": {
+          "title": "Proof Status",
+          "type": "string"
+        },
+        "related_rules": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Related Rules",
+          "type": "array"
+        },
+        "resolution_note": {
+          "title": "Resolution Note",
+          "type": "string"
+        },
+        "resolution_state": {
+          "enum": [
+            "open",
+            "resolved",
+            "accepted_risk"
+          ],
+          "title": "Resolution State",
+          "type": "string"
+        },
+        "severity": {
+          "title": "Severity",
+          "type": "string"
+        },
+        "type": {
+          "title": "Type",
+          "type": "string"
+        },
+        "witness": {
+          "additionalProperties": true,
+          "title": "Witness",
+          "type": "object"
+        }
+      },
+      "required": [
+        "type",
+        "severity",
+        "proof_status",
+        "message",
+        "witness",
+        "related_rules",
+        "resolution_state",
+        "resolution_note"
+      ],
+      "title": "ManifestFinding",
+      "type": "object"
+    },
+    "ManifestFindings": {
+      "additionalProperties": false,
+      "properties": {
+        "accepted": {
+          "items": {
+            "$ref": "#/$defs/ManifestFinding"
+          },
+          "title": "Accepted",
+          "type": "array"
+        },
+        "unresolved": {
+          "items": {
+            "$ref": "#/$defs/ManifestFinding"
+          },
+          "title": "Unresolved",
+          "type": "array"
+        }
+      },
+      "required": [
+        "unresolved",
+        "accepted"
+      ],
+      "title": "ManifestFindings",
+      "type": "object"
+    },
+    "ManifestRuleInput": {
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "enum": [
+            "style",
+            "workflow",
+            "knowledge",
+            "runtime_fact",
+            "hard_constraint",
+            "handoff",
+            "quality"
+          ],
+          "title": "Category",
+          "type": "string"
+        },
+        "digest": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Digest",
+          "type": "string"
+        },
+        "enforcement": {
+          "enum": [
+            "prompt",
+            "guard",
+            "test_only",
+            "human_review"
+          ],
+          "title": "Enforcement",
+          "type": "string"
+        },
+        "revision": {
+          "minimum": 1,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "severity": {
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "critical"
+          ],
+          "title": "Severity",
+          "type": "string"
+        },
+        "source_documents": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Source Documents",
+          "type": "array"
+        },
+        "stable_key": {
+          "title": "Stable Key",
+          "type": "string"
+        },
+        "status": {
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "stable_key",
+        "revision",
+        "status",
+        "severity",
+        "category",
+        "enforcement",
+        "source_documents",
+        "digest"
+      ],
+      "title": "ManifestRuleInput",
+      "type": "object"
+    },
+    "ManifestRuntime": {
+      "additionalProperties": false,
+      "properties": {
+        "adapter": {
+          "title": "Adapter",
+          "type": "string"
+        },
+        "arms": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Arms",
+          "type": "array"
+        },
+        "domain": {
+          "title": "Domain",
+          "type": "string"
+        },
+        "lifecycle": {
+          "enum": [
+            "pre_tool",
+            "post_tool",
+            "conversation",
+            "offline"
+          ],
+          "title": "Lifecycle",
+          "type": "string"
+        },
+        "policy_schema_version": {
+          "title": "Policy Schema Version",
+          "type": "string"
+        },
+        "runner_input_version": {
+          "title": "Runner Input Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "adapter",
+        "runner_input_version",
+        "policy_schema_version",
+        "domain",
+        "lifecycle",
+        "arms"
+      ],
+      "title": "ManifestRuntime",
+      "type": "object"
+    },
+    "ManifestSourceInput": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "title": "Kind",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "normalized_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Normalized Sha256",
+          "type": "string"
+        },
+        "normalizer": {
+          "title": "Normalizer",
+          "type": "string"
+        },
+        "normalizer_version": {
+          "title": "Normalizer Version",
+          "type": "string"
+        },
+        "original_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Original Sha256",
+          "type": "string"
+        },
+        "parser": {
+          "title": "Parser",
+          "type": "string"
+        },
+        "parser_version": {
+          "title": "Parser Version",
+          "type": "string"
+        },
+        "version": {
+          "minimum": 1,
+          "title": "Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "name",
+        "version",
+        "kind",
+        "original_sha256",
+        "normalized_sha256",
+        "parser",
+        "parser_version",
+        "normalizer",
+        "normalizer_version"
+      ],
+      "title": "ManifestSourceInput",
+      "type": "object"
+    },
+    "ManifestTestInput": {
+      "additionalProperties": false,
+      "properties": {
+        "digest": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Digest",
+          "type": "string"
+        },
+        "provenance": {
+          "title": "Provenance",
+          "type": "string"
+        },
+        "rule_ids": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Rule Ids",
+          "type": "array"
+        },
+        "stable_key": {
+          "title": "Stable Key",
+          "type": "string"
+        },
+        "tags": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Tags",
+          "type": "array"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        }
+      },
+      "required": [
+        "stable_key",
+        "title",
+        "provenance",
+        "rule_ids",
+        "tags",
+        "digest"
+      ],
+      "title": "ManifestTestInput",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "compiler": {
+      "$ref": "#/$defs/ManifestCompiler"
+    },
+    "facts": {
+      "$ref": "#/$defs/ManifestFactInput"
+    },
+    "findings": {
+      "$ref": "#/$defs/ManifestFindings"
+    },
+    "rules": {
+      "items": {
+        "$ref": "#/$defs/ManifestRuleInput"
+      },
+      "title": "Rules",
+      "type": "array"
+    },
+    "runtime": {
+      "$ref": "#/$defs/ManifestRuntime"
+    },
+    "schema_version": {
+      "const": "0.3",
+      "default": "0.3",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "sources": {
+      "items": {
+        "$ref": "#/$defs/ManifestSourceInput"
+      },
+      "title": "Sources",
+      "type": "array"
+    },
+    "tests": {
+      "items": {
+        "$ref": "#/$defs/ManifestTestInput"
+      },
+      "title": "Tests",
+      "type": "array"
+    },
+    "tools": {
+      "$ref": "#/$defs/ManifestArtifactInput"
+    }
+  },
+  "required": [
+    "compiler",
+    "runtime",
+    "sources",
+    "rules",
+    "tests",
+    "tools",
+    "facts",
+    "findings"
+  ],
+  "title": "InputManifest",
+  "type": "object"
+}

@@ -1,15 +1,36 @@
-export interface Project { id: string; slug: string; name: string; domain: string; description: string; mode: string; created_at: string }
+export interface Project { id: string; workspace_id: string; slug: string; name: string; domain: string; description: string; mode: string; created_at: string }
+export interface Workspace { id: string; slug: string; name: string; role: string; created_at: string }
+export interface BootstrapResult { workspace: Workspace; project: Project; created: boolean; project_id?: string }
+export interface Account { id: string; email: string | null; workspaces: Workspace[] }
+export type OperationStatus = "queued" | "running" | "succeeded" | "failed" | "dead_lettered" | "cancelled" | "canceled" | "expired" | "timed_out" | "stale" | "aborted" | (string & {});
+export interface OperationErrorPayload { code: string; message: string }
+export interface Operation {
+  id: string;
+  workspace_id?: string;
+  kind: string;
+  status: OperationStatus;
+  progress: number;
+  resource_type: string | null;
+  resource_id: string | null;
+  attempt_count: number;
+  max_attempts?: number;
+  error: OperationErrorPayload | null;
+  created_at?: string;
+  updated_at: string;
+}
 export interface Summary { sources: number; approved_rules: number; critical_findings: number; tests: number; current_build: Build | null; last_run: Run | null }
 export interface SourceRef { document_id: string; document_name: string; line_start: number; line_end: number; quote: string; source_sha256: string }
 export interface Document { id: string; project_id: string; kind: string; name: string; version: number; original_sha256: string; normalized_text: string; mime_type: string; line_count: number; token_estimate: number; origin: Record<string, unknown>; created_at: string }
 export interface Rule { id: string; project_id: string; stable_key: string; revision: number; title: string; normative_text: string; category: string; effect: string; severity: string; status: string; confidence: number; scope: Record<string, unknown>; condition: Record<string, unknown>; enforcement: string; decidability: string; source_refs: SourceRef[]; target_tools: string[]; reviewer_note: string }
-export interface Finding { id: string; project_id: string; type: string; severity: string; related_rule_ids: string[]; proof_status: string; message: string; witness: Record<string, unknown>; resolution_state: string; resolution_note: string }
+export type FindingResolutionState = "open" | "resolved" | "accepted_risk";
+export interface Finding { id: string; project_id: string; type: string; severity: string; related_rule_ids: string[]; proof_status: string; message: string; witness: Record<string, unknown>; resolution_state: FindingResolutionState; resolution_note: string }
 export interface Build { id: string; project_id: string; status: string; input_manifest: Record<string, unknown>; input_hash: string; compiler_version: string; artifacts: Record<string, unknown>; source_map: Record<string, string[]>; stats: { original: Stat; candidate: Stat; reduction: { lines: number; characters: number; estimated_tokens: number; label: string }; routing: Record<string, number> }; content_hash: string; created_at: string }
 interface Stat { lines: number; characters: number; tokens: number }
 export interface TestCase { id: string; project_id: string; stable_key: string; title: string; provenance: string; spec: { rule_ids: string[]; tags: string[]; expected: Record<string, unknown>; initial_state: Record<string, unknown> }; review_status: string }
-export interface ArmMetrics { cases: number; task_success_rate: number; attempted_violation_rate: number; executed_violation_rate: number; false_block_rate: number; input_tokens: number | null; output_tokens: number | null; cost: number | null }
-export interface Run { id: string; project_id: string; build_id: string; requested_arms: string[]; adapter: string; model: string | null; dataset_manifest: { name: string; version: string; data_scope: string; test_count: number; hash: string }; status: string; metrics: Record<string, ArmMetrics | Record<string, unknown>>; started_at: string; finished_at: string | null }
-export interface Result { id: string; run_id: string; test_case_id: string; arm: string; verdict: string; metrics: Record<string, unknown>; final_state_hash: string; first_divergence: string; trace_id: string; test: { stable_key: string; title: string; rule_ids: string[]; tags: string[] } }
-export interface Trace { result: Result; test: TestCase; events: Array<{ id: string; sequence: number; type: string; payload: Record<string, unknown>; rule_ids: string[]; duration_ms: number; created_at: string }> }
-export interface Report { id: string; run_id: string; verdict: string; evidence: { evidence_boundary: string; deterministic_runtime_boundary: string; provenance: Record<string, unknown>; hashes: Record<string, string>; comparison_arms: string[]; test_count: number; metrics: Record<string, ArmMetrics>; top_failures: Array<Record<string, unknown>>; limitations: string[] }; rendered_markdown: string; content_hash: string; created_at: string }
+export interface TestSnapshot { stable_key: string; title: string; rule_ids: string[]; tags: string[]; provenance: string; spec_digest?: string }
+export interface ArmMetrics { cases: number; task_success_rate: number; attempted_violation_rate: number; executed_violation_rate: number; false_block_rate: number; tool_validation_error_rate: number; input_tokens: number | null; output_tokens: number | null; cost: number | null }
+export interface Run { id: string; project_id: string; build_id: string; requested_arms: string[]; adapter: string; model: string | null; dataset_manifest: { name: string; version: string; data_scope: string; test_count: number; hash: string; [key: string]: unknown }; status: OperationStatus; metrics: Record<string, ArmMetrics | Record<string, unknown>>; started_at: string; finished_at: string | null }
+export interface Result { id: string; run_id: string; test_case_id: string; arm: string; verdict: string; metrics: Record<string, unknown>; final_state_hash: string; first_divergence: string; trace_id: string; test: TestSnapshot }
+export interface Trace { result: Result; test: TestSnapshot; events: Array<{ id: string; sequence: number; type: string; payload: Record<string, unknown>; rule_ids: string[]; duration_ms: number; created_at: string }> }
+export interface Report { id: string; run_id: string; verdict: string; evidence: { evidence_boundary: string; deterministic_runtime_boundary: string; provenance: Record<string, unknown>; hashes: Record<string, unknown>; comparison_arms: string[]; test_count: number; metrics: Record<string, ArmMetrics | Record<string, unknown>>; top_failures: Array<Record<string, unknown>>; limitations: string[]; report_digest?: string; [key: string]: unknown }; rendered_markdown: string; content_hash: string; created_at: string }
 export interface APIError { code: string; message: string; details: Record<string, unknown>; request_id: string }

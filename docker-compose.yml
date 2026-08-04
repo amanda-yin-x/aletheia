@@ -16,8 +16,11 @@ services:
       context: .
       dockerfile: apps/api/Dockerfile
     environment:
+      ENVIRONMENT: local
       DATABASE_URL: postgresql+asyncpg://aletheia:local_only_aletheia@db:5432/aletheia
+      MIGRATION_DATABASE_URL: postgresql+psycopg://aletheia:local_only_aletheia@db:5432/aletheia
       WEB_ORIGIN: http://localhost:3000
+      API_ORIGIN_TOKEN: local-compose-origin-token
       DEMO_MODE: "true"
       DEMO_INLINE_JOBS: "true"
     ports: ["8000:8000"]
@@ -28,7 +31,10 @@ services:
       context: .
       dockerfile: apps/web/Dockerfile
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:8000
+      AUTH_MODE: local
+      API_ORIGIN_URL: http://api:8000
+      API_ORIGIN_TOKEN: local-compose-origin-token
+      SITE_URL: http://localhost:3000
     ports: ["3000:3000"]
     depends_on: [api]
   worker:
@@ -37,10 +43,12 @@ services:
       dockerfile: apps/api/Dockerfile
     command: ["uv", "run", "aletheia", "worker"]
     environment:
+      ENVIRONMENT: local
       DATABASE_URL: postgresql+asyncpg://aletheia:local_only_aletheia@db:5432/aletheia
+      MIGRATION_DATABASE_URL: postgresql+psycopg://aletheia:local_only_aletheia@db:5432/aletheia
+      API_ORIGIN_TOKEN: local-compose-origin-token
       DEMO_INLINE_JOBS: "false"
     depends_on:
       db: { condition: service_healthy }
 volumes:
   postgres_data:
-

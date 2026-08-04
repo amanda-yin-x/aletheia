@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""CLI wrapper for the provenance-checking tau3 Retail sync adapter."""
+"""CLI wrapper for the provenance-checked tau2-derived Retail-17 import."""
 
 import json
 from pathlib import Path

@@ -1,0 +1,8 @@
+# Copy this file to .dev.vars for `wrangler dev`. Never commit real tokens.
+AUTH_MODE=local
+SITE_URL=http://localhost:3000
+API_ORIGIN_URL=http://localhost:8000
+API_ORIGIN_TOKEN=replace-with-a-long-random-origin-token
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_PUBLISHABLE_KEY=sb_publishable_replace_me
+TURNSTILE_SITE_KEY=1x00000000000000000000AA

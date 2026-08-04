@@ -1,0 +1,523 @@
+{
+  "schema_version": "1.0",
+  "document": {
+    "name": "Aletheia capability and verification inventory",
+    "version": "2026-08-03",
+    "repository": "https://github.com/amanda-yin-x/aletheia",
+    "canonical_site": "https://aletheia.aletheia-web.workers.dev",
+    "evidence_boundary": "The bundled results cover deterministic Northstar fixture data, reviewed rules, build-pinned artifacts, scripted trajectories, and calls routed through the fixture policy adapter. They do not establish live-model quality, customer safety, compliance, production reliability, or market validation."
+  },
+  "status_vocabulary": {
+    "operating": "A connected path works in the stated environment and is more than a class, endpoint, or deployment seam.",
+    "fixture": "A connected path works only with bundled deterministic or synthetic data, scripted trajectories, or in-memory evaluation tools.",
+    "interface_only": "A protocol, class, command shape, or explicit failure seam exists, but the named integration does not operate.",
+    "configuration_only": "Configuration or deployment manifests exist, but the external service or complete integration is not provisioned and verified.",
+    "unverified": "Implementation exists, but the current final verification gate or required external end-to-end check has not passed.",
+    "absent": "No operating implementation exists in the repository."
+  },
+  "overall_status": {
+    "local_product": {
+      "status": "fixture",
+      "reason": "All 111 backend tests passed across the default and real-PostgreSQL local runs; web lint, types, 32 unit/component tests, production/OpenNext builds, Cloudflare type generation, production/staging Wrangler dry-runs, and all five clean browser flows also passed. A successful GitHub Actions run and every hosted gate remain separate."
+    },
+    "evaluation_mode": {
+      "status": "fixture",
+      "reason": "The complete review, compile, run, trace, and report path uses the bundled Northstar corpus and deterministic scripted trajectories."
+    },
+    "hosted_product": {
+      "status": "unverified",
+      "reason": "The current Cloudflare, Render, Supabase Auth, Supabase Postgres, OAuth, SMTP, and Turnstile path has not been provisioned and exercised end to end."
+    },
+    "production_readiness": {
+      "status": "absent",
+      "reason": "Database-enforced tenant isolation, signed releases, customer runtime enforcement, production ingestion, operating controls, and production assurance are incomplete."
+    }
+  },
+  "target_architecture": [
+    {
+      "order": 1,
+      "component": "Public browser",
+      "responsibility": "Loads the public landing page or requests a protected workspace route."
+    },
+    {
+      "order": 2,
+      "component": "Supabase Auth",
+      "responsibility": "Issues and refreshes sessions for email and GitHub authentication and validates CAPTCHA for email auth."
+    },
+    {
+      "order": 3,
+      "component": "Cloudflare Workers with Next.js and OpenNext",
+      "responsibility": "Renders protected routes, refreshes cookies, validates browser mutations, and proxies same-origin API traffic."
+    },
+    {
+      "order": 4,
+      "component": "Render FastAPI",
+      "responsibility": "Validates the origin credential and user JWT, enforces membership scopes, and runs domain and operation services."
+    },
+    {
+      "order": 5,
+      "component": "Supabase Postgres",
+      "responsibility": "Stores accounts, workspaces, project data, build/run evidence, and operations."
+    }
+  ],
+  "capabilities": [
+    {
+      "id": "web.public_landing",
+      "name": "Public product landing page",
+      "status": "operating",
+      "environment": "local web and static/public route",
+      "scope": "Explains the policy-CI workflow, refund failure scenario, source boundary, and product path without reading private API data.",
+      "evidence": ["apps/web/app/page.tsx", "apps/web/components/marketing-landing.tsx", "apps/web/tests/e2e/demo.spec.ts"],
+      "limitations": ["The current hosted revision has not been confirmed deployed.", "No analytics, legal, privacy, or service-status pages are implemented."]
+    },
+    {
+      "id": "web.workspace",
+      "name": "Authenticated review, build, run, and report UI",
+      "status": "fixture",
+      "environment": "local Northstar workspace",
+      "scope": "Provides source, rule, build, test, run, trace, and report routes backed by the deterministic Northstar workflow.",
+      "evidence": ["apps/web/app/projects/", "apps/web/app/runs/", "apps/web/app/scenario-results/", "apps/web/app/reports/"],
+      "limitations": ["All five local Playwright flows pass; the hosted network path remains unverified.", "The current scenario and domain content is Northstar-specific."]
+    },
+    {
+      "id": "auth.local",
+      "name": "Local no-key authentication mode",
+      "status": "operating",
+      "environment": "loopback development",
+      "scope": "Uses a fixed API development identity and a loopback-only web bypass so the fixture workflow needs no external identity service.",
+      "evidence": ["apps/api/app/auth.py", "apps/web/lib/supabase/config.ts", "docker-compose.yml"],
+      "limitations": ["The Next.js development server also has a non-production no-Supabase fallback when AUTH_MODE is unset.", "This mode must never be used on a public origin."]
+    },
+    {
+      "id": "auth.supabase",
+      "name": "Supabase email and GitHub authentication",
+      "status": "unverified",
+      "environment": "hosted target",
+      "scope": "Implements email magic-link/OTP, GitHub OAuth, code-only PKCE callback exchange with raw token-hash rejection, cookie refresh, logout, and protected-route checks.",
+      "evidence": ["apps/web/app/login/", "apps/web/app/auth/", "apps/web/lib/supabase/", "apps/web/middleware.ts", "apps/web/tests/auth-callback.test.ts"],
+      "limitations": ["No Supabase project, GitHub provider, email templates, or custom SMTP setup is claimed provisioned.", "Real refresh, revocation, and provider delivery have not been exercised."]
+    },
+    {
+      "id": "auth.turnstile",
+      "name": "Turnstile protection for email authentication",
+      "status": "unverified",
+      "environment": "hosted target",
+      "scope": "Forwards a single-use CAPTCHA token to Supabase email auth and destroys/remounts the widget after each attempt.",
+      "evidence": ["apps/web/components/turnstile-widget.tsx", "apps/web/tests/login.test.tsx"],
+      "limitations": ["A real site-key/secret pair and Supabase CAPTCHA configuration have not been verified."]
+    },
+    {
+      "id": "web.same_origin_proxy",
+      "name": "Same-origin API proxy and browser mutation boundary",
+      "status": "unverified",
+      "environment": "Cloudflare-to-Render target",
+      "scope": "Checks session, path, Origin, Fetch Metadata, and double-submit CSRF; strips spoofable credentials; injects bearer and origin credentials; streams upstream responses.",
+      "evidence": ["apps/web/app/api/v1/[...path]/route.ts", "apps/web/lib/security.ts", "apps/web/tests/security.test.ts", "apps/web/tests/api-proxy-handler.test.ts"],
+      "limitations": ["The public Cloudflare-to-Render network path has not been smoke-tested.", "Independent security testing remains pending."]
+    },
+    {
+      "id": "api.hosted_authentication",
+      "name": "FastAPI Supabase JWT and origin authentication",
+      "status": "unverified",
+      "environment": "Render target",
+      "scope": "Defaults to fail-closed production settings, applies pre-routing origin-secret and bearer-presence checks, rejects hosted document uploads before multipart parsing, and requires a signed, non-anonymous authenticated-user JWT with constrained algorithms, key ID, issuer, audience, expiry, and subject on routed operations.",
+      "evidence": ["apps/api/app/auth.py", "apps/api/app/config.py", "apps/api/app/main.py", "apps/api/tests/test_hosted_backend.py"],
+      "limitations": ["The full local backend suite passed, but external Supabase JWKS rotation, outage, and cache behavior have not been exercised."]
+    },
+    {
+      "id": "tenancy.application",
+      "name": "Application-enforced workspace tenancy",
+      "status": "unverified",
+      "environment": "local tests and hosted target",
+      "scope": "Implements accounts, personal workspace bootstrap, owner/admin/editor/viewer roles, and membership-scoped project and child-resource lookups.",
+      "evidence": ["apps/api/app/tenancy.py", "apps/api/app/api/routes.py", "apps/api/tests/test_hosted_backend.py"],
+      "limitations": ["The full local backend suite passed; real hosted two-user isolation remains unverified.", "There is no invitation, membership-administration, group, or service-account workflow."]
+    },
+    {
+      "id": "tenancy.database",
+      "name": "Database-enforced tenant isolation",
+      "status": "absent",
+      "environment": "Supabase Postgres target",
+      "scope": "Would use RLS or an equivalent private-schema and least-privilege grant boundary.",
+      "evidence": ["apps/api/migrations/versions/0002_tenancy_operations.py", "apps/api/tests/test_migrations_integration.py"],
+      "limitations": ["Current tenant authorization is enforced only by FastAPI query scopes.", "The migration's locally tested anon/authenticated privilege revocations are a coarse Data API denial, not tenant isolation.", "The actual Supabase roles, grants, exposed schemas, and Data API denial remain unverified."]
+    },
+    {
+      "id": "sources.provenance_viewer",
+      "name": "Versioned source records and source-linked viewer",
+      "status": "fixture",
+      "environment": "Northstar workspace",
+      "scope": "Stores original-byte and normalized-text hashes, parser/normalizer identity and version, source versions, line counts, source references, and exact highlighted spans for bundled sources.",
+      "evidence": ["apps/api/app/models.py", "apps/web/app/projects/[projectId]/sources/page.tsx", "data/demo/northstar-retail/"],
+      "limitations": ["The hosted workspace uses fictional evaluation data.", "Source maps do not yet resolve every generated output span to a stable versioned anchor."]
+    },
+    {
+      "id": "sources.local_ingestion",
+      "name": "Local text and document ingestion API",
+      "status": "operating",
+      "environment": "local API with DEMO_MODE=false",
+      "scope": "Accepts pasted text and bounded UTF-8 txt, Markdown, JSON, YAML, and text-based PDF input; records distinct original-byte and normalized-text hashes plus parser/normalizer provenance.",
+      "evidence": ["apps/api/app/services/ingestion.py", "apps/api/app/api/routes.py", "apps/api/tests/test_vertical_slice.py"],
+      "limitations": ["There is no upload UI in the current workspace.", "No OCR, malware scanning, DLP, quarantine, or object storage exists."]
+    },
+    {
+      "id": "sources.hosted_ingestion",
+      "name": "Secure hosted customer ingestion",
+      "status": "absent",
+      "environment": "hosted target",
+      "scope": "Would provide quarantined, scanned, access-controlled customer uploads and production connectors.",
+      "evidence": [],
+      "limitations": ["Uploads are intentionally disabled in the current hosted evaluation configuration.", "FastAPI locally verifies that hosted document uploads are rejected before multipart body parsing; no secure hosted ingestion path exists."]
+    },
+    {
+      "id": "extraction.fixture",
+      "name": "Fixture candidate extraction",
+      "status": "fixture",
+      "environment": "Northstar workspace",
+      "scope": "Loads checked-in rule candidates and preserves exact source quotes for the seeded workflow.",
+      "evidence": ["apps/api/app/adapters/providers.py", "apps/api/app/services/seed.py"],
+      "limitations": ["It does not extract arbitrary customer policy language.", "The broader finding set is seeded rather than recomputed by a general analyzer."]
+    },
+    {
+      "id": "extraction.live_model",
+      "name": "Structured live-model extraction",
+      "status": "interface_only",
+      "environment": "optional provider target",
+      "scope": "Defines a provider seam and explicit typed service errors when credentials or an implementation are missing.",
+      "evidence": ["apps/api/app/adapters/providers.py", "apps/api/tests/test_adapters.py"],
+      "limitations": ["No provider request, structured-output validation loop, quote verification pipeline, or live extraction result exists."]
+    },
+    {
+      "id": "analysis.findings",
+      "name": "Conflict, ambiguity, duplicate, and coverage findings",
+      "status": "fixture",
+      "environment": "Northstar workspace",
+      "scope": "Shows known current-versus-legacy conflicts, duplicate guidance, ambiguity, and missing-test findings with proof labels and witnesses.",
+      "evidence": ["apps/api/app/services/seed.py", "apps/web/app/projects/[projectId]/rules/page.tsx"],
+      "limitations": ["There is no domain-neutral conflict engine, bounded solver, or automatic re-analysis of arbitrary uploaded sources.", "Analysis and test-generation operation kinds remain placeholders."]
+    },
+    {
+      "id": "review.workflow",
+      "name": "Revision-safe rule and finding review",
+      "status": "fixture",
+      "environment": "Northstar workspace",
+      "scope": "Uses optimistic revisions, forces semantic edits back to review, records a conflict winner/loser/authority/rationale, supersedes the loser, and gates compilation on unresolved critical findings.",
+      "evidence": ["apps/api/app/services/review.py", "apps/api/app/api/routes.py", "apps/web/app/projects/[projectId]/rules/page.tsx"],
+      "limitations": ["There is no assignment, comment, two-person approval, durable audit actor model, or automatic analyzer rerun before compile."]
+    },
+    {
+      "id": "compiler.northstar_bundle",
+      "name": "Byte-reproducible Northstar artifact compiler",
+      "status": "fixture",
+      "environment": "Northstar workspace",
+      "scope": "Emits prompt, workflow, knowledge, policy, regression tests, pinned sources/rules/findings/tools/facts, source map, README, and a canonical manifest whose exact bytes form the build root.",
+      "evidence": ["apps/api/app/services/compiler.py", "apps/api/app/services/canonical.py", "apps/api/tests/test_evidence_correctness.py"],
+      "limitations": ["Templates and prose remain refund-specific.", "Artifacts are stored in database JSON rather than an append-only content-addressed blob store.", "Final generated-schema drift verification is pending in combined CI.", "Bundles are not signed."]
+    },
+    {
+      "id": "compiler.domain_neutral",
+      "name": "Domain-neutral compiler and second domain",
+      "status": "absent",
+      "environment": "future local and hosted product",
+      "scope": "Would compile the same bounded IR across refund and appointment-scheduling corpora without semantic domain branches.",
+      "evidence": [],
+      "limitations": ["No appointment-scheduling corpus or generic template router exists."]
+    },
+    {
+      "id": "runtime.build_pinning",
+      "name": "Build-pinned fixture execution",
+      "status": "fixture",
+      "environment": "deterministic runner",
+      "scope": "Verifies the build root and every artifact digest, then reads policy, test specifications and trajectories, tool registry, fact metadata, and runtime domain/lifecycle from the selected build; stores stable test snapshots on scenario results.",
+      "evidence": ["apps/api/app/services/runner.py", "apps/api/migrations/versions/0003_evidence_correctness.py", "apps/api/tests/test_evidence_correctness.py"],
+      "limitations": ["A live TestCase row is still used only as relational FK mapping.", "Run, trace, and report labels use the stored result snapshot; the test-authoring screen intentionally shows current project cases.", "Final repository-wide CI is pending."]
+    },
+    {
+      "id": "runtime.policy_interpreter",
+      "name": "Bounded deterministic policy interpreter",
+      "status": "fixture",
+      "environment": "deterministic policy adapter",
+      "scope": "Evaluates bounded boolean/predicate rules with tool/domain/lifecycle scope, fact/prior-event/approval requirements, argument-correlated approvals, allow/not-applicable exceptions, deny/indeterminate/prerequisite/approval/allow precedence, safe RE2 matching, and proposal-before-execution traces.",
+      "evidence": ["apps/api/app/services/policy/interpreter.py", "apps/api/tests/test_policy.py"],
+      "limitations": ["The supported scope vocabulary is intentionally limited to tool, domain, and lifecycle.", "Fact values do not come from a typed fact catalog, and generic timezone, operating-window, cooldown, or persisted temporal-monitor semantics are absent.", "The compatibility approval path is Northstar-shaped: it correlates exact order/amount values but does not require legacy fixture events to carry tool/rule identity metadata."]
+    },
+    {
+      "id": "runtime.strict_typed_boundary",
+      "name": "Build-pinned typed tool-call and exact-money boundary",
+      "status": "fixture",
+      "environment": "deterministic Northstar runner",
+      "scope": "Requires a valid Draft 2020-12 object schema with additionalProperties=false for every pinned tool and rejects missing fields, wrong types, nested-schema violations, unknown tools, unsupported adapters, and unexpected properties before policy evaluation or execution; Northstar money is exact USD minor_units.",
+      "evidence": ["apps/api/app/services/runner.py", "data/demo/northstar-retail/tools.json", "data/demo/northstar-retail/orders.json", "apps/api/tests/test_evidence_correctness.py", "apps/api/tests/test_policy.py"],
+      "limitations": ["This boundary operates only in the scripted in-memory fixture runner, not a customer dispatcher.", "There is no typed fact catalog, multi-currency conversion/rounding policy, or generic timezone-aware time system.", "It must not be described as a production enforcement boundary."]
+    },
+    {
+      "id": "evaluation.fixture_runner",
+      "name": "Labelled-arm deterministic evaluation",
+      "status": "fixture",
+      "environment": "Northstar workspace",
+      "scope": "Runs the build-pinned suite across the build-declared labelled arms from isolated state with explicit tool/compiler assertions plus computed rule, normative-source, and guarded-boundary coverage; the release gate also rejects unclassified critical rules.",
+      "evidence": ["apps/api/app/services/runner.py", "apps/api/app/services/seed.py", "apps/api/tests/test_evidence_correctness.py"],
+      "limitations": ["Trajectories are scripted, not model-generated.", "There are no stochastic trials, uncertainty intervals, calibrated judges, human-label studies, or incident-derived regression lifecycle."]
+    },
+    {
+      "id": "evaluation.live_agent",
+      "name": "Live model and tool loop",
+      "status": "interface_only",
+      "environment": "optional provider target",
+      "scope": "Defines an agent-adapter seam that fails explicitly instead of silently substituting fixture results.",
+      "evidence": ["apps/api/app/adapters/providers.py", "apps/api/tests/test_adapters.py"],
+      "limitations": ["No operating provider call, tool loop, recovery after denial, model capability probe, model digest, or live result exists."]
+    },
+    {
+      "id": "evidence.fixture_report",
+      "name": "Fixture traces and self-digested evidence reports",
+      "status": "fixture",
+      "environment": "Northstar workspace",
+      "scope": "Separates proposals, decisions, execution, results, and state changes; reports exact source/test/tool/fact/build/run hashes, parser/normalizer provenance, computed rule/source/boundary coverage, limitations, and a canonical report digest under aligned build/evidence schema-v0.3 contracts.",
+      "evidence": ["apps/api/app/services/reporting.py", "apps/api/tests/test_evidence_correctness.py", "apps/web/app/reports/[reportId]/page.tsx"],
+      "limitations": ["Reports are not signed or trusted-timestamped.", "Failure rows do not yet deep-link directly to source anchors.", "Final generated-schema drift verification is pending in combined CI."]
+    },
+    {
+      "id": "release.artifact_integrity",
+      "name": "Signed artifact storage, promotion, and rollback",
+      "status": "absent",
+      "environment": "future production system",
+      "scope": "Would store append-only content-addressed blobs, sign roots, verify releases, promote environments, revoke bundles, and retain deployment receipts.",
+      "evidence": [],
+      "limitations": ["Current SHA-256 digests detect changes but do not prove signer identity, trusted time, or deployment state."]
+    },
+    {
+      "id": "operations.contract",
+      "name": "Typed asynchronous operation contract",
+      "status": "unverified",
+      "environment": "local API and hosted target",
+      "scope": "Returns HTTP 202, Location, and OperationOut; records idempotency and request/input fingerprints; polls progress and validates the resulting resource before navigation.",
+      "evidence": ["apps/api/app/operations.py", "apps/api/app/schemas.py", "apps/web/lib/operations.ts", "apps/web/tests/operations.test.ts"],
+      "limitations": ["Local browser polling, terminal-state behavior, and the full backend suite passed; the hosted network path remains unverified.", "Compile fingerprint capture and execution still have an incomplete transaction/TOCTOU boundary.", "There is no cancellation endpoint despite a modeled cancelled state."]
+    },
+    {
+      "id": "operations.local_worker",
+      "name": "SQL operation worker with leases",
+      "status": "unverified",
+      "environment": "local worker and PostgreSQL target",
+      "scope": "Claims queued work, limits one running operation per project, assigns leases, extends owned leases with a heartbeat, recovers expiry, retries unexpected failures, dead-letters exhaustion, and handles shutdown.",
+      "evidence": ["apps/api/app/worker.py", "apps/api/tests/test_adapters.py", "apps/api/tests/test_hosted_backend.py"],
+      "limitations": ["The full backend suite and real local PostgreSQL integration passed; no separate hosted worker is deployed.", "There is no scheduled backoff, cancellation administration, dead-letter replay UI, metrics, or alerts."]
+    },
+    {
+      "id": "operations.hosted_worker",
+      "name": "Separately deployed hosted worker",
+      "status": "absent",
+      "environment": "current Render Free topology",
+      "scope": "Would execute queued operations independently from the web process.",
+      "evidence": [],
+      "limitations": ["The current Render blueprint uses DEMO_INLINE_JOBS=true and defines only one Free web service."]
+    },
+    {
+      "id": "database.sqlite",
+      "name": "Local SQLite lifecycle",
+      "status": "operating",
+      "environment": "local development and tests",
+      "scope": "Provides a zero-install local database with Alembic migrations and deterministic seed/reset.",
+      "evidence": ["apps/api/migrations/", "apps/api/tests/test_migrations_integration.py", "Makefile"],
+      "limitations": ["All five clean Playwright flows and the empty SQLite Alembic upgrade/check passed locally; SQLite does not substitute for the hosted PostgreSQL path."]
+    },
+    {
+      "id": "database.postgres",
+      "name": "PostgreSQL and Supabase database lifecycle",
+      "status": "operating",
+      "environment": "isolated local PostgreSQL 14; PostgreSQL 17 CI target",
+      "scope": "Includes PostgreSQL-compatible models, migrations, URL normalization, advisory migration locking, bounded pooling, conditional anon/authenticated table-privilege revocation, and a PostgreSQL lifecycle CI job.",
+      "evidence": ["apps/api/migrations/", "apps/api/tests/test_migrations_integration.py", ".github/workflows/ci.yml"],
+      "limitations": ["The real PostgreSQL 14 integration passed locally, including current/default role-privilege denial and the queued operation lifecycle; the configured PostgreSQL 17 Actions job has not yet been observed on the settled commit.", "No target Supabase database is claimed migrated, restored, or smoke-tested.", "No target Supabase Data API denial is claimed verified.", "Render Free has no pre-deploy migration command."]
+    },
+    {
+      "id": "deployment.cloudflare",
+      "name": "Cloudflare OpenNext deployment",
+      "status": "configuration_only",
+      "environment": "Cloudflare target",
+      "scope": "Defines the Next.js/OpenNext Worker entry point, static assets, explicit production and named staging bindings, disabled deployment preview URLs, observability sampling, source maps, and deploy commands.",
+      "evidence": ["apps/web/wrangler.jsonc", "apps/web/open-next.config.ts", "apps/web/package.json"],
+      "limitations": ["Production and staging Wrangler dry-runs passed locally, but neither current Worker revision is claimed deployed or publicly smoke-tested.", "Workers Free CPU and bundle limits must be measured with real traffic."]
+    },
+    {
+      "id": "deployment.render",
+      "name": "Render FastAPI deployment",
+      "status": "configuration_only",
+      "environment": "Render target",
+      "scope": "Defines a Free Docker web service, readiness probe, fail-closed production variables, and inline operations.",
+      "evidence": ["render.yaml", "apps/api/Dockerfile"],
+      "limitations": ["No current service provisioning, database migration, cold-start measurement, logs, or rollback test is claimed."]
+    },
+    {
+      "id": "deployment.supabase",
+      "name": "Supabase Auth and Postgres environment",
+      "status": "configuration_only",
+      "environment": "Supabase target",
+      "scope": "Documents required Auth callbacks, providers, SMTP, CAPTCHA, JWT verification, runtime/migration URLs, and database isolation gates.",
+      "evidence": [".env.example", "apps/web/.dev.vars.example", "docs/deployment.md"],
+      "limitations": ["No external Supabase project or production secret set is claimed provisioned.", "RLS or an equivalent private-schema boundary is absent."]
+    },
+    {
+      "id": "benchmark.tau_sync",
+      "name": "Pinned tau Retail sync and normalized manifest",
+      "status": "operating",
+      "environment": "optional local command",
+      "scope": "Pins Sierra v1.0.1/commit prefix fc0055d, normalizes the reviewed 17-task Retail manifest, records hashes/provenance, and preserves the upstream licence.",
+      "evidence": ["apps/api/app/adapters/tau_sync.py", "data/benchmarks/tau3-retail/", "THIRD_PARTY_NOTICES.md"],
+      "limitations": ["The imported data is simulated, real-world-like benchmark data, not customer data.", "Sync/import does not execute or score the benchmark."]
+    },
+    {
+      "id": "benchmark.tau_execution",
+      "name": "Executed tau Retail adapter",
+      "status": "absent",
+      "environment": "optional benchmark target",
+      "scope": "Would run selected upstream tasks and preserve smoke/full-split evidence.",
+      "evidence": [],
+      "limitations": ["The current run command only validates that imported data exists.", "No tau score or quality claim is supported."]
+    },
+    {
+      "id": "ci.repository",
+      "name": "Repository quality and deployment checks",
+      "status": "configuration_only",
+      "environment": "GitHub Actions target",
+      "scope": "Configures Python audit/lint/types/tests, SQLite migration drift, generated contracts, web lint/types/tests, OpenNext build, production/staging Wrangler dry-runs, Playwright, PostgreSQL lifecycle and role-privilege integration, and secret scanning.",
+      "evidence": [".github/workflows/ci.yml", "Makefile"],
+      "limitations": ["The full workflow has not yet passed on the final combined commit.", "Configured checks must not be mistaken for a successful CI run."]
+    },
+    {
+      "id": "ci.customer_release_check",
+      "name": "Customer-facing aletheia check command",
+      "status": "absent",
+      "environment": "future customer CI",
+      "scope": "Would return distinct pass, policy-gate-fail, and infrastructure-fail exit codes for a compiled release.",
+      "evidence": [],
+      "limitations": ["Current CLI commands compile, run fixtures, and report; they do not provide this release-check contract."]
+    },
+    {
+      "id": "runtime.customer_sdk",
+      "name": "Customer runtime guard SDK",
+      "status": "absent",
+      "environment": "future customer runtime",
+      "scope": "Would verify a signed bundle and mediate a real customer tool dispatcher in observe or enforce mode.",
+      "evidence": [],
+      "limitations": ["The current in-memory fixture adapter is not a customer runtime integration."]
+    },
+    {
+      "id": "models.capability_probe",
+      "name": "Local or hosted model capability probe",
+      "status": "absent",
+      "environment": "future model runtime",
+      "scope": "Would verify exact model presence, structured output, tool calling, context, engine, quantization, and failure state.",
+      "evidence": [],
+      "limitations": ["No Qwen/Ollama/vLLM model has been integrated or evaluated."]
+    },
+    {
+      "id": "analysis.symbolic",
+      "name": "Solver-backed bounded analysis",
+      "status": "absent",
+      "environment": "future analyzer",
+      "scope": "Would produce concrete witnesses for supported overlap, conflict, shadowing, and unreachable-policy cases.",
+      "evidence": [],
+      "limitations": ["No Z3 integration or supported/unknown solver result contract exists."]
+    },
+    {
+      "id": "runtime.temporal_monitors",
+      "name": "Generic temporal monitor compiler",
+      "status": "absent",
+      "environment": "future compiler/runtime",
+      "scope": "Would compile timezone, operating-window, cooldown, ordering, and prior-event rules into persisted monitors.",
+      "evidence": [],
+      "limitations": ["Bounded prior-event correlation now operates in the fixture interpreter, but callback examples are not a persisted generic temporal-monitor or timezone/operating-window system."]
+    },
+    {
+      "id": "evaluation.mutation_testing",
+      "name": "Policy mutation generation and score",
+      "status": "absent",
+      "environment": "future evaluation lane",
+      "scope": "Would generate valid bounded policy mutants, identify equivalent mutants, report survivors, and gate critical mutation coverage.",
+      "evidence": [],
+      "limitations": ["The current mutation tag in a test case is scenario metadata, not mutation testing."]
+    },
+    {
+      "id": "product.team_administration",
+      "name": "Team administration and collaborative review",
+      "status": "absent",
+      "environment": "future hosted product",
+      "scope": "Would provide invitations, membership and role administration, assignments, comments, approvals, notifications, quotas, and billing.",
+      "evidence": [],
+      "limitations": ["Only the backend membership role model exists."]
+    },
+    {
+      "id": "operations.production_assurance",
+      "name": "Production observability, backup, and incident controls",
+      "status": "absent",
+      "environment": "future production system",
+      "scope": "Would include structured telemetry, exception tracking, SLOs, alerts, runbooks, backups, restore drills, privacy controls, and incident response.",
+      "evidence": [],
+      "limitations": ["Request IDs, logs, and Cloudflare sampling configuration are not a complete operating-control system."]
+    }
+  ],
+  "verification_gates": [
+    {
+      "id": "evidence_core_targeted",
+      "status": "operating",
+      "scope": "Focused evidence-correctness checks",
+      "result": "The settled tree passed Ruff, strict mypy, 110 default backend tests, the separately executed PostgreSQL-only test, and the empty SQLite Alembic upgrade/check; all 111 collected backend tests passed across the two database runs."
+    },
+    {
+      "id": "typed_fixture_boundary_targeted",
+      "status": "operating",
+      "scope": "Strict schema, money, policy-scope, requirement, and no-execution regressions",
+      "result": "Ruff, strict mypy, and 14 focused policy/runner tests passed for Draft 2020-12 validation, exact USD minor units, pinned domain/lifecycle, bounded prior-event/approval semantics, and rejection before execution."
+    },
+    {
+      "id": "final_combined_ci",
+      "status": "unverified",
+      "scope": "Aggregated GitHub Actions workflow on the settled commit",
+      "result": "No successful settled-commit workflow run is claimed. Its core backend, web, PostgreSQL, Worker-build/dry-run, and browser constituents passed locally across independent runs."
+    },
+    {
+      "id": "clean_browser_e2e",
+      "status": "operating",
+      "scope": "Dedicated migrated and seeded E2E SQLite database",
+      "result": "Five Chromium flows passed: landing/workspace bootstrap, reduced motion and navigation, narrow-width overflow checks, explicit conflict review and compile, and run/trace/report/export."
+    },
+    {
+      "id": "postgres_integration",
+      "status": "operating",
+      "scope": "Local empty PostgreSQL 14 migration, privilege, and operation lifecycle",
+      "result": "The real local marker passed: migration through head, current/default privilege denial for anon/authenticated roles, bootstrap, queued build/run worker processing, polling, and downgrade cleanup. The configured PostgreSQL 17 Actions job and target Supabase database remain unverified."
+    },
+    {
+      "id": "hosted_end_to_end",
+      "status": "unverified",
+      "scope": "Cloudflare to Render to Supabase",
+      "result": "No current-revision public workflow has been recorded as passing."
+    },
+    {
+      "id": "production_assurance",
+      "status": "unverified",
+      "scope": "Load, fault, penetration, accessibility, privacy, backup/restore, and incident exercises",
+      "result": "No production-assurance exercise is claimed complete."
+    }
+  ],
+  "highest_priority_gaps": [
+    "Pass the final aggregated GitHub Actions workflow on the settled commit; the full backend suite, local PostgreSQL integration, web/build checks, both Worker dry-runs, and the clean Playwright workflow are already green locally.",
+    "Complete the operation input-fingerprint transaction boundary and keep all evidence presentation build-snapshot-derived.",
+    "Add database-enforced tenant isolation or a verified private-schema and least-privilege grant boundary.",
+    "Provision and smoke-test the complete Cloudflare, Render, Supabase Auth, Supabase Postgres, OAuth, SMTP, and Turnstile staging path.",
+    "Build a second domain and domain-neutral compiler/analyzer before making general policy-analysis claims.",
+    "Add typed fact catalogs, multi-currency/time semantics, a real local-model loop, customer CI command, and guarded runtime SDK only after fixture evidence contracts are stable.",
+    "Store and sign build roots with release promotion, rollback, revocation, and deployment receipts."
+  ],
+  "external_references": [
+    "https://developers.cloudflare.com/workers/platform/limits/",
+    "https://opennext.js.org/cloudflare",
+    "https://render.com/docs/free",
+    "https://render.com/docs/deploys",
+    "https://supabase.com/docs/guides/auth/server-side/creating-a-client?framework=nextjs&queryGroups=framework",
+    "https://supabase.com/docs/guides/auth/rate-limits",
+    "https://supabase.com/docs/guides/deployment/going-into-prod"
+  ]
+}

@@ -1,4 +1,98 @@
 {
+  "$defs": {
+    "DatasetManifest": {
+      "additionalProperties": false,
+      "properties": {
+        "build_root_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Build Root Sha256",
+          "type": "string"
+        },
+        "contains_customer_records": {
+          "title": "Contains Customer Records",
+          "type": "boolean"
+        },
+        "data_scope": {
+          "title": "Data Scope",
+          "type": "string"
+        },
+        "evaluation_timestamp": {
+          "title": "Evaluation Timestamp",
+          "type": "string"
+        },
+        "facts_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Facts Sha256",
+          "type": "string"
+        },
+        "facts_source": {
+          "title": "Facts Source",
+          "type": "string"
+        },
+        "hash": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Hash",
+          "type": "string"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "provenance": {
+          "title": "Provenance",
+          "type": "string"
+        },
+        "runner_version": {
+          "title": "Runner Version",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "0.3",
+          "default": "0.3",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "test_count": {
+          "minimum": 0,
+          "title": "Test Count",
+          "type": "integer"
+        },
+        "tests_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Tests Sha256",
+          "type": "string"
+        },
+        "tools_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Tools Sha256",
+          "type": "string"
+        },
+        "version": {
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version",
+        "data_scope",
+        "provenance",
+        "test_count",
+        "tests_sha256",
+        "tools_sha256",
+        "facts_sha256",
+        "facts_source",
+        "contains_customer_records",
+        "evaluation_timestamp",
+        "build_root_sha256",
+        "runner_version",
+        "hash"
+      ],
+      "title": "DatasetManifest",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
   "properties": {
     "adapter": {
       "title": "Adapter",
@@ -12,13 +106,12 @@
       "type": "array"
     },
     "build_hash": {
+      "pattern": "^[0-9a-f]{64}$",
       "title": "Build Hash",
       "type": "string"
     },
     "dataset": {
-      "additionalProperties": true,
-      "title": "Dataset",
-      "type": "object"
+      "$ref": "#/$defs/DatasetManifest"
     },
     "model": {
       "anyOf": [
@@ -37,8 +130,8 @@
       "type": "string"
     },
     "schema_version": {
-      "const": "0.1",
-      "default": "0.1",
+      "const": "0.3",
+      "default": "0.3",
       "title": "Schema Version",
       "type": "string"
     }

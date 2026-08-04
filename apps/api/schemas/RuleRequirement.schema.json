@@ -1,0 +1,79 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "event_type": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Event Type"
+    },
+    "fact": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Fact"
+    },
+    "kind": {
+      "enum": [
+        "prior_event",
+        "approval",
+        "fact"
+      ],
+      "title": "Kind",
+      "type": "string"
+    },
+    "match_arguments": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Match Arguments",
+      "type": "array"
+    },
+    "op": {
+      "anyOf": [
+        {
+          "enum": [
+            "eq",
+            "ne",
+            "lt",
+            "lte",
+            "gt",
+            "gte",
+            "in",
+            "not_in",
+            "exists",
+            "contains",
+            "regex"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Op"
+    },
+    "value": {
+      "default": null,
+      "title": "Value"
+    }
+  },
+  "required": [
+    "kind"
+  ],
+  "title": "RuleRequirement",
+  "type": "object"
+}

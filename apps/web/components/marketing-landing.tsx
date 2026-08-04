@@ -2,7 +2,6 @@
 
 import { useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent } from "react";
 import Link from "next/link";
-import { useQuery } from "@tanstack/react-query";
 import {
   ArrowRight,
   Check,
@@ -14,8 +13,6 @@ import {
   ScanSearch,
   ShieldCheck,
 } from "lucide-react";
-import { API_IS_CONFIGURED, api } from "@/lib/api";
-import type { Project, Summary } from "@/lib/types";
 
 const typedDecision = "decision = require_approval";
 
@@ -34,7 +31,7 @@ const workflow = [
     number: "2.0",
     verb: "Resolve",
     title: "Make disagreement visible before it reaches an agent.",
-    copy: "Reviewers see proved conflicts, ambiguity, missing facts, and the exact evidence behind each finding. Critical conflicts stop the build.",
+    copy: "Reviewers see source-linked conflicts, ambiguity, missing facts, and the exact evidence behind each finding. Critical conflicts stop the build.",
     proof: "30 / 60 days · $200 / $250",
     detail: "human decision required · rationale retained",
     icon: GitCompareArrows,
@@ -46,16 +43,16 @@ const workflow = [
     title: "Turn reviewed intent into release artifacts.",
     copy: "Approved rules compile into a prompt kernel, workflow, deterministic tool policy, regression suite, source map, and manifest.",
     proof: "7 machine-decidable guards",
-    detail: "bounded AST · immutable build · source-linked output",
+    detail: "bounded AST · stored snapshot · source-linked output",
     icon: LockKeyhole,
     route: "build",
   },
   {
     number: "4.0",
-    verb: "Prove",
+    verb: "Test",
     title: "Compare behavior before the candidate ships.",
     copy: "Run the same deep-copied cases across baseline, compiled, and guarded arms. Trace proposals separately from executions and state changes.",
-    proof: "16 cases × 3 comparison arms",
+    proof: "Reviewed suite × labelled comparison arms",
     detail: "trace · metrics · Markdown / JSON evidence",
     icon: FileCheck2,
     route: "tests",
@@ -71,16 +68,8 @@ const outputs = [
 ] as const;
 
 export function MarketingLanding() {
-  const projects = useQuery({ queryKey: ["projects"], queryFn: () => api<Project[]>("/api/v1/projects"), enabled: API_IS_CONFIGURED });
-  const project = projects.data?.[0];
-  const summary = useQuery({
-    queryKey: ["summary", project?.id],
-    queryFn: () => api<Summary>(`/api/v1/projects/${project!.id}/summary`),
-    enabled: API_IS_CONFIGURED && Boolean(project),
-  });
   const [scenario, setScenario] = useState<"without" | "with">("with");
-  const projectPath = (route: string) => project ? `/projects/${project.id}/${route}` : "/demo";
-  const workspaceHref = project ? `/projects/${project.id}/overview` : "/demo";
+  const workspaceHref = "/demo";
   const handleScenarioKeyDown = (event: ReactKeyboardEvent<HTMLButtonElement>) => {
     const order = ["without", "with"] as const;
     const current = order.indexOf(scenario);
@@ -108,19 +97,19 @@ export function MarketingLanding() {
             <Link className="marketing-button marketing-button-primary" href={workspaceHref}>Run the refund scenario <ArrowRight size={16} aria-hidden="true" /></Link>
             <a className="marketing-text-link" href="#why">See the failure path <ArrowRight size={15} aria-hidden="true" /></a>
           </div>
-          <dl className="hero-facts marketing-intro" style={{ "--intro-order": 4 } as CSSProperties} aria-label="Policy evaluation facts">
-            <div><dt>Sources</dt><dd>{summary.data?.sources ?? 6}</dd></div>
-            <div><dt>Cases</dt><dd>{summary.data?.tests ?? 16}</dd></div>
-            <div><dt>Critical open</dt><dd>{summary.data?.critical_findings ?? 2}</dd></div>
+          <dl className="hero-facts marketing-intro" style={{ "--intro-order": 4 } as CSSProperties} aria-label="Bundled Northstar fixture targets">
+            <div><dt>Sources</dt><dd>6</dd></div>
+            <div><dt>Suite</dt><dd>Reviewed</dd></div>
+            <div><dt>Critical open</dt><dd>2</dd></div>
           </dl>
           <p className="hero-boundary marketing-intro" style={{ "--intro-order": 5 } as CSSProperties}>
-            <ShieldCheck size={15} aria-hidden="true" /> <span>Deterministic evaluation · no customer records · scoped evidence</span>
+            <ShieldCheck size={15} aria-hidden="true" /> <span>Bundled Northstar fixture · deterministic evaluation · no customer records · scoped evidence</span>
           </p>
         </div>
 
         <div className="policy-console marketing-intro" style={{ "--intro-order": 3 } as CSSProperties} role="group" aria-label="Aletheia policy decision preview">
           <div className="policy-console-head">
-            <div><span>POLICY RUN</span><strong>NORTHSTAR / REFUND-016</strong></div>
+            <div><span>POLICY RUN</span><strong>NORTHSTAR / REFUND-BOUNDARY</strong></div>
             <span className="console-status"><span aria-hidden="true" /> CASE READY</span>
           </div>
           <div className="console-rule">
@@ -131,7 +120,7 @@ export function MarketingLanding() {
             <li><span>01</span><div><small>tool.proposed</small><strong>issue_refund($200.01)</strong></div><em>seen</em></li>
             <li><span>02</span><div><small>policy.evaluated</small><strong>rule.refund.approval_threshold</strong></div><em>match</em></li>
             <li className="console-trace-active"><span>03</span><div><small><span className="typed-decision-visual" aria-hidden="true"><span className="typed-decision-text">{typedDecision}</span><i /></span><span className="sr-only">{typedDecision}</span></small><strong>Approval must exist first</strong></div><em>hold</em></li>
-            <li><span>04</span><div><small>state.compared</small><strong>No refund mutation recorded</strong></div><em>safe</em></li>
+            <li><span>04</span><div><small>state.compared</small><strong>No refund mutation recorded</strong></div><em>held</em></li>
           </ol>
           <div className="console-foot"><span>proposal ≠ execution</span><span>source-linked decision</span></div>
         </div>
@@ -195,7 +184,7 @@ export function MarketingLanding() {
             const Icon = stage.icon;
             return (
               <li key={stage.number}>
-                <div className="workflow-copy"><div className="workflow-number"><span>{stage.number}</span><small>{stage.verb}</small></div><h3>{stage.title}</h3><p>{stage.copy}</p><Link href={projectPath(stage.route)}>Inspect {stage.verb.toLocaleLowerCase()} stage <ArrowRight size={14} aria-hidden="true" /></Link></div>
+                <div className="workflow-copy"><div className="workflow-number"><span>{stage.number}</span><small>{stage.verb}</small></div><h3>{stage.title}</h3><p>{stage.copy}</p><Link href="/demo">Inspect {stage.verb.toLocaleLowerCase()} stage <ArrowRight size={14} aria-hidden="true" /></Link></div>
                 <div className="workflow-proof"><Icon size={18} aria-hidden="true" /><strong>{stage.proof}</strong><small>{stage.detail}</small></div>
               </li>
             );
@@ -207,7 +196,7 @@ export function MarketingLanding() {
         <div className="evidence-thesis">
           <h2 id="evidence-title">A reviewed change leaves artifacts—not vibes.</h2>
           <p>Each output has a job in the release decision. The bundle can be inspected by the policy owner, the agent engineer, and the person reviewing evidence.</p>
-          <Link className="marketing-text-link" href={projectPath("build")}>Inspect a compiled build <ArrowRight size={15} aria-hidden="true" /></Link>
+          <Link className="marketing-text-link" href="/demo">Inspect a compiled build <ArrowRight size={15} aria-hidden="true" /></Link>
         </div>
         <dl className="evidence-spec">
           {outputs.map(([name, detail]) => <div key={name}><dt>{name}</dt><dd>{detail}</dd><Check size={15} aria-hidden="true" /></div>)}
@@ -235,7 +224,7 @@ export function MarketingLanding() {
             <a href="https://github.com/amanda-yin-x/aletheia/blob/main/docs/current-state-and-production-roadmap.md">Roadmap</a>
             <a href="https://github.com/amanda-yin-x/aletheia/blob/main/LICENSE">MIT License</a>
           </nav>
-          <small>Open source · reproducible evaluation · 2026</small>
+          <small>Open source · deterministic fixture evaluation · 2026</small>
         </div>
       </footer>
     </main>

@@ -1,0 +1,158 @@
+{
+  "$defs": {
+    "CustomerFixture": {
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "timezone": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Timezone"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "timezone"
+      ],
+      "title": "CustomerFixture",
+      "type": "object"
+    },
+    "Money": {
+      "additionalProperties": false,
+      "properties": {
+        "currency": {
+          "pattern": "^[A-Z]{3}$",
+          "title": "Currency",
+          "type": "string"
+        },
+        "minor_units": {
+          "maximum": 999999999,
+          "minimum": 0,
+          "title": "Minor Units",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "currency",
+        "minor_units"
+      ],
+      "title": "Money",
+      "type": "object"
+    },
+    "OrderFixture": {
+      "additionalProperties": false,
+      "properties": {
+        "amount": {
+          "$ref": "#/$defs/Money"
+        },
+        "customer_id": {
+          "minLength": 1,
+          "title": "Customer Id",
+          "type": "string"
+        },
+        "days_since_delivery": {
+          "minimum": 0,
+          "title": "Days Since Delivery",
+          "type": "integer"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "item_id": {
+          "minLength": 1,
+          "title": "Item Id",
+          "type": "string"
+        },
+        "payment_method": {
+          "minLength": 1,
+          "title": "Payment Method",
+          "type": "string"
+        },
+        "refunded": {
+          "title": "Refunded",
+          "type": "boolean"
+        },
+        "returnable": {
+          "title": "Returnable",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "customer_id",
+        "days_since_delivery",
+        "item_id",
+        "amount",
+        "returnable",
+        "refunded",
+        "payment_method"
+      ],
+      "title": "OrderFixture",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "contains_customer_records": {
+      "const": false,
+      "title": "Contains Customer Records",
+      "type": "boolean"
+    },
+    "customers": {
+      "items": {
+        "$ref": "#/$defs/CustomerFixture"
+      },
+      "title": "Customers",
+      "type": "array"
+    },
+    "data_scope": {
+      "const": "evaluation",
+      "title": "Data Scope",
+      "type": "string"
+    },
+    "evaluation_timestamp": {
+      "title": "Evaluation Timestamp",
+      "type": "string"
+    },
+    "orders": {
+      "items": {
+        "$ref": "#/$defs/OrderFixture"
+      },
+      "title": "Orders",
+      "type": "array"
+    },
+    "schema_version": {
+      "const": "0.2",
+      "default": "0.2",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "data_scope",
+    "contains_customer_records",
+    "evaluation_timestamp",
+    "customers",
+    "orders"
+  ],
+  "title": "FactFixture",
+  "type": "object"
+}

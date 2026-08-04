@@ -7,7 +7,7 @@ import "./globals.css";
 const displayFont = Newsreader({ subsets: ["latin"], weight: "variable", style: "normal", axes: ["opsz"], variable: "--font-newsreader", display: "swap" });
 const bodyFont = Geist({ subsets: ["latin"], weight: "variable", variable: "--font-geist-sans", display: "swap" });
 const monoFont = Geist_Mono({ subsets: ["latin"], weight: "variable", variable: "--font-geist-mono", display: "swap" });
-const publicSiteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://aletheia.aletheia-web.workers.dev";
+const publicSiteUrl = process.env.SITE_URL || "https://aletheia.aletheia-web.workers.dev";
 
 export const metadata: Metadata = {
   title: "Aletheia — Policy CI for AI agents",

@@ -1,10 +1,15 @@
+import os
 from collections.abc import AsyncIterator
 
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from app.db import Base
-from app.services.seed import seed_demo
+# The application defaults to fail-closed production mode. Tests opt into the
+# fixed test identity before importing any module that constructs Settings.
+os.environ.setdefault("ENVIRONMENT", "test")
+
+from app.db import Base  # noqa: E402
+from app.services.seed import seed_demo  # noqa: E402
 
 
 @pytest_asyncio.fixture
@@ -17,4 +22,3 @@ async def session(tmp_path) -> AsyncIterator[AsyncSession]:
         await seed_demo(value)
         yield value
     await engine.dispose()
-

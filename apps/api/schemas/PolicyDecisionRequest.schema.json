@@ -1,34 +1,72 @@
 {
+  "$defs": {
+    "PolicyEvent": {
+      "additionalProperties": false,
+      "properties": {
+        "payload": {
+          "additionalProperties": true,
+          "title": "Payload",
+          "type": "object"
+        },
+        "type": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "title": "PolicyEvent",
+      "type": "object"
+    },
+    "PolicyToolCall": {
+      "additionalProperties": false,
+      "properties": {
+        "arguments": {
+          "additionalProperties": true,
+          "title": "Arguments",
+          "type": "object"
+        },
+        "name": {
+          "maxLength": 160,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name"
+      ],
+      "title": "PolicyToolCall",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
   "properties": {
     "context": {
       "additionalProperties": true,
-      "default": {},
       "title": "Context",
       "type": "object"
     },
     "events": {
-      "default": [],
       "items": {
-        "additionalProperties": true,
-        "type": "object"
+        "$ref": "#/$defs/PolicyEvent"
       },
       "title": "Events",
       "type": "array"
     },
     "state": {
       "additionalProperties": true,
-      "default": {},
       "title": "State",
       "type": "object"
     },
     "tool": {
-      "additionalProperties": true,
-      "title": "Tool",
-      "type": "object"
+      "$ref": "#/$defs/PolicyToolCall"
     },
     "user": {
       "additionalProperties": true,
-      "default": {},
       "title": "User",
       "type": "object"
     }

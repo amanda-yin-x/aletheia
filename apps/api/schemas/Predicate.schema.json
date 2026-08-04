@@ -1,4 +1,5 @@
 {
+  "additionalProperties": false,
   "properties": {
     "fact": {
       "title": "Fact",

@@ -11,6 +11,10 @@ jobs:
   quality:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    env:
+      # The API defaults to fail-closed production mode; CI opts into the
+      # isolated test identity before Alembic/OpenAPI import application code.
+      ENVIRONMENT: test
     steps:
       - uses: actions/checkout@v7
       - uses: astral-sh/setup-uv@v9.0.0
@@ -20,13 +24,22 @@ jobs:
       - run: corepack enable
       - run: cd apps/api && uv sync --all-groups --frozen
       - run: corepack pnpm install --frozen-lockfile
+      - name: Audit Python production dependencies
+        run: cd apps/api && uv run pip-audit
+      - name: Audit Node production dependencies
+        run: corepack pnpm audit --prod --audit-level high
       - run: cd apps/api && uv run ruff check app tests
       - run: cd apps/api && uv run mypy app
       - run: cd apps/api && uv run pytest
+      - name: Verify an empty migration and model drift
+        env:
+          DATABASE_URL: sqlite+aiosqlite:///${{ runner.temp }}/aletheia-ci.db
+          MIGRATION_DATABASE_URL: sqlite:///${{ runner.temp }}/aletheia-ci.db
+        run: cd apps/api && uv run alembic upgrade head && uv run alembic check
       - run: cd apps/api && uv run python scripts/export_contracts.py
       - run: corepack pnpm --filter @aletheia/web exec openapi-typescript ../../apps/api/openapi.json -o ../../packages/api-client/src/schema.d.ts
       - name: Verify generated API contracts are committed
-        run: git diff --exit-code -- apps/api/openapi.json packages/api-client/src/schema.d.ts
+        run: git diff --exit-code -- apps/api/openapi.json apps/api/schemas packages/api-client/src/schema.d.ts
       - run: corepack pnpm --filter @aletheia/web lint
       - name: Generate Cloudflare binding types
         run: corepack pnpm --filter @aletheia/web run cf-typegen
@@ -34,7 +47,56 @@ jobs:
       - run: corepack pnpm --filter @aletheia/web test
       - name: Build the Next.js application for Cloudflare Workers
         run: corepack pnpm --filter @aletheia/web exec opennextjs-cloudflare build
-      - name: Validate the Cloudflare deployment bundle
-        run: corepack pnpm --filter @aletheia/web exec wrangler deploy --dry-run
+      - name: Validate the production Cloudflare deployment bundle
+        run: corepack pnpm --filter @aletheia/web exec wrangler deploy --dry-run --env=""
+      - name: Validate the staging Cloudflare deployment bundle
+        run: corepack pnpm --filter @aletheia/web exec wrangler deploy --dry-run --env staging
       - run: corepack pnpm --filter @aletheia/web exec playwright install --with-deps chromium
       - run: corepack pnpm --filter @aletheia/web test:e2e
+
+  postgres-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: aletheia_test
+          POSTGRES_USER: aletheia
+          POSTGRES_PASSWORD: local_ci_only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U aletheia -d aletheia_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgresql+asyncpg://aletheia:local_ci_only@127.0.0.1:5432/aletheia_test
+      TEST_MIGRATION_DATABASE_URL: postgresql+psycopg://aletheia:local_ci_only@127.0.0.1:5432/aletheia_test
+      DATABASE_URL: postgresql+asyncpg://aletheia:local_ci_only@127.0.0.1:5432/aletheia_test
+      MIGRATION_DATABASE_URL: postgresql+psycopg://aletheia:local_ci_only@127.0.0.1:5432/aletheia_test
+      ENVIRONMENT: test
+      API_ORIGIN_TOKEN: ci-origin-token-not-a-secret
+      SUPABASE_ISSUER: https://example.supabase.co/auth/v1
+      SUPABASE_JWKS_URL: https://example.supabase.co/auth/v1/.well-known/jwks.json
+      SUPABASE_AUDIENCE: authenticated
+      WEB_ORIGIN: https://example.test
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v9.0.0
+        with: { python-version: "3.12", enable-cache: true }
+      - run: cd apps/api && uv sync --all-groups --frozen
+      - name: Upgrade an empty PostgreSQL database and run the hosted lifecycle
+        run: cd apps/api && uv run pytest -m postgres
+
+  secret-scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with: { fetch-depth: 0 }
+      - name: Scan committed history for secrets
+        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

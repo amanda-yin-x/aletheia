@@ -1,6 +1,12 @@
-import { expect, test, type APIRequestContext } from "@playwright/test";
+import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
 
 const API = "http://127.0.0.1:8000";
+const UPDATE_DOC_SCREENSHOTS = process.env.UPDATE_DOC_SCREENSHOTS === "1";
+
+async function captureDocumentationScreenshot(page: Page, name: string) {
+  if (!UPDATE_DOC_SCREENSHOTS) return;
+  await page.screenshot({ path: `../../docs/screenshots/${name}.png`, animations: "disabled" });
+}
 
 async function reset(request: APIRequestContext) {
   const response = await request.post(`${API}/api/v1/demo/reset`);
@@ -10,13 +16,17 @@ async function reset(request: APIRequestContext) {
 
 async function resolveAndApprove(request: APIRequestContext) {
   const project = await reset(request);
-  const findings = await (await request.get(`${API}/api/v1/projects/${project.id}/findings`)).json() as Array<{ id: string; severity: string }>;
+  const rules = await (await request.get(`${API}/api/v1/projects/${project.id}/rules`)).json() as Array<{ id: string; stable_key: string; revision: number }>;
+  const findings = await (await request.get(`${API}/api/v1/projects/${project.id}/findings`)).json() as Array<{ id: string; severity: string; related_rule_ids: string[] }>;
   for (const finding of findings.filter((item) => item.severity === "critical")) {
-    const response = await request.patch(`${API}/api/v1/findings/${finding.id}`, { data: { resolution_state: "resolved", resolution_note: "Current policy v3 selected in E2E review." } });
+    const related = rules.filter((rule) => finding.related_rule_ids.includes(rule.id));
+    const winner = related.find((rule) => !rule.stable_key.startsWith("rule.legacy."))!;
+    const loser = related.find((rule) => rule.stable_key.startsWith("rule.legacy."))!;
+    const response = await request.patch(`${API}/api/v1/findings/${finding.id}`, { data: { resolution_state: "resolved", expected_resolution_state: "open", winner_rule_id: winner.id, loser_rule_id: loser.id, authority: "Refund Policy v3 is current.", resolution_note: "Current policy v3 selected in E2E review." } });
     expect(response.ok()).toBeTruthy();
   }
-  const rules = await (await request.get(`${API}/api/v1/projects/${project.id}/rules`)).json() as Array<{ id: string; stable_key: string; revision: number }>;
-  const threshold = rules.find((item) => item.stable_key === "rule.refund.approval_threshold")!;
+  const refreshedRules = await (await request.get(`${API}/api/v1/projects/${project.id}/rules`)).json() as Array<{ id: string; stable_key: string; revision: number }>;
+  const threshold = refreshedRules.find((item) => item.stable_key === "rule.refund.approval_threshold")!;
   const approval = await request.post(`${API}/api/v1/rules/${threshold.id}/approve`, { data: { expected_revision: threshold.revision } });
   expect(approval.ok()).toBeTruthy();
   return project;
@@ -24,11 +34,13 @@ async function resolveAndApprove(request: APIRequestContext) {
 
 test("landing opens the workspace and shows the source-linked 30/60-day conflict", async ({ page, request }) => {
   await reset(request);
+  await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "The policy CI for AI agents." })).toBeVisible();
   const typedDecision = page.locator(".typed-decision-text");
   await expect(typedDecision).toHaveText("decision = require_approval");
   await expect.poll(() => typedDecision.evaluate((element) => element.getAnimations()[0]?.playState)).toBe("finished");
+  await captureDocumentationScreenshot(page, "landing-desktop");
   await expect(page.getByText("One refund. Three documents. Two answers.")).toBeVisible();
   await page.getByRole("tab", { name: "Without a gate" }).click();
   await expect(page.getByText("Without the gate, the refund executes.")).toBeVisible();
@@ -41,6 +53,7 @@ test("landing opens the workspace and shows the source-linked 30/60-day conflict
   await page.keyboard.press("ArrowRight");
   await expect(page.getByRole("tab", { name: "With Aletheia" })).toHaveAttribute("aria-selected", "true");
   await page.getByRole("link", { name: /Run the refund scenario/ }).click();
+  await expect(page).toHaveURL(/\/projects\/[^/]+\/overview$/, { timeout: 20_000 });
   await expect(page.getByRole("heading", { name: "Northstar Retail Refund Agent" })).toBeVisible();
   await page.getByRole("link", { name: "Rules" }).click();
   await expect(page.getByText("Conflict: current policy says 30 days; the legacy SOP says 60 days.")).toBeVisible();
@@ -48,6 +61,8 @@ test("landing opens the workspace and shows the source-linked 30/60-day conflict
   await expect(page.getByRole("region", { name: /Numbered source/ })).toBeVisible();
   await page.getByRole("button", { name: /refund-sop-legacy.md/ }).click();
   await expect(page.getByText("Agents may approve returns received within 60 calendar days of delivery.")).toBeVisible();
+  await page.setViewportSize({ width: 820, height: 1024 });
+  await captureDocumentationScreenshot(page, "sources-tablet");
 });
 
 test("landing command palette and reduced-motion mode remain usable", async ({ page, request }) => {
@@ -90,11 +105,19 @@ test("landing has no horizontal overflow at supported narrow widths", async ({ p
 test("review resolves conflicts, approves the threshold, and builds a measured candidate", async ({ page, request }) => {
   const project = await reset(request);
   await page.goto(`/projects/${project.id}/rules`);
-  const useCurrent = page.getByRole("button", { name: "Use current policy" });
-  await useCurrent.first().click();
-  await expect(useCurrent).toHaveCount(1);
-  await useCurrent.first().click();
-  await expect(useCurrent).toHaveCount(0);
+  for (const rationale of [
+    "The current policy revision sets the release window; the legacy SOP is superseded.",
+    "The current policy revision sets the approval boundary; the legacy SOP is superseded.",
+  ]) {
+    await page.getByRole("button", { name: "Review conflict" }).first().click();
+    const decision = page.getByRole("form", { name: /Resolve conflict:/ });
+    await decision.getByRole("radio", { name: /refund-policy-v3\.md/i }).click();
+    await decision.getByLabel("Decision authority").fill("Refund Policy v3, approved by Policy Operations");
+    await decision.getByLabel("Resolution rationale").fill(rationale);
+    await decision.getByRole("button", { name: "Save resolution" }).click();
+    await expect(decision).toBeHidden();
+  }
+  await expect(page.getByRole("button", { name: "Review conflict" })).toHaveCount(0);
   await page.getByText("Approval above $200", { exact: true }).click();
   await expect(page.getByRole("dialog")).toContainText("tool.arguments.amount");
   await page.getByRole("button", { name: "Approve revision" }).click();
@@ -104,7 +127,8 @@ test("review resolves conflicts, approves the threshold, and builds a measured c
   await page.getByRole("button", { name: "Build candidate" }).click();
   await expect(page.getByText("Original / prompt kernel")).toBeVisible();
   await expect(page.getByText("char_4_estimate")).toBeVisible();
-  await expect(page.getByText("Immutable", { exact: true })).toBeVisible();
+  await expect(page.getByText("Stored", { exact: true })).toBeVisible();
+  await captureDocumentationScreenshot(page, "build-desktop");
 });
 
 test("run comparison exposes the blocked $200.01 trace and exports evidence", async ({ page, request }) => {
@@ -120,9 +144,11 @@ test("run comparison exposes the blocked $200.01 trace and exports evidence", as
   await expect(page.getByText("Proposal intercepted; approval route returned; state not mutated.")).toBeVisible();
   await expect(page.getByText("Proposed", { exact: true })).toBeVisible();
   await expect(page.getByText("Executed", { exact: true })).toHaveCount(0);
+  await captureDocumentationScreenshot(page, "guarded-trace-desktop");
   await page.getByRole("link", { name: "Back to run comparison" }).click();
   await page.getByRole("button", { name: "Create evidence report" }).click();
   await expect(page.getByRole("heading", { name: "Scope and evidence boundary" })).toBeVisible();
   const download = page.getByRole("link", { name: "Download Markdown" });
   await expect(download).toHaveAttribute("href", /format=markdown/);
+  await captureDocumentationScreenshot(page, "report-desktop");
 });
