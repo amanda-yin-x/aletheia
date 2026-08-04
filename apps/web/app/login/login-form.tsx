@@ -6,6 +6,7 @@ import { ArrowRight, Github, KeyRound, Mail, ShieldCheck } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { SupabasePublicConfig } from "@/lib/supabase/config";
 import { TurnstileWidget } from "@/components/turnstile-widget";
+import { BrandLockup } from "@/components/brand-lockup";
 
 export function LoginForm({ config, nextPath, initialError, hasAnonymousSession }: { config: SupabasePublicConfig; nextPath: string; initialError?: string | null; hasAnonymousSession: boolean }) {
   const supabase = useMemo(() => createSupabaseBrowserClient(config), [config]);
@@ -118,7 +119,7 @@ export function LoginForm({ config, nextPath, initialError, hasAnonymousSession 
   return (
     <main className="auth-page">
       <section className="auth-card" aria-labelledby="login-title">
-        <div className="auth-brand"><span><ShieldCheck size={20} /></span>Aletheia</div>
+        <div className="auth-brand"><BrandLockup size="large" /></div>
         <p className="eyebrow">Optional persistent access</p>
         <h1 id="login-title">Keep a personal Northstar workspace across visits.</h1>
         <p className="auth-lede">Sign in to open a persistent personal Northstar workspace. From a guest session, adding a new sign-in method keeps the same workspace.</p>

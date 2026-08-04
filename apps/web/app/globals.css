@@ -20,6 +20,9 @@
   --red: #b42318;
   --border: #dbe3ed;
   --border-strong: #c7d2df;
+  --brand-navy: #092e5d;
+  --brand-gold: #c9a34c;
+  --brand-steel: #7895ac;
   --radius: 10px;
   --shadow: 0 1px 2px rgb(15 23 42 / 0.04), 0 8px 24px rgb(15 23 42 / 0.04);
 }
@@ -42,9 +45,22 @@ h1, h2, h3 { font-family: var(--font-display); font-style: normal; }
 
 .sr-only { position: absolute !important; width: 1px !important; height: 1px !important; padding: 0 !important; margin: -1px !important; overflow: hidden !important; clip: rect(0, 0, 0, 0) !important; white-space: nowrap !important; border: 0 !important; }
 
+.aletheia-lockup { min-width: 0; display: inline-flex; align-items: center; gap: .52rem; color: var(--brand-navy); white-space: nowrap; }
+.aletheia-lockup-mark { width: 2.15rem; height: 2.15rem; flex: 0 0 auto; overflow: visible; }
+.aletheia-mark-navy { fill: var(--brand-navy); }
+.aletheia-mark-gold { fill: var(--brand-gold); }
+.aletheia-mark-steel { fill: var(--brand-steel); }
+.aletheia-lockup-wordmark { color: var(--brand-navy); font-family: var(--font-brand); font-size: .96rem; font-weight: 500; font-synthesis: none; letter-spacing: .15em; line-height: 1; }
+.aletheia-lockup-compact { gap: .43rem; }
+.aletheia-lockup-compact .aletheia-lockup-mark { width: 1.82rem; height: 1.82rem; }
+.aletheia-lockup-compact .aletheia-lockup-wordmark { font-size: .8rem; letter-spacing: .14em; }
+.aletheia-lockup-large { gap: .68rem; }
+.aletheia-lockup-large .aletheia-lockup-mark { width: 2.9rem; height: 2.9rem; }
+.aletheia-lockup-large .aletheia-lockup-wordmark { font-size: 1.12rem; letter-spacing: .17em; }
+
 .site-header { height: 56px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 28px; position: sticky; top: 0; z-index: 30; }
-.brand { display: inline-flex; align-items: center; gap: 9px; font-weight: 750; letter-spacing: -0.02em; font-size: 16px; }
-.brand-mark { width: 28px; height: 28px; display: inline-grid; place-items: center; border-radius: 8px; background: var(--navy); color: white; }
+.brand { display: inline-flex; align-items: center; gap: 10px; }
+.brand:hover .aletheia-lockup-wordmark { color: #061f40; }
 .brand-tag { color: var(--muted); font-size: 11px; line-height: 20px; padding-left: 9px; border-left: 1px solid var(--border); text-transform: uppercase; letter-spacing: .08em; }
 .header-note { color: #475569; font-size: 12px; display: flex; align-items: center; gap: 7px; }
 .status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--teal); display: inline-block; box-shadow: 0 0 0 3px rgb(15 118 110 / .12); }
@@ -68,8 +84,7 @@ h1, h2, h3 { font-family: var(--font-display); font-style: normal; }
 /* Authentication */
 .auth-page { min-height: calc(100vh - 56px); display: grid; place-items: center; padding: 48px 20px; background: radial-gradient(circle at 50% 0%, #e8eef8 0, transparent 42%), var(--bg); }
 .auth-card { width: min(100%, 470px); padding: clamp(28px, 6vw, 44px); border: 1px solid var(--border); border-radius: 14px; background: white; box-shadow: 0 24px 70px rgb(15 23 42 / .10); }
-.auth-brand { display: flex; align-items: center; gap: 9px; margin-bottom: 28px; font-family: var(--font-display); font-size: 17px; font-weight: 650; }
-.auth-brand > span { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 9px; background: var(--navy); color: white; }
+.auth-brand { display: flex; align-items: center; margin-bottom: 28px; }
 .auth-card h1 { margin: 0 0 10px; font-size: clamp(28px, 6vw, 36px); line-height: 1.08; letter-spacing: -.035em; }
 .auth-lede { margin: 0 0 25px; color: var(--muted); }
 .auth-guest-link { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 70px; padding: 13px 15px; border: 1px solid #bfdbfe; border-radius: 9px; background: #eff6ff; color: #1e3a8a; transition: border-color .15s, background .15s, transform .15s; }
@@ -103,6 +118,7 @@ h1, h2, h3 { font-family: var(--font-display); font-style: normal; }
 /* Public guest-demo entry */
 .guest-demo-page { min-height: calc(100dvh - 56px); display: grid; place-items: center; padding: clamp(28px, 7vw, 72px) 20px; background: radial-gradient(circle at 50% 0%, #e7eef9 0, transparent 44%), var(--bg); }
 .guest-demo-gate { width: min(100%, 640px); padding: clamp(26px, 6vw, 48px); border: 1px solid var(--border); border-radius: 16px; background: white; box-shadow: 0 26px 80px rgb(15 23 42 / .11); }
+.guest-demo-brand { display: flex; width: fit-content; margin-bottom: 24px; }
 .guest-demo-badge { width: fit-content; display: inline-flex; align-items: center; gap: 7px; margin-bottom: 24px; padding: 6px 10px; border: 1px solid #bfdbfe; border-radius: 999px; background: #eff6ff; color: #1d4ed8; font-size: 11px; font-weight: 700; }
 .guest-demo-gate h1 { max-width: 14ch; margin: 0; font-size: clamp(32px, 7vw, 49px); font-weight: 500; letter-spacing: -.045em; line-height: 1.02; }
 .guest-demo-gate > p:not(.eyebrow, .guest-demo-error, .guest-demo-privacy) { max-width: 57ch; margin: 18px 0 0; color: #475569; font-size: 15px; }
@@ -119,10 +135,9 @@ h1, h2, h3 { font-family: var(--font-display); font-style: normal; }
 /* Marketing navigation */
 .marketing-header { min-height: 4.25rem; position: sticky; inset-block-start: 0; z-index: var(--z-sticky); border-block-end: var(--rule-hair) solid var(--color-rule); background: color-mix(in oklch, var(--color-paper) 94%, transparent); color: var(--color-ink); backdrop-filter: blur(0.75rem) saturate(130%); }
 .marketing-header-inner { width: min(100%, calc(var(--page-max) + (var(--page-gutter) * 2))); min-height: 4.25rem; margin-inline: auto; padding-inline: var(--page-gutter); display: flex; align-items: center; justify-content: space-between; gap: var(--space-md); }
-.marketing-brand { min-width: 0; min-height: 2.75rem; display: inline-flex; align-items: center; gap: var(--space-xs); font-family: var(--font-display); font-weight: 600; letter-spacing: -0.025em; white-space: nowrap; }
+.marketing-brand { min-width: 0; min-height: 2.75rem; display: inline-flex; align-items: center; gap: var(--space-xs); white-space: nowrap; }
 .marketing-brand:active { color: var(--color-accent-hover); }
-.marketing-brand-mark { width: 2rem; height: 2rem; display: grid; place-items: center; color: var(--color-accent); border: var(--rule-hair) solid var(--color-rule-2); border-radius: var(--radius-control); }
-.marketing-wordmark { font-family: var(--font-display); font-weight: 600; letter-spacing: -0.025em; }
+.marketing-brand:hover .aletheia-lockup-wordmark { color: var(--color-accent-hover); }
 .marketing-brand-product { display: none; color: var(--color-muted); font-family: var(--font-body); font-size: var(--text-xs); font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
 .marketing-nav { display: flex; align-items: center; justify-content: flex-end; gap: var(--space-xs); min-width: 0; }
 .marketing-nav > a:not(.marketing-nav-cta) { display: none; min-height: 2.75rem; align-items: center; color: var(--color-ink-2); font-size: var(--text-sm); font-weight: 500; white-space: nowrap; }
@@ -328,6 +343,7 @@ h1, h2, h3 { font-family: var(--font-display); font-style: normal; }
 .marketing-footer nav a:hover { color: var(--color-accent); }
 .marketing-footer nav a:active { color: var(--color-accent-hover); }
 .marketing-footer small { color: var(--color-muted); font-family: var(--font-body); font-size: var(--text-xs); }
+.marketing-footer-brand { align-self: center; }
 
 #why, #workflow, #evidence, #waitlist { scroll-margin-block-start: calc(4.25rem + var(--space-md)); }
 

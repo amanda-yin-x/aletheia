@@ -8,7 +8,6 @@ const TURNSTILE_SCRIPT_URL = "https://challenges.cloudflare.com/turnstile/v0/api
 declare global {
   interface Window {
     turnstile?: {
-      ready: (callback: () => void) => void;
       render: (element: HTMLElement, options: Record<string, unknown>) => string;
       remove: (widgetId: string) => void;
       reset: (widgetId: string) => void;
@@ -19,15 +18,14 @@ declare global {
 export function TurnstileWidget({ siteKey, action, onToken }: { siteKey: string; action: string; onToken: (token: string | null) => void }) {
   const elementRef = useRef<HTMLDivElement>(null);
   const widgetRef = useRef<string | null>(null);
-  const readyQueuedRef = useRef(false);
   const mountedRef = useRef(false);
   const generationRef = useRef(0);
   const [status, setStatus] = useState<"loading" | "waiting" | "verified" | "expired" | "timeout" | "error">("loading");
+  const [errorCode, setErrorCode] = useState<string | null>(null);
   const [renderAttempt, setRenderAttempt] = useState(0);
   const [scriptAttempt, setScriptAttempt] = useState(0);
 
   const disposeWidget = useCallback(() => {
-    readyQueuedRef.current = false;
     const widgetId = widgetRef.current;
     widgetRef.current = null;
     if (!widgetId || !window.turnstile) return;
@@ -43,13 +41,15 @@ export function TurnstileWidget({ siteKey, action, onToken }: { siteKey: string;
     }
   }, []);
 
-  const reportFailure = useCallback((nextStatus: "expired" | "timeout" | "error") => {
+  const reportFailure = useCallback((nextStatus: "expired" | "timeout" | "error", code?: string) => {
     setStatus(nextStatus);
+    setErrorCode(code || null);
     onToken(null);
   }, [onToken]);
 
   const renderWidget = useCallback(() => {
     if (!mountedRef.current || !elementRef.current || !window.turnstile || widgetRef.current) return;
+    const generation = generationRef.current;
     try {
       widgetRef.current = window.turnstile.render(elementRef.current, {
         sitekey: siteKey,
@@ -58,49 +58,46 @@ export function TurnstileWidget({ siteKey, action, onToken }: { siteKey: string;
         size: "flexible",
         appearance: "always",
         callback: (token: string) => {
+          if (!mountedRef.current || generation !== generationRef.current) return;
           setStatus("verified");
+          setErrorCode(null);
           onToken(token);
         },
-        "expired-callback": () => reportFailure("expired"),
-        "timeout-callback": () => reportFailure("timeout"),
-        "error-callback": () => reportFailure("error"),
+        "expired-callback": () => {
+          if (mountedRef.current && generation === generationRef.current) reportFailure("expired");
+        },
+        "timeout-callback": () => {
+          if (mountedRef.current && generation === generationRef.current) reportFailure("timeout");
+        },
+        "error-callback": (code?: string) => {
+          if (mountedRef.current && generation === generationRef.current) reportFailure("error", code);
+          return true;
+        },
       });
       setStatus("waiting");
-    } catch {
+      setErrorCode(null);
+    } catch (error) {
+      console.warn(
+        "[Aletheia Turnstile] Widget render failed:",
+        error instanceof Error ? error.message : "unknown error",
+      );
       reportFailure("error");
     }
   }, [action, onToken, reportFailure, siteKey]);
-
-  const queueRender = useCallback(() => {
-    if (!mountedRef.current || !window.turnstile || widgetRef.current || readyQueuedRef.current) return;
-    const generation = generationRef.current;
-    readyQueuedRef.current = true;
-    try {
-      window.turnstile.ready(() => {
-        if (!mountedRef.current || generation !== generationRef.current) return;
-        readyQueuedRef.current = false;
-        renderWidget();
-      });
-    } catch {
-      readyQueuedRef.current = false;
-      reportFailure("error");
-    }
-  }, [renderWidget, reportFailure]);
 
   useEffect(() => {
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
       generationRef.current += 1;
-      readyQueuedRef.current = false;
       disposeWidget();
     };
   }, [disposeWidget]);
 
   useEffect(() => {
-    const frame = window.requestAnimationFrame(queueRender);
+    const frame = window.requestAnimationFrame(renderWidget);
     return () => window.cancelAnimationFrame(frame);
-  }, [queueRender, renderAttempt]);
+  }, [renderAttempt, renderWidget]);
 
   const retryVerification = useCallback(() => {
     const apiLoaded = Boolean(window.turnstile);
@@ -108,17 +105,25 @@ export function TurnstileWidget({ siteKey, action, onToken }: { siteKey: string;
     disposeWidget();
     onToken(null);
     setStatus("loading");
+    setErrorCode(null);
     setRenderAttempt((value) => value + 1);
     if (!apiLoaded) setScriptAttempt((value) => value + 1);
   }, [disposeWidget, onToken]);
 
+  const errorMessage = errorCode?.startsWith("110")
+    ? "Verification is temporarily misconfigured. Please try again shortly."
+    : errorCode?.startsWith("200")
+      ? "Verification was blocked by this browser or network. Check content blockers and try again."
+      : errorCode && (/^(300|600)/).test(errorCode)
+        ? "This browser could not complete the security check. Refresh or try a private window."
+        : "Verification could not load. Check your connection and try again.";
   const statusMessage = {
     loading: "Loading verification…",
     waiting: "Complete the verification to continue.",
     verified: "Verification complete.",
     expired: "Verification expired. Try again.",
     timeout: "Verification timed out. Try again.",
-    error: "Verification could not load. Check your connection and try again.",
+    error: errorMessage,
   }[status];
   const isError = status === "expired" || status === "timeout" || status === "error";
   const scriptUrl = scriptAttempt === 0 ? TURNSTILE_SCRIPT_URL : `${TURNSTILE_SCRIPT_URL}&retry=${scriptAttempt}`;
@@ -129,8 +134,8 @@ export function TurnstileWidget({ siteKey, action, onToken }: { siteKey: string;
         key={scriptAttempt}
         src={scriptUrl}
         strategy="afterInteractive"
-        onLoad={queueRender}
-        onReady={queueRender}
+        onLoad={renderWidget}
+        onReady={renderWidget}
         onError={() => reportFailure("error")}
       />
       <div ref={elementRef} aria-label="Bot verification" />

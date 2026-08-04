@@ -28,6 +28,7 @@ describe("account menu", () => {
   it("labels anonymous workspace sessions as Guest demo", async () => {
     const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     render(<QueryClientProvider client={client}><SiteHeader /></QueryClientProvider>);
+    expect(screen.getByRole("link", { name: "Aletheia home" })).toContainElement(screen.getByText("ALETHEIA"));
     expect((await screen.findAllByText("Guest demo")).length).toBeGreaterThan(0);
     expect(screen.getByText("Temporary guest session")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Keep this workspace" })).toHaveAttribute(

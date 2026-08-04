@@ -5,7 +5,6 @@ import { TurnstileWidget } from "@/components/turnstile-widget";
 
 const mocks = vi.hoisted(() => ({
   options: null as Record<string, unknown> | null,
-  ready: vi.fn((callback: () => void) => callback()),
   render: vi.fn((_element: HTMLElement, options: Record<string, unknown>) => {
     mocks.options = options;
     return `widget-${mocks.render.mock.calls.length}`;
@@ -26,7 +25,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocks.options = null;
   mocks.scripts.length = 0;
-  window.turnstile = { ready: mocks.ready, render: mocks.render, reset: mocks.reset, remove: mocks.remove };
+  window.turnstile = { render: mocks.render, reset: mocks.reset, remove: mocks.remove };
 });
 
 afterEach(cleanup);
@@ -37,7 +36,6 @@ describe("Turnstile widget lifecycle", () => {
     const view = render(<TurnstileWidget siteKey="site-key" action="guest_demo" onToken={onToken} />);
 
     await waitFor(() => expect(mocks.render).toHaveBeenCalledTimes(1));
-    expect(mocks.ready).toHaveBeenCalled();
     expect(mocks.options).toEqual(expect.objectContaining({ sitekey: "site-key", action: "guest_demo", appearance: "always" }));
     expect(screen.getByText("Complete the verification to continue.")).toBeInTheDocument();
 
@@ -73,9 +71,18 @@ describe("Turnstile widget lifecycle", () => {
       "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&retry=1",
     ]);
 
-    window.turnstile = { ready: mocks.ready, render: mocks.render, reset: mocks.reset, remove: mocks.remove };
+    window.turnstile = { render: mocks.render, reset: mocks.reset, remove: mocks.remove };
     act(() => { mocks.scripts.findLast((script) => script.src.endsWith("&retry=1"))?.onLoad?.(); });
     await waitFor(() => expect(mocks.render).toHaveBeenCalledTimes(1));
     expect(screen.getByText("Complete the verification to continue.")).toBeInTheDocument();
+  });
+
+  it("turns provider error families into useful recovery guidance", async () => {
+    render(<TurnstileWidget siteKey="site-key" action="guest_demo" onToken={vi.fn()} />);
+    await waitFor(() => expect(mocks.render).toHaveBeenCalledTimes(1));
+
+    act(() => { (mocks.options?.["error-callback"] as (code: string) => boolean)("200500"); });
+
+    expect(screen.getByRole("alert")).toHaveTextContent("blocked by this browser or network");
   });
 });

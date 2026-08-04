@@ -49,6 +49,7 @@ describe("public guest demo", () => {
   it("creates an anonymous session with the guest_demo CAPTCHA before bootstrapping", async () => {
     renderEntry(false);
 
+    expect(screen.getByText("ALETHEIA")).toHaveClass("aletheia-lockup-wordmark");
     const verification = screen.getByRole("button", { name: "Complete guest verification" });
     expect(verification).toHaveAttribute("data-action", "guest_demo");
     expect(screen.getByRole("link", { name: /persistent personal Northstar workspace/i })).toHaveAttribute("href", "/login?next=%2Fdemo");

@@ -40,6 +40,7 @@ describe("email sign in", () => {
 
   it("discards and remounts Turnstile after each attempted request", async () => {
     render(<LoginForm config={{ url: "https://project.supabase.co", publishableKey: "publishable", turnstileSiteKey: "site-key", siteUrl: "https://aletheia.example", githubAuthEnabled: false, emailOtpEnabled: false }} nextPath="/demo" hasAnonymousSession={false} />);
+    expect(screen.getByText("ALETHEIA")).toHaveClass("aletheia-lockup-wordmark");
     expect(screen.getByRole("link", { name: /Open the no-account demo/i })).toHaveAttribute("href", "/demo");
     expect(screen.getByRole("heading", { name: "Keep a personal Northstar workspace across visits." })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Complete verification" })).toHaveAttribute("data-action", "login");

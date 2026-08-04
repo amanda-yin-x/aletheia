@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Newsreader } from "next/font/google";
+import { Cinzel, Geist, Geist_Mono, Newsreader } from "next/font/google";
 import { Providers } from "@/components/providers";
 import { SiteHeader } from "@/components/site-header";
 import "./globals.css";
@@ -7,6 +7,7 @@ import "./globals.css";
 const displayFont = Newsreader({ subsets: ["latin"], weight: "variable", style: "normal", axes: ["opsz"], variable: "--font-newsreader", display: "swap" });
 const bodyFont = Geist({ subsets: ["latin"], weight: "variable", variable: "--font-geist-sans", display: "swap" });
 const monoFont = Geist_Mono({ subsets: ["latin"], weight: "variable", variable: "--font-geist-mono", display: "swap" });
+const brandFont = Cinzel({ subsets: ["latin"], weight: "500", variable: "--font-cinzel", display: "swap" });
 const publicSiteUrl = process.env.SITE_URL || "https://aletheia.aletheia-web.workers.dev";
 
 export const metadata: Metadata = {
@@ -28,7 +29,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" data-scroll-behavior="smooth" className={`${displayFont.variable} ${bodyFont.variable} ${monoFont.variable}`}>
+    <html lang="en" data-scroll-behavior="smooth" className={`${displayFont.variable} ${bodyFont.variable} ${monoFont.variable} ${brandFont.variable}`}>
       <body>
         <a className="skip-link" href="#main-content">Skip to content</a>
         <Providers>

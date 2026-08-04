@@ -21,6 +21,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, ensureCsrfToken } from "@/lib/api";
 import { CSRF_HEADER_NAME, safeNextPath } from "@/lib/security";
 import type { Account } from "@/lib/types";
+import { BrandLockup } from "@/components/brand-lockup";
 
 const commands = [
   { label: "Why policy CI matters", detail: "See the failure scenario", href: "#why", icon: ShieldCheck },
@@ -51,8 +52,7 @@ export function SiteHeader() {
   return (
     <header className="site-header">
       <Link href="/" className="brand" aria-label="Aletheia home">
-        <span className="brand-mark"><ShieldCheck size={18} strokeWidth={2.2} /></span>
-        <span>Aletheia</span>
+        <BrandLockup size="compact" />
         <span className="brand-tag">Policy CI</span>
       </Link>
       {protectedPath ? <AccountMenu currentPath={pathname} /> : <div className="header-note"><span className="status-dot" /> Deterministic evaluation</div>}
@@ -168,8 +168,7 @@ function MarketingHeader() {
       <header className="marketing-header">
         <div className="marketing-header-inner">
           <Link href="/" className="marketing-brand" aria-label="Aletheia home">
-            <span className="marketing-brand-mark"><ShieldCheck size={17} strokeWidth={2.2} /></span>
-            <span className="marketing-wordmark">Aletheia</span>
+            <BrandLockup size="compact" />
             <span className="marketing-brand-product">Policy CI</span>
           </Link>
           <nav className="marketing-nav" aria-label="Marketing navigation">

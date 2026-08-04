@@ -11,6 +11,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { SupabasePublicConfig } from "@/lib/supabase/config";
 import { TurnstileWidget } from "@/components/turnstile-widget";
 import { ErrorState, PageLoading } from "@/components/ui";
+import { BrandLockup } from "@/components/brand-lockup";
 
 type BootstrapCompatibility = BootstrapResult | Project | { project?: Project; project_id?: string };
 
@@ -102,6 +103,7 @@ export function DemoEntry({ config, initialHasSession }: { config: SupabasePubli
     return (
       <main className="guest-demo-page">
         <section className="guest-demo-gate" aria-labelledby="guest-demo-title">
+          <BrandLockup className="guest-demo-brand" size="large" />
           <div className="guest-demo-badge"><Sparkles size={15} aria-hidden="true" /> No account needed</div>
           <p className="eyebrow">Interactive Northstar workspace</p>
           <h1 id="guest-demo-title">Run the complete policy release path.</h1>

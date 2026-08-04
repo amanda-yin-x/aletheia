@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import type { SupabasePublicConfig } from "@/lib/supabase/config";
 import { WaitlistForm } from "@/components/waitlist-form";
+import { BrandLockup } from "@/components/brand-lockup";
 
 const typedDecision = "decision = deny";
 
@@ -225,7 +226,7 @@ export function MarketingLanding({ config, initialHasSession }: { config: Supaba
       <footer className="marketing-footer">
         <p>Policies deserve a release gate.</p>
         <div>
-          <span className="marketing-wordmark">Aletheia</span>
+          <BrandLockup className="marketing-footer-brand" size="compact" />
           <nav aria-label="Footer navigation">
             <a href="https://github.com/amanda-yin-x/aletheia">GitHub</a>
             <a href="https://github.com/amanda-yin-x/aletheia/blob/main/docs/current-state-and-production-roadmap.md">Roadmap</a>
