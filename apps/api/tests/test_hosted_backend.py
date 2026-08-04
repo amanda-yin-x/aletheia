@@ -14,7 +14,7 @@ from app import auth, worker
 from app import main as app_main
 from app.api import routes as api_routes
 from app.auth import LOCAL_USER_EMAIL, LOCAL_USER_ID, AuthIdentity, require_identity
-from app.config import Settings
+from app.config import Settings, get_settings
 from app.db import get_session
 from app.main import app
 from app.models import (
@@ -27,12 +27,16 @@ from app.models import (
     Rule,
     Run,
     UserAccount,
+    WaitlistSignup,
     Workspace,
     WorkspaceMembership,
 )
 from app.operations import create_operation, execute_inline
 from app.services.canonical import content_hash
+from app.services.compiler import compile_project
 from app.services.errors import ServiceError
+from app.services.guest_cleanup import cleanup_expired_guests
+from app.services.reporting import create_report
 from app.services.review import resolve_finding, revise_rule
 from app.services.runner import run_comparison
 from app.services.seed import seed_demo
@@ -186,6 +190,85 @@ async def test_hosted_boundary_rejects_upload_before_reading_multipart(
         assert hosted_upload.reads == 0
 
 
+@pytest.mark.asyncio
+async def test_hosted_boundary_caps_declared_and_chunked_mutation_bodies(
+    monkeypatch: pytest.MonkeyPatch,
+    session: AsyncSession,
+) -> None:
+    settings = _production_settings(api_max_body_bytes=4096)
+    monkeypatch.setattr(app_main, "settings", settings)
+
+    class OversizedBody(httpx.AsyncByteStream):
+        def __init__(self) -> None:
+            self.reads = 0
+
+        async def __aiter__(self):  # type: ignore[no-untyped-def]
+            self.reads += 1
+            yield b"x" * (settings.api_max_body_bytes + 1)
+
+    boundary_headers = {
+        "Authorization": "Bearer structurally-present-token",
+        "Content-Type": "application/json",
+        "X-Aletheia-Origin-Token": settings.api_origin_token,
+    }
+    async with httpx.AsyncClient(
+        transport=httpx.ASGITransport(app=app), base_url="https://api.example.com"
+    ) as client:
+        declared_body = OversizedBody()
+        declared = await client.post(
+            "/api/v1/waitlist",
+            headers={
+                **boundary_headers,
+                "Content-Length": str(settings.api_max_body_bytes + 1),
+            },
+            content=declared_body,
+        )
+        assert declared.status_code == 413
+        assert declared.json()["code"] == "request_body_too_large"
+        assert declared_body.reads == 0
+
+        chunked_body = OversizedBody()
+        chunked = await client.post(
+            "/api/v1/waitlist",
+            headers=boundary_headers,
+            content=chunked_body,
+        )
+        assert chunked.status_code == 413
+        assert chunked.json()["code"] == "request_body_too_large"
+        assert chunked_body.reads == 1
+
+        identity = AuthIdentity(
+            "bounded-body-user",
+            "bounded-body@example.com",
+            {},
+        )
+
+        async def override_identity() -> AuthIdentity:
+            return identity
+
+        async def override_session():  # type: ignore[no-untyped-def]
+            yield session
+
+        app.dependency_overrides[require_identity] = override_identity
+        app.dependency_overrides[get_session] = override_session
+        try:
+            accepted = await client.post(
+                "/api/v1/waitlist",
+                headers=boundary_headers,
+                json={"email": identity.email},
+            )
+            assert accepted.status_code == 200, accepted.text
+            assert accepted.json() == {"joined": True}
+            stored = await session.scalar(
+                select(WaitlistSignup).where(WaitlistSignup.user_id == identity.subject)
+            )
+            assert stored is not None
+            assert stored.email == identity.email
+        finally:
+            app.dependency_overrides.pop(get_session, None)
+            app.dependency_overrides.pop(require_identity, None)
+
+
 def test_production_configuration_and_jwt_validation(monkeypatch: pytest.MonkeyPatch) -> None:
     with pytest.raises(ValueError, match="Hosted mode requires"):
         Settings(environment="production")
@@ -216,6 +299,15 @@ def test_production_configuration_and_jwt_validation(monkeypatch: pytest.MonkeyP
     decoded = auth._decode_token(token, settings)
     assert decoded["sub"] == claims["sub"]
 
+    anonymous = jwt.encode(
+        {**claims, "email": None, "is_anonymous": True},
+        private_key,
+        algorithm="RS256",
+        headers={"kid": "test-key"},
+    )
+    anonymous_claims = auth._decode_token(anonymous, settings)
+    assert anonymous_claims["is_anonymous"] is True
+
     invalid = jwt.encode(
         {**claims, "aud": "wrong"},
         private_key,
@@ -226,6 +318,16 @@ def test_production_configuration_and_jwt_validation(monkeypatch: pytest.MonkeyP
         auth._decode_token(invalid, settings)
     assert error.value.code == "authentication_required"
     assert error.value.status_code == 401
+
+    wrong_role = jwt.encode(
+        {**claims, "role": "anon"},
+        private_key,
+        algorithm="RS256",
+        headers={"kid": "test-key"},
+    )
+    with pytest.raises(ServiceError) as wrong_role_error:
+        auth._decode_token(wrong_role, settings)
+    assert wrong_role_error.value.status_code == 401
 
 
 async def _prepare_buildable_project(session: AsyncSession, project: Project) -> None:
@@ -383,6 +485,221 @@ async def test_bootstrap_never_seeds_a_shared_viewer_workspace(
     finally:
         app.dependency_overrides.pop(require_identity, None)
         app.dependency_overrides.pop(get_session, None)
+
+
+@pytest.mark.asyncio
+async def test_waitlist_is_normalized_private_and_idempotent(
+    session: AsyncSession,
+) -> None:
+    async def override_session():  # type: ignore[no-untyped-def]
+        yield session
+
+    app.dependency_overrides[get_session] = override_session
+    try:
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            joined = await client.post(
+                "/api/v1/waitlist", json={"email": "  Founder@Example.COM  "}
+            )
+            repeated = await client.post(
+                "/api/v1/waitlist", json={"email": "founder@example.com"}
+            )
+            changed = await client.post(
+                "/api/v1/waitlist", json={"email": "another@example.com"}
+            )
+            invalid = await client.post(
+                "/api/v1/waitlist", json={"email": "not-an-email"}
+            )
+
+        assert joined.status_code == 200
+        assert repeated.json() == {"joined": True}
+        assert changed.json() == {"joined": True}
+        assert invalid.status_code == 422
+        signups = list((await session.scalars(select(WaitlistSignup))).all())
+        assert len(signups) == 1
+        assert signups[0].email == "founder@example.com"
+        assert signups[0].user_id == LOCAL_USER_ID
+    finally:
+        app.dependency_overrides.pop(get_session, None)
+
+
+@pytest.mark.asyncio
+async def test_guest_operation_quota_and_reset_boundary(
+    session: AsyncSession,
+) -> None:
+    guest = AuthIdentity("guest-user", None, {"is_anonymous": True})
+    guest_account = UserAccount(
+        id=guest.subject,
+        email=None,
+        is_anonymous=True,
+        guest_operation_count=get_settings().guest_max_operations,
+        guest_mutation_count=get_settings().guest_max_mutations,
+    )
+    guest_workspace = Workspace(
+        id="guest-workspace",
+        slug="guest-workspace",
+        name="Guest workspace",
+        created_by_user_id=guest.subject,
+    )
+    session.add_all(
+        [
+            guest_account,
+            guest_workspace,
+            WorkspaceMembership(
+                workspace_id=guest_workspace.id,
+                user_id=guest.subject,
+                role="owner",
+            ),
+        ]
+    )
+    await session.commit()
+    guest_project = await seed_demo(session, workspace_id=guest_workspace.id)
+    guest_rule = await session.scalar(
+        select(Rule).where(
+            Rule.project_id == guest_project.id,
+            Rule.status != "superseded",
+        )
+    )
+    assert guest_rule is not None
+
+    with pytest.raises(ServiceError) as limited:
+        await create_operation(
+            session,
+            identity=guest,
+            project=guest_project,
+            kind="compile",
+            payload={"project_id": guest_project.id},
+            idempotency_key="over-quota",
+        )
+    assert limited.value.code == "guest_operation_limit_reached"
+    assert limited.value.status_code == 429
+
+    async def override_session():  # type: ignore[no-untyped-def]
+        yield session
+
+    async def override_identity() -> AuthIdentity:
+        return guest
+
+    app.dependency_overrides[get_session] = override_session
+    app.dependency_overrides[require_identity] = override_identity
+    try:
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            denied = await client.post(f"/api/v1/projects/{guest_project.id}/reset")
+            hidden = await client.post(
+                "/api/v1/projects/00000000-0000-0000-0000-999999999999/reset"
+            )
+            mutation_limited = await client.post(
+                f"/api/v1/rules/{guest_rule.id}/approve",
+                json={"expected_revision": guest_rule.revision},
+            )
+        assert denied.status_code == 403
+        assert denied.json()["code"] == "guest_reset_disabled"
+        assert hidden.status_code == 404
+        assert mutation_limited.status_code == 429
+        assert mutation_limited.json()["code"] == "guest_mutation_limit_reached"
+    finally:
+        app.dependency_overrides.pop(require_identity, None)
+        app.dependency_overrides.pop(get_session, None)
+
+
+@pytest.mark.asyncio
+async def test_guest_cleanup_dry_run_and_workspace_cascade(
+    session: AsyncSession,
+) -> None:
+    now = datetime.now(UTC)
+    old_guest = UserAccount(
+        id="expired-guest",
+        email=None,
+        is_anonymous=True,
+        created_at=now - timedelta(days=31),
+        updated_at=now - timedelta(days=31),
+    )
+    old_workspace = Workspace(
+        id="expired-guest-workspace",
+        slug="expired-guest-workspace",
+        name="Expired guest workspace",
+        created_by_user_id=old_guest.id,
+        created_at=now - timedelta(days=31),
+        updated_at=now - timedelta(days=31),
+    )
+    signup = WaitlistSignup(
+        id="expired-guest-waitlist",
+        user_id=old_guest.id,
+        email="keep-consent@example.com",
+        source="landing",
+        consent_version="2026-08-04",
+        created_at=now - timedelta(days=31),
+    )
+    session.add_all(
+        [
+            old_guest,
+            old_workspace,
+            WorkspaceMembership(
+                workspace_id=old_workspace.id,
+                user_id=old_guest.id,
+                role="owner",
+            ),
+            signup,
+        ]
+    )
+    await session.commit()
+    old_project = await seed_demo(session, workspace_id=old_workspace.id)
+    await _prepare_buildable_project(session, old_project)
+    old_build = await compile_project(session, old_project.id)
+    old_run = await run_comparison(session, old_project.id, old_build.id)
+    old_report = await create_report(session, old_run.id)
+    old_guest_id = old_guest.id
+    old_workspace_id = old_workspace.id
+    old_project_id = old_project.id
+    signup_id = signup.id
+    old_run_id = old_run.id
+    old_report_id = old_report.id
+
+    preview = await cleanup_expired_guests(
+        session,
+        older_than_days=30,
+        execute=False,
+        now=now,
+    )
+    assert preview.guest_accounts == 1
+    assert preview.auth_only_accounts == 0
+    assert preview.workspaces == 1
+    assert preview.projects == 1
+    assert preview.linked_waitlist_signups == 1
+    assert await session.get(Project, old_project_id) is not None
+
+    applied = await cleanup_expired_guests(
+        session,
+        older_than_days=30,
+        execute=True,
+        now=now,
+    )
+    assert applied.executed is True
+    session.expire_all()
+    assert await session.get(UserAccount, old_guest_id) is None
+    assert await session.get(Workspace, old_workspace_id) is None
+    assert await session.get(Project, old_project_id) is None
+    assert await session.get(Run, old_run_id) is None
+    assert await session.get(Report, old_report_id) is None
+    preserved_signup = await session.get(WaitlistSignup, signup_id)
+    assert preserved_signup is not None
+    assert preserved_signup.user_id is None
+    assert preserved_signup.email == "keep-consent@example.com"
+
+    repeated = await cleanup_expired_guests(
+        session,
+        older_than_days=30,
+        execute=True,
+        now=now,
+    )
+    assert repeated.executed is True
+    assert repeated.guest_accounts == 0
+    assert repeated.auth_only_accounts == 0
+    assert repeated.workspaces == 0
+    assert repeated.projects == 0
 
 
 @pytest.mark.asyncio

@@ -12,7 +12,8 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   const query = await searchParams;
   const nextPath = safeNextPath(query.next);
   const identity = await getAuthIdentity();
-  if (identity) redirect(nextPath);
+  // Anonymous visitors may still choose a persistent email or GitHub identity.
+  if (identity && !identity.isAnonymous) redirect(nextPath);
 
   const config = getSupabasePublicConfig();
   if (!config) {
@@ -20,5 +21,5 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
     return <main className="auth-page"><section className="auth-card"><h1>Authentication is unavailable.</h1><p className="auth-lede">The deployment is missing its Supabase runtime configuration. Ask the site operator to configure it before signing in.</p></section></main>;
   }
   const initialError = query.error === "callback_failed" ? "That sign-in link could not be verified. Request a new link and try again." : null;
-  return <LoginForm config={config} nextPath={nextPath} initialError={initialError} />;
+  return <LoginForm config={config} nextPath={nextPath} initialError={initialError} hasAnonymousSession={identity?.isAnonymous === true} />;
 }

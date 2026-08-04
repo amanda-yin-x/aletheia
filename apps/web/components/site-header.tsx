@@ -8,6 +8,7 @@ import {
   BookOpenText,
   FileCheck2,
   Github,
+  MailPlus,
   Play,
   Search,
   ShieldCheck,
@@ -25,6 +26,7 @@ const commands = [
   { label: "Why policy CI matters", detail: "See the failure scenario", href: "#why", icon: ShieldCheck },
   { label: "How Aletheia works", detail: "Follow the four-stage release path", href: "#workflow", icon: Workflow },
   { label: "What the build produces", detail: "Inspect the release evidence", href: "#evidence", icon: FileCheck2 },
+  { label: "Request hosted preview access", detail: "Join the private-workspace waitlist", href: "#waitlist", icon: MailPlus },
   { label: "Open the Northstar workspace", detail: "Run the source-linked refund workflow", href: "/demo", icon: Play },
   {
     label: "Read the production roadmap",
@@ -45,7 +47,7 @@ const commands = [
 export function SiteHeader() {
   const pathname = usePathname();
   if (pathname === "/") return <MarketingHeader />;
-  const protectedPath = pathname === "/demo" || ["/projects/", "/runs/", "/reports/", "/scenario-results/"].some((prefix) => pathname.startsWith(prefix));
+  const protectedPath = ["/projects/", "/runs/", "/reports/", "/scenario-results/"].some((prefix) => pathname.startsWith(prefix));
   return (
     <header className="site-header">
       <Link href="/" className="brand" aria-label="Aletheia home">
@@ -69,7 +71,8 @@ function AccountMenu() {
     retry: false,
     refetchInterval: 10 * 60 * 1_000,
   });
-  const label = account.data?.email || "Account";
+  const isGuest = account.data?.is_anonymous === true;
+  const label = isGuest ? "Guest demo" : account.data?.email || "Account";
 
   async function logout() {
     setLoggingOut(true);
@@ -83,7 +86,7 @@ function AccountMenu() {
         const names = await window.caches.keys();
         await Promise.all(names.map((name) => window.caches.delete(name)));
       }
-      router.replace("/login");
+      router.replace(isGuest ? "/" : "/login");
       router.refresh();
     } catch {
       setLogoutError("Could not sign out. Please try again.");
@@ -96,10 +99,10 @@ function AccountMenu() {
     <details className="account-menu">
       <summary><UserRound size={16} /><span>{label}</span></summary>
       <div className="account-popover">
-        <small>Signed in</small>
+        <small>{isGuest ? "Temporary guest session" : "Signed in"}</small>
         <strong>{label}</strong>
         {account.data?.workspaces?.[0] && <span>{account.data.workspaces[0].name} · {account.data.workspaces[0].role}</span>}
-        <button type="button" onClick={logout} disabled={loggingOut}><LogOut size={15} /> {loggingOut ? "Signing out…" : "Sign out"}</button>
+        <button type="button" onClick={logout} disabled={loggingOut}><LogOut size={15} /> {loggingOut ? "Signing out…" : isGuest ? "End guest session" : "Sign out"}</button>
         {logoutError && <span role="alert" className="account-error">{logoutError}</span>}
       </div>
     </details>
@@ -170,6 +173,7 @@ function MarketingHeader() {
           <nav className="marketing-nav" aria-label="Marketing navigation">
             <a href="#why">Why it matters</a>
             <a href="#workflow">Workflow</a>
+            <a href="#waitlist">Preview access</a>
             <button className="command-trigger" type="button" onClick={openPalette} aria-haspopup="dialog" aria-expanded={open} aria-controls={open ? "jump-dialog" : undefined} aria-label="Open jump menu">
               <Search size={15} aria-hidden="true" />
               <span aria-hidden="true">Jump to…</span>

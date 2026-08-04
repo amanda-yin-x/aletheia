@@ -9,6 +9,7 @@ export interface AuthIdentity {
   email: string | null;
   name: string | null;
   avatarUrl: string | null;
+  isAnonymous: boolean;
   localBypass?: boolean;
 }
 
@@ -25,12 +26,18 @@ function identityFromClaims(claims: Record<string, unknown>): AuthIdentity | nul
     : {};
   const name = stringClaim(metadata, "full_name") || stringClaim(metadata, "name") || stringClaim(claims, "name");
   const avatarUrl = stringClaim(metadata, "avatar_url") || stringClaim(metadata, "picture") || stringClaim(claims, "picture");
-  return { id, email: stringClaim(claims, "email"), name, avatarUrl };
+  return {
+    id,
+    email: stringClaim(claims, "email"),
+    name,
+    avatarUrl,
+    isAnonymous: claims.is_anonymous === true,
+  };
 }
 
 export async function getAuthIdentity(): Promise<AuthIdentity | null> {
   if (isLocalAuthBypassEnabled()) {
-    return { id: "local-development", email: "local@aletheia.dev", name: "Local workspace", avatarUrl: null, localBypass: true };
+    return { id: "local-development", email: "local@aletheia.dev", name: "Local workspace", avatarUrl: null, isAnonymous: false, localBypass: true };
   }
   if (!getSupabasePublicConfig()) return null;
 

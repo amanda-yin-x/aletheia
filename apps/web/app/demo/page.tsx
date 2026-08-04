@@ -1,9 +1,10 @@
 import { DemoEntry } from "@/components/demo-entry";
-import { requireAuth } from "@/lib/supabase/auth";
+import { getAuthIdentity } from "@/lib/supabase/auth";
+import { getSupabasePublicConfig } from "@/lib/supabase/config";
 
 export const dynamic = "force-dynamic";
 
 export default async function DemoPage() {
-  await requireAuth("/demo");
-  return <DemoEntry />;
+  const identity = await getAuthIdentity();
+  return <DemoEntry config={getSupabasePublicConfig()} initialHasSession={identity !== null} />;
 }

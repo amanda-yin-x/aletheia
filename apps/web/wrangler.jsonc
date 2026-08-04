@@ -9,7 +9,12 @@
   "keep_vars": true,
   "vars": {
     "AUTH_MODE": "supabase",
-    "SITE_URL": "https://aletheia.aletheia-web.workers.dev"
+    "SITE_URL": "https://aletheia.aletheia-web.workers.dev",
+    "SUPABASE_URL": "https://xhcwbvrlyyaceelncfeo.supabase.co",
+    "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_4uOB2LkmDAuuESS3ePABpg_k6RtgZhD",
+    "TURNSTILE_SITE_KEY": "0x4AAAAAAEGWc82Yh7ePf9Vt",
+    "GITHUB_AUTH_ENABLED": "false",
+    "EMAIL_OTP_ENABLED": "false"
   },
   "assets": {
     "directory": ".open-next/assets",
@@ -18,6 +23,11 @@
   "secrets": {
     "required": ["API_ORIGIN_URL", "API_ORIGIN_TOKEN"]
   },
+  "ratelimits": [
+    { "name": "API_RATE_LIMITER", "namespace_id": "6821904521", "simple": { "limit": 120, "period": 60 } },
+    { "name": "API_POLL_RATE_LIMITER", "namespace_id": "6821904522", "simple": { "limit": 90, "period": 60 } },
+    { "name": "API_HEAVY_RATE_LIMITER", "namespace_id": "6821904523", "simple": { "limit": 30, "period": 60 } }
+  ],
   "observability": {
     "enabled": true,
     "head_sampling_rate": 0.1
@@ -27,7 +37,12 @@
     "staging": {
       "vars": {
         "AUTH_MODE": "supabase",
-        "SITE_URL": "https://aletheia-staging.aletheia-web.workers.dev"
+        "SITE_URL": "https://aletheia-staging.aletheia-web.workers.dev",
+        "SUPABASE_URL": "https://xhcwbvrlyyaceelncfeo.supabase.co",
+        "SUPABASE_PUBLISHABLE_KEY": "sb_publishable_4uOB2LkmDAuuESS3ePABpg_k6RtgZhD",
+        "TURNSTILE_SITE_KEY": "0x4AAAAAAEGWc82Yh7ePf9Vt",
+        "GITHUB_AUTH_ENABLED": "false",
+        "EMAIL_OTP_ENABLED": "false"
       },
       "assets": {
         "directory": ".open-next/assets",
@@ -35,7 +50,12 @@
       },
       "secrets": {
         "required": ["API_ORIGIN_URL", "API_ORIGIN_TOKEN"]
-      }
+      },
+      "ratelimits": [
+        { "name": "API_RATE_LIMITER", "namespace_id": "6821904531", "simple": { "limit": 120, "period": 60 } },
+        { "name": "API_POLL_RATE_LIMITER", "namespace_id": "6821904532", "simple": { "limit": 90, "period": 60 } },
+        { "name": "API_HEAVY_RATE_LIMITER", "namespace_id": "6821904533", "simple": { "limit": 30, "period": 60 } }
+      ]
     }
   }
 }

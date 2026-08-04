@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth import AuthIdentity
 from app.config import get_settings
-from app.models import Build, Document, Finding, Job, Project, Rule, TestCase
+from app.models import Build, Document, Finding, Job, Project, Rule, TestCase, UserAccount
 from app.schemas import OperationError, OperationOut
 from app.services.canonical import content_hash
 from app.services.compiler import compile_project
@@ -288,7 +288,26 @@ async def create_operation(
         session, kind=kind, project_id=project.id, payload=payload
     )
     captured_payload["input_fingerprint"] = input_fingerprint
-    await ensure_account(session, identity)
+    account = await ensure_account(session, identity)
+    if identity.is_anonymous:
+        # The counter belongs to the account, not the project, so resetting a
+        # fixture cannot reset the free guest allowance. Locking serializes
+        # concurrent requests from the same guest across tabs.
+        await session.flush()
+        locked_account = await session.scalar(
+            select(UserAccount)
+            .where(UserAccount.id == account.id)
+            .with_for_update()
+        )
+        if locked_account is None:
+            raise ServiceError("authentication_required", "A valid user session is required.", status_code=401)
+        if locked_account.guest_operation_count >= get_settings().guest_max_operations:
+            raise ServiceError(
+                "guest_operation_limit_reached",
+                "This guest workspace has used its live-operation allowance. Sign in for a persistent workspace or start a new guest session.",
+                status_code=429,
+            )
+        locked_account.guest_operation_count += 1
     job = Job(
         workspace_id=project.workspace_id,
         project_id=project.id,

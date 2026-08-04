@@ -2,7 +2,7 @@
   "schema_version": "1.0",
   "document": {
     "name": "Aletheia capability and verification inventory",
-    "version": "2026-08-03",
+    "version": "2026-08-04-guest-candidate",
     "repository": "https://github.com/amanda-yin-x/aletheia",
     "canonical_site": "https://aletheia.aletheia-web.workers.dev",
     "evidence_boundary": "The bundled results cover deterministic Northstar fixture data, reviewed rules, build-pinned artifacts, scripted trajectories, and calls routed through the fixture policy adapter. They do not establish live-model quality, customer safety, compliance, production reliability, or market validation."
@@ -18,7 +18,7 @@
   "overall_status": {
     "local_product": {
       "status": "fixture",
-      "reason": "All 111 backend tests passed across the default and real-PostgreSQL local runs; web lint, types, 32 unit/component tests, production/OpenNext builds, Cloudflare type generation, production/staging Wrangler dry-runs, and all five clean browser flows also passed. GitHub Actions run 30867243068 passed quality, secret scan, and PostgreSQL integration. Every hosted gate remains separate."
+      "reason": "The settled revision passed its 111-test backend matrix, web/build/Worker checks, and five browser flows. In the current guest candidate, all 60 Vitest tests pass across 16 files and all 116 backend tests pass across two local runs: 115 default plus one real-PostgreSQL test. Hosted guest verification remains separate."
     },
     "evaluation_mode": {
       "status": "fixture",
@@ -26,7 +26,7 @@
     },
     "hosted_product": {
       "status": "unverified",
-      "reason": "The current Cloudflare, Render, Supabase Auth, Supabase Postgres, OAuth, SMTP, and Turnstile path has not been provisioned and exercised end to end."
+      "reason": "Supabase, Render, Turnstile, and a named Cloudflare staging Worker are provisioned, and the permanent-user Northstar workflow passed there. The newer public-guest candidate is not deployed or hosted-verified, and canonical production remains on the preceding release."
     },
     "production_readiness": {
       "status": "absent",
@@ -37,17 +37,17 @@
     {
       "order": 1,
       "component": "Public browser",
-      "responsibility": "Loads the public landing page or requests a protected workspace route."
+      "responsibility": "Loads the public landing page or public /demo guest entry, then accesses private workspace routes through a signed session."
     },
     {
       "order": 2,
       "component": "Supabase Auth",
-      "responsibility": "Issues and refreshes sessions for email and GitHub authentication and validates CAPTCHA for email auth."
+      "responsibility": "Issues and refreshes anonymous or permanent sessions and validates Turnstile CAPTCHA for anonymous/email auth."
     },
     {
       "order": 3,
       "component": "Cloudflare Workers with Next.js and OpenNext",
-      "responsibility": "Renders protected routes, refreshes cookies, validates browser mutations, and proxies same-origin API traffic."
+      "responsibility": "Renders public /demo, establishes the guest session, protects workspace routes, refreshes cookies, validates mutations, and proxies same-origin API traffic."
     },
     {
       "order": 4,
@@ -57,7 +57,7 @@
     {
       "order": 5,
       "component": "Supabase Postgres",
-      "responsibility": "Stores accounts, workspaces, project data, build/run evidence, and operations."
+      "responsibility": "Stores accounts, workspaces, project data, build/run evidence, operations, guest usage/expiry data, and waitlist consent."
     }
   ],
   "capabilities": [
@@ -68,16 +68,16 @@
       "environment": "local web and static/public route",
       "scope": "Explains the policy-CI workflow, refund failure scenario, source boundary, and product path without reading private API data.",
       "evidence": ["apps/web/app/page.tsx", "apps/web/components/marketing-landing.tsx", "apps/web/tests/e2e/demo.spec.ts"],
-      "limitations": ["The current hosted revision has not been confirmed deployed.", "No analytics, legal, privacy, or service-status pages are implemented."]
+      "limitations": ["The canonical hostname still serves the preceding release; the guest candidate is not deployed.", "No analytics, legal, privacy, or service-status pages are implemented."]
     },
     {
       "id": "web.workspace",
-      "name": "Authenticated review, build, run, and report UI",
+      "name": "Signed-session review, build, run, and report UI",
       "status": "fixture",
-      "environment": "local Northstar workspace",
-      "scope": "Provides source, rule, build, test, run, trace, and report routes backed by the deterministic Northstar workflow.",
+      "environment": "local Northstar workspace; permanent-user staging path",
+      "scope": "Provides source, rule, build, test, run, trace, and report routes backed by the deterministic Northstar workflow for a guest or permanent signed subject.",
       "evidence": ["apps/web/app/projects/", "apps/web/app/runs/", "apps/web/app/scenario-results/", "apps/web/app/reports/"],
-      "limitations": ["All five local Playwright flows pass; the hosted network path remains unverified.", "The current scenario and domain content is Northstar-specific."]
+      "limitations": ["The permanent-user hosted workflow passed; the public guest entry and limits remain to verify there.", "The current scenario and domain content is Northstar-specific."]
     },
     {
       "id": "auth.local",
@@ -90,39 +90,48 @@
     },
     {
       "id": "auth.supabase",
-      "name": "Supabase email and GitHub authentication",
-      "status": "unverified",
-      "environment": "hosted target",
-      "scope": "Implements email magic-link/OTP, GitHub OAuth, code-only PKCE callback exchange with raw token-hash rejection, cookie refresh, logout, and protected-route checks.",
+      "name": "Supabase permanent-account authentication",
+      "status": "operating",
+      "environment": "named staging Worker; provider-limited",
+      "scope": "Implements email magic-link/OTP, GitHub OAuth, code-only PKCE callback exchange with raw token-hash rejection, cookie refresh, logout, protected-route checks, and in-place anonymous-to-email/OAuth identity linking that preserves the Supabase subject and workspace.",
       "evidence": ["apps/web/app/login/", "apps/web/app/auth/", "apps/web/lib/supabase/", "apps/web/middleware.ts", "apps/web/tests/auth-callback.test.ts"],
-      "limitations": ["No Supabase project, GitHub provider, email templates, or custom SMTP setup is claimed provisioned.", "Real refresh, revocation, and provider delivery have not been exercised."]
+      "limitations": ["Magic-link/session behavior passed with hosted permanent users, but default SMTP is limited to project-team addresses.", "Manual OTP and GitHub OAuth are deployment-disabled; custom SMTP, revocation, and broader delivery remain unverified.", "Attaching an identity owned by another account returns a conflict; automatic workspace merging is not implemented."]
     },
     {
       "id": "auth.turnstile",
-      "name": "Turnstile protection for email authentication",
+      "name": "Turnstile protection for anonymous and email authentication",
       "status": "unverified",
-      "environment": "hosted target",
-      "scope": "Forwards a single-use CAPTCHA token to Supabase email auth and destroys/remounts the widget after each attempt.",
-      "evidence": ["apps/web/components/turnstile-widget.tsx", "apps/web/tests/login.test.tsx"],
-      "limitations": ["A real site-key/secret pair and Supabase CAPTCHA configuration have not been verified."]
+      "environment": "guest candidate; provisioned hosted Turnstile",
+      "scope": "Forwards a single-use CAPTCHA token to Supabase anonymous/email auth and destroys/remounts the widget after each attempt. Supabase verifies challenge success; Aletheia action values are client labels. The widget allowlist contains only canonical/staging hosts; local use relies on local auth or Cloudflare's test key.",
+      "evidence": ["apps/web/components/turnstile-widget.tsx", "apps/web/tests/login.test.tsx", "apps/web/tests/turnstile-widget.test.tsx", "apps/web/tests/guest-demo.test.tsx"],
+      "limitations": ["The hosted site-key/secret pairing passed on the prior email path; the anonymous sign-in path has not been deployed and exercised.", "Native Supabase CAPTCHA does not enforce Turnstile action or hostname response fields."]
+    },
+    {
+      "id": "auth.guest",
+      "name": "Turnstile-protected anonymous guest entry",
+      "status": "unverified",
+      "environment": "current guest candidate",
+      "scope": "Keeps /demo public, obtains a signed Supabase anonymous session with role=authenticated, and bootstraps an isolated personal Northstar workspace without email or password.",
+      "evidence": ["apps/web/app/demo/page.tsx", "apps/web/components/demo-entry.tsx", "apps/web/tests/guest-demo.test.tsx", "apps/api/app/auth.py"],
+      "limitations": ["The candidate path is implemented and locally covered but not deployed or hosted-verified.", "It exposes only the seeded evaluation workspace, not uploads or arbitrary project creation."]
     },
     {
       "id": "web.same_origin_proxy",
       "name": "Same-origin API proxy and browser mutation boundary",
       "status": "unverified",
       "environment": "Cloudflare-to-Render target",
-      "scope": "Checks session, path, Origin, Fetch Metadata, and double-submit CSRF; strips spoofable credentials; injects bearer and origin credentials; streams upstream responses.",
-      "evidence": ["apps/web/app/api/v1/[...path]/route.ts", "apps/web/lib/security.ts", "apps/web/tests/security.test.ts", "apps/web/tests/api-proxy-handler.test.ts"],
-      "limitations": ["The public Cloudflare-to-Render network path has not been smoke-tested.", "Independent security testing remains pending."]
+      "scope": "Checks session, path, Origin, Fetch Metadata, and double-submit CSRF; strips spoofable credentials; injects bearer and origin credentials; streams responses; configures per-subject 120 general/90 poll/30 heavy per-location thresholds, a 64 KiB mutation cap, and 85 seconds to receive upstream response headers.",
+      "evidence": ["apps/web/app/api/v1/[...path]/route.ts", "apps/web/lib/edge-rate-limit.ts", "apps/web/lib/security.ts", "apps/web/tests/security.test.ts", "apps/web/tests/api-proxy-handler.test.ts", "apps/web/tests/edge-rate-limit.test.ts", "apps/web/tests/api-client.test.ts"],
+      "limitations": ["The permanent-user Cloudflare-to-Render path passed on staging; the anonymous JWT path and new edge controls must be reverified.", "Cloudflare rate counters are permissive and eventually consistent per location, not exact global quotas; the 85-second bound ends at response headers and does not time the streamed body.", "Independent security testing remains pending."]
     },
     {
       "id": "api.hosted_authentication",
       "name": "FastAPI Supabase JWT and origin authentication",
       "status": "unverified",
       "environment": "Render target",
-      "scope": "Defaults to fail-closed production settings, applies pre-routing origin-secret and bearer-presence checks, rejects hosted document uploads before multipart parsing, and requires a signed, non-anonymous authenticated-user JWT with constrained algorithms, key ID, issuer, audience, expiry, and subject on routed operations.",
+      "scope": "Defaults to fail-closed production settings, applies pre-routing origin-secret and bearer-presence checks, rejects hosted document uploads before multipart parsing, streams and caps hosted mutation bodies at 64 KiB, and requires a signed role=authenticated JWT with constrained algorithms, key ID, issuer, audience, expiry, and subject; signed anonymous identities enter the bounded guest path.",
       "evidence": ["apps/api/app/auth.py", "apps/api/app/config.py", "apps/api/app/main.py", "apps/api/tests/test_hosted_backend.py"],
-      "limitations": ["The full local backend suite passed, but external Supabase JWKS rotation, outage, and cache behavior have not been exercised."]
+      "limitations": ["External JWT/origin enforcement passed for permanent users on staging; anonymous JWT acceptance remains to verify there.", "JWKS rotation, outage, and cache behavior have not been exercised."]
     },
     {
       "id": "tenancy.application",
@@ -131,7 +140,7 @@
       "environment": "local tests and hosted target",
       "scope": "Implements accounts, personal workspace bootstrap, owner/admin/editor/viewer roles, and membership-scoped project and child-resource lookups.",
       "evidence": ["apps/api/app/tenancy.py", "apps/api/app/api/routes.py", "apps/api/tests/test_hosted_backend.py"],
-      "limitations": ["The full local backend suite passed; real hosted two-user isolation remains unverified.", "There is no invitation, membership-administration, group, or service-account workflow."]
+      "limitations": ["Permanent-user hosted two-user isolation passed; guest-to-guest and guest-to-permanent isolation remain to verify.", "There is no invitation, membership-administration, group, or service-account workflow."]
     },
     {
       "id": "tenancy.database",
@@ -140,7 +149,25 @@
       "environment": "Supabase Postgres target",
       "scope": "Would use RLS or an equivalent private-schema and least-privilege grant boundary.",
       "evidence": ["apps/api/migrations/versions/0002_tenancy_operations.py", "apps/api/tests/test_migrations_integration.py"],
-      "limitations": ["Current tenant authorization is enforced only by FastAPI query scopes.", "The migration's locally tested anon/authenticated privilege revocations are a coarse Data API denial, not tenant isolation.", "The actual Supabase roles, grants, exposed schemas, and Data API denial remain unverified."]
+      "limitations": ["Current tenant authorization is enforced only by FastAPI query scopes.", "Hosted Data API disablement plus current/default anon/authenticated grant denial passed, but that is coarse browser denial rather than tenant isolation.", "RLS or an equivalent private-schema/least-privilege server boundary remains absent."]
+    },
+    {
+      "id": "guest.governance",
+      "name": "Guest limits, expiry, and cleanup",
+      "status": "unverified",
+      "environment": "current guest candidate",
+      "scope": "Caps guests at 30 successful writes and six live operations, denies reset, expires access after seven days, and cleans anonymous identities after 30 days at startup/every 24 hours. Hosted age is anchored to auth.users.created_at, and auth-only anonymous identities that never bootstrapped the app are included.",
+      "evidence": ["apps/api/app/tenancy.py", "apps/api/app/operations.py", "apps/api/app/services/guest_cleanup.py", "apps/api/app/cli.py", "apps/api/migrations/versions/0005_guest_access_waitlist.py", "apps/api/tests/test_hosted_backend.py"],
+      "limitations": ["The limits and cleanup behavior have not been exercised against hosted Postgres.", "Startup and periodic cleanup are fail-open by design and therefore require alert monitoring."]
+    },
+    {
+      "id": "product.waitlist",
+      "name": "Authenticated waitlist consent",
+      "status": "unverified",
+      "environment": "current guest candidate",
+      "scope": "Accepts normalized unique email consent behind a guest or permanent authenticated API and preserves the consent while clearing its user link during guest cleanup.",
+      "evidence": ["apps/api/app/api/routes.py", "apps/api/app/models.py", "apps/web/components/waitlist-form.tsx", "apps/web/tests/waitlist.test.tsx"],
+      "limitations": ["The candidate path is locally covered but not deployed or hosted-verified.", "Joining the waitlist does not convert an anonymous identity into a permanent account."]
     },
     {
       "id": "sources.provenance_viewer",
@@ -289,11 +316,11 @@
     {
       "id": "operations.contract",
       "name": "Typed asynchronous operation contract",
-      "status": "unverified",
-      "environment": "local API and hosted target",
-      "scope": "Returns HTTP 202, Location, and OperationOut; records idempotency and request/input fingerprints; polls progress and validates the resulting resource before navigation.",
-      "evidence": ["apps/api/app/operations.py", "apps/api/app/schemas.py", "apps/web/lib/operations.ts", "apps/web/tests/operations.test.ts"],
-      "limitations": ["Local browser polling, terminal-state behavior, and the full backend suite passed; the hosted network path remains unverified.", "Compile fingerprint capture and execution still have an incomplete transaction/TOCTOU boundary.", "There is no cancellation endpoint despite a modeled cancelled state."]
+      "status": "operating",
+      "environment": "local API and permanent-user staging path",
+      "scope": "Returns HTTP 202, Location, and OperationOut; records idempotency and request/input fingerprints; polls progress and validates the result. Snapshot-consuming operations and child mutations use one Project-to-child lock order.",
+      "evidence": ["apps/api/app/operations.py", "apps/api/app/tenancy.py", "apps/api/app/schemas.py", "apps/api/tests/test_migrations_integration.py", "apps/web/lib/operations.ts", "apps/web/tests/operations.test.ts"],
+      "limitations": ["Permanent-user hosted build/run polling passed; the guest six-operation allowance and new locking revision remain to verify hosted.", "There is no cancellation endpoint despite a modeled cancelled state."]
     },
     {
       "id": "operations.local_worker",
@@ -326,37 +353,37 @@
       "id": "database.postgres",
       "name": "PostgreSQL and Supabase database lifecycle",
       "status": "operating",
-      "environment": "isolated local PostgreSQL 14; PostgreSQL 17 CI target",
+      "environment": "hosted Supabase plus isolated local PostgreSQL 14 and PostgreSQL 17 CI",
       "scope": "Includes PostgreSQL-compatible models, migrations, URL normalization, advisory migration locking, bounded pooling, conditional anon/authenticated table-privilege revocation, and a PostgreSQL lifecycle CI job.",
       "evidence": ["apps/api/migrations/", "apps/api/tests/test_migrations_integration.py", ".github/workflows/ci.yml"],
-      "limitations": ["The real PostgreSQL 14 integration passed locally, including current/default role-privilege denial and the queued operation lifecycle; the PostgreSQL 17 Actions job also passed on the settled implementation commit.", "No target Supabase database is claimed migrated, restored, or smoke-tested.", "No target Supabase Data API denial is claimed verified.", "Render Free has no pre-deploy migration command."]
+      "limitations": ["The hosted database reached the preceding Alembic head and passed Data API/current/default grant denial; the guest migration is not yet applied or verified there.", "No backup/restore drill is claimed.", "Render Free has no pre-deploy migration command."]
     },
     {
       "id": "deployment.cloudflare",
       "name": "Cloudflare OpenNext deployment",
-      "status": "configuration_only",
-      "environment": "Cloudflare target",
+      "status": "unverified",
+      "environment": "named staging verified for preceding revision; guest candidate pending",
       "scope": "Defines the Next.js/OpenNext Worker entry point, static assets, explicit production and named staging bindings, disabled deployment preview URLs, observability sampling, source maps, and deploy commands.",
       "evidence": ["apps/web/wrangler.jsonc", "apps/web/open-next.config.ts", "apps/web/package.json"],
-      "limitations": ["Production and staging Wrangler dry-runs passed locally, but neither current Worker revision is claimed deployed or publicly smoke-tested.", "Workers Free CPU and bundle limits must be measured with real traffic."]
+      "limitations": ["A permanent-user revision passed on the named staging Worker, but the guest candidate is not deployed there and canonical production is stale.", "Workers Free CPU and bundle limits must be measured with real traffic."]
     },
     {
       "id": "deployment.render",
       "name": "Render FastAPI deployment",
-      "status": "configuration_only",
-      "environment": "Render target",
-      "scope": "Defines a Free Docker web service, readiness probe, fail-closed production variables, and inline operations.",
+      "status": "unverified",
+      "environment": "provisioned Render Free service; guest candidate pending",
+      "scope": "Defines a Free Docker web service, readiness probe, fail-closed production variables, inline operations, a 64 KiB API mutation cap, guest limits, and fail-open cleanup at startup/every 24 hours, including auth-only anonymous identities. The Free Blueprint omits maxShutdownDelaySeconds and uses the 30-second platform default.",
       "evidence": ["render.yaml", "apps/api/Dockerfile"],
-      "limitations": ["No current service provisioning, database migration, cold-start measurement, logs, or rollback test is claimed."]
+      "limitations": ["The service passed the preceding permanent-user staging workflow; guest code and migration are not deployed.", "No availability SLO, rollback drill, or durable hosted worker is claimed."]
     },
     {
       "id": "deployment.supabase",
       "name": "Supabase Auth and Postgres environment",
-      "status": "configuration_only",
-      "environment": "Supabase target",
+      "status": "operating",
+      "environment": "provisioned Supabase project",
       "scope": "Documents required Auth callbacks, providers, SMTP, CAPTCHA, JWT verification, runtime/migration URLs, and database isolation gates.",
       "evidence": [".env.example", "apps/web/.dev.vars.example", "docs/deployment.md"],
-      "limitations": ["No external Supabase project or production secret set is claimed provisioned.", "RLS or an equivalent private-schema boundary is absent."]
+      "limitations": ["Anonymous sign-in and Turnstile are configured, but the guest application path is not hosted-verified.", "Default SMTP is project-team-only; GitHub OAuth is disabled; RLS or an equivalent private-schema boundary is absent."]
     },
     {
       "id": "benchmark.tau_sync",
@@ -487,13 +514,25 @@
       "id": "postgres_integration",
       "status": "operating",
       "scope": "Local empty PostgreSQL 14 migration, privilege, and operation lifecycle",
-      "result": "The real local marker passed: migration through head, current/default privilege denial for anon/authenticated roles, bootstrap, queued build/run worker processing, polling, and downgrade cleanup. The PostgreSQL 17 Actions job also passed; the target Supabase database remains unverified."
+      "result": "The real local marker passed: migration through head, current/default privilege denial for anon/authenticated roles, bootstrap, queued build/run worker processing, polling, and downgrade cleanup. PostgreSQL 17 CI passed. The target Supabase database reached the preceding head and passed Data API/grant denial; the guest migration remains pending."
     },
     {
       "id": "hosted_end_to_end",
+      "status": "operating",
+      "scope": "Permanent-user Cloudflare to Render to Supabase staging path",
+      "result": "The permanent-user path passed personal bootstrap, two-user isolation, complete Northstar build/run/trace/report/download, Data API denial, and direct-origin rejection on the named staging Worker."
+    },
+    {
+      "id": "guest_candidate_local",
+      "status": "operating",
+      "scope": "Current local guest candidate",
+      "result": "All 60 web Vitest tests pass across 16 files. All 116 backend tests pass across two local runs: 115 default and one real-PostgreSQL integration test, including the two-session Project-to-child snapshot-lock fence. Hosted verification remains separate."
+    },
+    {
+      "id": "guest_hosted_end_to_end",
       "status": "unverified",
-      "scope": "Cloudflare to Render to Supabase",
-      "result": "The complete Cloudflare-to-Render-to-Supabase path has not been provisioned or passed hosted smoke tests."
+      "scope": "Guest Cloudflare to Render to Supabase staging and canonical paths",
+      "result": "The guest build is not deployed. Anonymous sign-in/JWT handling, tenant isolation, guest limits/reset denial, seven-day expiry, auth-created-at plus auth-only cleanup, waitlist persistence, per-location edge policies, two-hop 64 KiB limits, the 85-second response-header deadline, and the full Northstar workflow remain promotion gates."
     },
     {
       "id": "production_assurance",
@@ -503,9 +542,8 @@
     }
   ],
   "highest_priority_gaps": [
-    "Complete the operation input-fingerprint transaction boundary and keep all evidence presentation build-snapshot-derived.",
     "Add database-enforced tenant isolation or a verified private-schema and least-privilege grant boundary.",
-    "Provision and smoke-test the complete Cloudflare, Render, Supabase Auth, Supabase Postgres, OAuth, SMTP, and Turnstile staging path.",
+    "Deploy the guest migration and candidate to staging; verify anonymous Turnstile sign-in, signed-JWT isolation, guest limits/expiry/cleanup/reset denial, waitlist persistence, and the complete Northstar workflow before canonical promotion.",
     "Build a second domain and domain-neutral compiler/analyzer before making general policy-analysis claims.",
     "Add typed fact catalogs, multi-currency/time semantics, a real local-model loop, customer CI command, and guarded runtime SDK only after fixture evidence contracts are stable.",
     "Store and sign build roots with release promotion, rollback, revocation, and deployment receipts."

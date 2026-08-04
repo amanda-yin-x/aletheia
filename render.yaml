@@ -8,7 +8,6 @@ services:
     dockerfilePath: ./apps/api/Dockerfile
     dockerContext: .
     healthCheckPath: /readyz
-    maxShutdownDelaySeconds: 60
     envVars:
       - key: DATABASE_URL
         sync: false
@@ -30,5 +29,17 @@ services:
         value: "true"
       - key: DEMO_INLINE_JOBS
         value: "true"
+      - key: GUEST_MAX_OPERATIONS
+        value: "6"
+      - key: GUEST_MAX_MUTATIONS
+        value: "30"
+      - key: GUEST_SESSION_TTL_HOURS
+        value: "168"
+      - key: GUEST_RETENTION_DAYS
+        value: "30"
+      - key: GUEST_CLEANUP_INTERVAL_HOURS
+        value: "24"
+      - key: API_MAX_BODY_BYTES
+        value: "65536"
       - key: LOG_LEVEL
         value: INFO

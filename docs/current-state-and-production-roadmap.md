@@ -1,6 +1,6 @@
 # Aletheia current state and production roadmap
 
-**Snapshot date:** 2026-08-03  
+**Snapshot date:** 2026-08-04  
 **Audience:** product, engineering, security reviewers, design partners, and contributors  
 **Scope:** what is built, what has been verified, what still needs hosted
 verification, and what remains for a production-capable system
@@ -55,20 +55,25 @@ The deterministic product slice can:
   state mutation;
 - export a limitation-aware Markdown/JSON evidence report.
 
-The hosted control plane can:
+The hosted guest candidate can:
 
-- keep the landing page public while protecting product routes;
-- authenticate by email magic link, email OTP, or GitHub through Supabase;
+- keep the landing page and `/demo` entry public while protecting workspace
+  resources;
+- require Turnstile, create a signed anonymous Supabase session, and bootstrap
+  an isolated Northstar workspace without an email or password;
+- retain email magic link as a permanent-account path for authorized
+  project-team addresses, while manual OTP and GitHub OAuth remain disabled;
 - accept only browser-bound PKCE authorization codes at the Auth callback and
   reject portable raw token-hash links;
-- send a Turnstile token on email auth and prevent token reuse;
+- send a Turnstile token on anonymous/email auth and prevent token reuse;
 - refresh session cookies before protected rendering;
 - send browser API calls only through a same-origin Cloudflare route;
 - enforce exact mutation Origin and double-submit CSRF validation;
 - add a verified Supabase bearer JWT and server-only origin token to Render
   requests;
-- validate JWT algorithm, key ID, issuer, audience, expiry, subject, role, and
-  anonymous-user status in FastAPI;
+- validate JWT algorithm, key ID, issuer, audience, expiry, subject, and role in
+  FastAPI, accepting a signed `is_anonymous=true` subject only through the
+  bounded guest path;
 - default the API to fail-closed production settings and reject hosted document
   uploads before route dispatch or multipart body parsing;
 - provision a personal workspace/project idempotently for each authenticated
@@ -77,21 +82,36 @@ The hosted control plane can:
 - submit build/run work through an idempotent `OperationOut` contract;
 - poll operation status and navigate only after validating the returned
   resource type, identifier, and project relationship;
-- recover expired worker leases and dead-letter exhausted work.
+- recover expired worker leases and dead-letter exhausted work;
+- apply per-subject Cloudflare thresholds of 120 general, 90 polling, and 30
+  heavy requests per minute, evaluated permissively per location rather than as
+  an exact global quota;
+- cap mutation bodies at 64 KiB in both the Worker and API and require upstream
+  response headers within 85 seconds;
+- cap a guest at 30 successful writes and six live operations, deny guest reset,
+  and disable hosted uploads/arbitrary project creation;
+- expire guest access after seven days and clean anonymous identities older
+  than 30 days at startup/every 24 hours, anchoring hosted age to
+  `auth.users.created_at` and including identities that never bootstrapped the
+  app, with a dry-run CLI plus fail-open alerting; and
+- store normalized unique waitlist consent separately so it survives guest
+  workspace cleanup.
 
-The repository also defines separate production and staging Cloudflare Worker
-bindings with deployment preview URLs disabled. Its Postgres migration revokes
-table privileges from the Supabase `anon` and `authenticated` roles; a real
-local PostgreSQL 14 test passed that current/default privilege boundary and the
-queued operation lifecycle. Neither configuration is evidence that the current
-Workers or target Supabase database have been deployed or verified.
+The dedicated Supabase project and Render Free service are provisioned, the
+hosted database is migrated through Alembic head, and the Data API is disabled.
+Hosted inspection found zero application-table privileges for `anon` and
+`authenticated`, and a transactionally created probe table inherited the same
+default denial. The named Cloudflare staging Worker passed the permanent-user
+bootstrap, two-user isolation, deterministic build/run/trace/report, download,
+and direct-origin security path. The newer guest candidate and migration have
+not been deployed or hosted-verified. The canonical hostname still serves the
+preceding release in this snapshot.
 
-That is a credible hosted architecture, but not yet a hosted product. The new
-external Supabase, Render, and Cloudflare configuration has not been provisioned
-and verified together. There is also a meaningful difference between tenant
-aware and production multi-tenant: the former is implemented in FastAPI query
-scopes; the latter still needs database isolation, team administration,
-operational controls, security testing, and a complete audit model.
+That is an operating hosted preview, not a production-capable multi-tenant
+service. Tenant awareness is implemented in FastAPI query scopes and protected
+from browser Data API access, but the system still lacks per-tenant database
+RLS, team administration, custom SMTP, GitHub OAuth, operational controls,
+independent security testing, and a complete audit model.
 
 ## 3. Current system map
 
@@ -99,7 +119,8 @@ operational controls, security testing, and a complete audit model.
                              public landing
 Browser ─────────────────────────────────────────► Cloudflare Next.js
    │                                                    │
-   └─ protected route ─► Supabase Auth ─► session ──────┤
+   └─ public /demo ─► Turnstile ─► Supabase anonymous ──┤
+                                  signed session        │
                                                         │
                              same-origin /api/v1/* ─────┘
                                       │ JWT + origin token
@@ -123,7 +144,7 @@ FastAPI / Typer CLI / worker
 
 ### 4.1 Public landing and product explanation
 
-**Status:** Operating locally; current hosted revision unverified
+**Status:** Guest candidate implemented; hosted verification and promotion pending
 
 The public landing page explains the user pain through a composite refund
 scenario backed by the bundled `N-1099` case: a `$249`, nine-day,
@@ -133,12 +154,13 @@ source-linked policy trace, with/without-gate comparison, four-stage workflow,
 evidence boundary, responsive navigation, keyboard command palette,
 reduced-motion behavior, and CTA into `/demo`.
 
-It no longer reads protected project data. Every product CTA enters the
-authenticated bootstrap path.
+It no longer reads protected project data. Every product CTA enters public
+`/demo`, where Turnstile and anonymous sign-in precede private bootstrap.
 
 Remaining work:
 
-- deploy the current revision to the canonical hostname;
+- deploy the guest candidate to staging, verify it, then promote the exact
+  passing revision to the canonical hostname;
 - test real conversion and comprehension with design partners;
 - add privacy, terms, security contact, and service-status links before a broad
   launch;
@@ -146,20 +168,22 @@ Remaining work:
 
 ### 4.2 Authentication and session lifecycle
 
-**Status:** Unverified hosted integration; focused local component checks exist
+**Status:** Guest candidate implemented; permanent-user staging path verified
 
 Implemented web paths:
 
-- `/login` with GitHub and email;
+- public `/demo` with a Turnstile gate and Supabase anonymous sign-in;
+- `/login` with email plus feature-gated GitHub and manual OTP controls;
 - Supabase PKCE callback at `/auth/callback` that accepts only an authorization
   `code` and rejects a portable raw `token_hash` callback;
-- email magic link and manually entered OTP;
-- Turnstile token forwarding for email requests;
+- email magic link and an implemented manually entered OTP path;
+- Turnstile token forwarding for guest and email requests;
 - mandatory Turnstile reset/remount after every attempt because tokens are
   single-use;
 - safe relative return-path validation;
 - session-cookie refresh before protected rendering;
-- protected layouts for demo, projects, runs, reports, and scenario results;
+- private layouts for projects, runs, reports, and scenario results; `/demo`
+  remains public so it can establish the guest session;
 - logout with local Supabase sign-out and browser cache clearing;
 - account display through `GET /api/v1/me`.
 
@@ -176,9 +200,37 @@ Security properties:
   proxy also requires an HTTPS origin and server-only origin credential;
 - auth responses use private/no-store caching.
 
+Current hosted configuration:
+
+- Supabase anonymous sign-in is enabled and requires Turnstile;
+- Turnstile-protected email magic link is enabled;
+- manual identity linking is enabled, and a guest attaching a new email keeps
+  the same Supabase subject and workspace;
+- Supabase's default SMTP limits delivery to authorized project-team email
+  addresses, so the preview is not open self-service sign-up;
+- manual email OTP is disabled with `EMAIL_OTP_ENABLED=false`; and
+- GitHub is disabled with `GITHUB_AUTH_ENABLED=false` until its OAuth
+  application and Supabase provider are configured and verified.
+
+The backend requires `role=authenticated` on every product JWT and accepts the
+signed `is_anonymous=true` claim. This does not expose application tables to the
+Supabase database `anon` role: the Data API remains disabled and all browser
+product traffic still passes through FastAPI tenancy.
+
+Supabase's native CAPTCHA integration verifies that a Turnstile challenge
+succeeded, but it does not enforce the returned `action` or `hostname` fields.
+The `guest_demo`, `waitlist`, and `login` action values are client-side labels.
+The widget allowlist contains only canonical and staging hostnames; local work
+uses local auth or Cloudflare's test key, not a localhost allowlist entry.
+
 Remaining work:
 
-- provision Supabase Auth, GitHub OAuth, Turnstile, and custom SMTP;
+- deploy and hosted-verify anonymous sign-in, cookie refresh, logout, expiry,
+  and replay rejection before production promotion;
+- configure custom SMTP and verify delivery for non-team users;
+- configure and stage-verify GitHub OAuth before enabling its login control;
+- define an explicit merge/recovery flow when a guest tries to attach an
+  identity that already belongs to another account;
 - verify enterprise email scanners and link-tracking do not consume or rewrite
   single-use links;
 - add MFA or step-up authentication for high-risk administration;
@@ -188,7 +240,7 @@ Remaining work:
 
 ### 4.3 Same-origin web security boundary
 
-**Status:** Unverified hosted integration; focused local route checks exist
+**Status:** Permanent-user staging path verified; guest candidate pending
 
 The catch-all Cloudflare route proxies `/api/v1/*` to the configured FastAPI
 origin. It:
@@ -205,23 +257,37 @@ origin. It:
 - uses private/no-store caching;
 - retries transient gateway failures only within bounded rules.
 
+The proxy configures per-subject Cloudflare thresholds of 120 general requests,
+90 job polls, and 30 heavy result/report/export requests per minute;
+specialized requests also consume the general budget. Cloudflare evaluates
+these per location with permissive, eventually consistent counters, so they
+are abuse controls rather than exact global quotas. Missing production bindings
+fail closed. The Worker streams and rejects mutation bodies over 64 KiB, while
+FastAPI independently enforces the same limit before request models are
+materialized. Every fetch/retry shares an 85-second deadline to receive
+upstream response headers; that deadline does not time a streamed response body
+after headers arrive.
+
 The browser therefore sees one application origin. FastAPI remains reachable
 on its Render hostname, but a production caller still needs both the shared
 origin token and a valid user JWT.
 
 Remaining work:
 
+- repeat proxy, CSRF, credential-stripping, streaming, and cold-start checks
+  with a signed anonymous session;
 - rotate the origin token through a rehearsed process;
-- add Web Application Firewall/rate-limit rules at Cloudflare and application
-  quotas in FastAPI;
+- tune and monitor Cloudflare rate-limit budgets, add broader WAF policy, and
+  add permanent/team product quotas; the guest candidate already has bounded
+  evaluation allowances;
 - verify request IDs and redaction across both services;
 - perform independent CSRF, SSRF, request-smuggling, cache, redirect, and
   authentication tests.
 
 ### 4.4 Accounts, workspaces, and tenancy
 
-**Status:** Locally verified application boundary; hosted two-user and database
-enforcement unverified
+**Status:** Permanent-user application boundary and browser Data API denial
+verified; guest candidate pending; database RLS absent
 
 The schema now includes:
 
@@ -232,36 +298,49 @@ The schema now includes:
 - workspace/project/requester ownership on jobs;
 - per-project uniqueness for project slugs, build hashes, and operation keys.
 
-`POST /api/v1/workspaces/bootstrap` creates or reuses the subject's first
-workspace and seeds one personal Northstar project. The derived workspace slug
-includes a subject hash; it is not a shared fixed slug. Repeated bootstrap is
-idempotent.
+`POST /api/v1/workspaces/bootstrap` creates or reuses the signed subject's first
+workspace and seeds one personal Northstar project. This works for permanent
+and anonymous identities. The derived workspace slug includes a subject hash;
+it is not a shared fixed slug. Repeated bootstrap is idempotent.
 
 Every resource lookup joins back to workspace membership. Unauthorized IDs are
 returned as not found to reduce enumeration. Write routes require owner, admin,
-or editor; workspace reset requires owner/admin.
+or editor. Permanent reset requires owner/admin; guest reset is always denied.
+
+Guest accounts also carry a locked usage ledger. Successful mutations stop at
+30 and live operations stop at six. Access expires after seven days. Startup
+cleanup uses `auth.users.created_at` as the hosted age source, removes
+anonymous identities older than 30 days with their app data, and also removes
+expired auth-only identities that never bootstrapped Aletheia. The CLI is
+dry-run by default, and cleanup failure alerts without blocking readiness.
+
+The waitlist is behind the authenticated guest/permanent API. Emails are
+normalized and unique; repeat/concurrent submissions are idempotent and do not
+reveal prior presence. Cleanup clears the guest user link but preserves the
+consent record.
 
 Migration `0002` conditionally revokes every current table privilege and the
 migration user's default table privileges in `public` from Supabase's `anon`
-and `authenticated` roles. A real local PostgreSQL 14 integration test creates
-those roles, checks each current table/privilege, and verifies a
-post-migration probe table inherits the denial. This is useful coarse Data API
-denial evidence, but it is not per-tenant isolation and does not establish the
-actual target Supabase grants, ownership, exposed schemas, or API behavior.
+and `authenticated` roles. That boundary passed both the local PostgreSQL test
+and the hosted target inspection. The Supabase Data API is disabled, every
+current application-table privilege for those roles is zero, a negative REST
+probe is unavailable, and a transactionally created probe table inherited the
+default denial. This is strong browser Data API denial evidence, but it is not
+per-tenant database isolation.
 
 Remaining work:
 
 - PostgreSQL RLS or a hardened private-schema/grant model. Current tenant
   isolation is application-enforced, not database-enforced;
-- apply the migration to the target Supabase database, inspect its actual roles
-  and grants, and prove the Data API cannot expose application tables before
-  relying on the configured revocations;
+- keep the Data API disabled and recheck current/default grants after every
+  migration that changes ownership, schemas, or privileges;
 - invitation, membership, role-change, removal, ownership transfer, and
   workspace deletion flows;
 - organization/domain policy, SSO/SAML, SCIM, service accounts, and API keys;
-- tenant-aware quotas, retention, encryption-key strategy, export, deletion,
-  and legal holds;
-- adversarial hosted tests using two real Supabase users.
+- permanent/team quotas, configurable retention, encryption-key strategy,
+  export, deletion, and legal holds beyond the bounded guest policy;
+- retain adversarial two-user checks in every staged release and extend them to
+  future team/member administration.
 
 ### 4.5 Source records and ingestion
 
@@ -390,8 +469,9 @@ Correctness and product gaps:
   integrations;
 - a live `TestCase` row is still used as relational FK mapping; run, trace, and
   report evidence labels come from `test_snapshot`;
-- operation fingerprints detect changed inputs, but compile capture/execution
-  still need a complete transaction boundary against TOCTOU races;
+- snapshot-consuming operations and child-row mutations share the same
+  `Project → child` lock order; a real two-session PostgreSQL test proves a
+  competing mutation waits for the snapshot fence;
 - schema and policy validation are bounded to the build-pinned fixture runner;
   no customer dispatcher or production enforcement SDK consumes these bundles;
 - fact values do not yet come from a typed fact catalog, money is currently
@@ -408,7 +488,8 @@ Correctness and product gaps:
 
 ### 4.9 Operations and worker
 
-**Status:** Locally verified; hosted topology uses inline work
+**Status:** Permanent-user staging path verified with inline work; guest
+operation allowance pending hosted verification; durable hosted worker absent
 
 Build and run submission return HTTP `202`, `Location`, and:
 
@@ -437,7 +518,11 @@ Implemented reliability controls:
 - retry on unexpected worker exceptions;
 - graceful worker shutdown;
 - typed frontend polling and resource validation;
-- an 85-second wake/retry window for only idempotent bootstrap/build/run calls.
+- an 85-second wake/retry window and response-header deadline (not a streamed
+  response-body deadline);
+- a `Project → child` lock fence around snapshot capture and child mutations,
+  proven with two concurrent PostgreSQL sessions;
+- an account-locked six-live-operation allowance for anonymous guests.
 
 Remaining work:
 
@@ -450,7 +535,8 @@ Remaining work:
 
 ### 4.10 API, CLI, migrations, and packaging
 
-**Status:** Mixed — local paths operating, hosted integrations unverified/configuration only
+**Status:** Mixed — local paths and permanent-user staging preview operating;
+guest deployment and canonical promotion pending
 
 Implemented qualities:
 
@@ -461,12 +547,15 @@ Implemented qualities:
   origin-secret requirements on the product boundary;
 - pre-routing origin/bearer checks and hosted document-upload rejection;
 - local OpenAPI and production docs shutdown;
-- Alembic baseline plus tenancy/operation, evidence, and document-provenance
-  migrations;
+- Alembic baseline plus tenancy/operation, evidence, document-provenance, and
+  guest-access/waitlist migrations;
 - PostgreSQL advisory lock helper for controlled migrations;
 - async runtime URL and synchronous migration URL normalization;
 - bounded SQLAlchemy pool settings;
 - Typer local workflow and worker commands;
+- a guest-cleanup command that is dry-run by default, plus 30-day cleanup at
+  startup and every 24 hours with structured fail-open alerting;
+- 64 KiB mutation-body enforcement at both Worker and API boundaries;
 - locked Python and Node dependencies;
 - Dockerfiles, Compose, Render blueprint, Wrangler/OpenNext, and GitHub Actions;
 - a PostgreSQL CI job that upgrades an empty database and exercises bootstrap,
@@ -475,13 +564,19 @@ Implemented qualities:
 - explicit production and named staging Worker environments with deployment
   preview URLs disabled.
 
+The Render Free Blueprint intentionally omits `maxShutdownDelaySeconds` because
+the platform rejected that field for the Free plan; Render's 30-second default
+remains in effect.
+
 Remaining work:
 
-- a trusted migration step for the actual Supabase database. Render Free does
-  not provide the paid pre-deploy command path used for migrations;
-- clean-image Compose and Render container smoke tests;
-- pagination, stable cursors, quotas, request-size budgets per endpoint, and
-  webhook/event delivery;
+- move migration execution from the advisory-locked container entrypoint to a
+  paid Render pre-deploy phase when the service is upgraded; the current hosted
+  database is already at Alembic head;
+- retain clean-image Compose and Render container smoke tests for future base
+  image or entrypoint changes;
+- pagination, stable cursors, permanent/team quotas, endpoint-specific budgets
+  beyond the universal 64 KiB mutation cap, and webhook/event delivery;
 - structured telemetry, exception reporting, traces, metrics, dashboards,
   alerting, runbooks, backups, restore drills, and disaster recovery;
 - a complete CSP review for the Next.js application and any future third-party
@@ -504,18 +599,21 @@ No live quality, latency, token, cost, safety, or benchmark claim is supported.
 
 - ESLint passed.
 - Strict TypeScript passed.
-- Vitest passed 32 tests across ten files.
+- In the current guest candidate, Vitest passes 60 tests across 16 files.
 - Next.js 16 production build passed.
 - Cloudflare binding type generation passed without a committed diff.
 - OpenNext Cloudflare bundle generation passed.
 - Wrangler dry-runs passed for both the production and named staging Workers.
-- Playwright passed all five Chromium flows against a dedicated migrated and
-  reset SQLite database, covering landing/CTA, reduced motion, responsive
-  widths, conflict choice, compile, run, trace, report, and export.
+- The settled pre-guest revision passed all five Playwright Chromium flows
+  against a dedicated migrated/reset SQLite database, covering landing/CTA,
+  reduced motion, responsive widths, conflict choice, compile, run, trace,
+  report, and export. The guest candidate still needs this browser rerun.
 - Focused tests cover session-cookie propagation, mutation security, safe
   redirects, code-only PKCE exchange/raw-token rejection, API proxy credential
   filtering, every modeled Operation terminal state, conflict payloads,
-  API-derived run presentation, and Turnstile token reset.
+  API-derived run presentation, Turnstile token reset, per-user edge rate-limit
+  categories, missing-binding failure, streaming 64 KiB body rejection, and the
+  85-second upstream response-header deadline.
 
 ### Locally verified backend and configured CI coverage
 
@@ -537,6 +635,9 @@ No live quality, latency, token, cost, safety, or benchmark claim is supported.
 - tenant scoping and cross-project rejection;
 - operation idempotency, status, resource contract, input staleness, per-project
   concurrency, lease recovery, and dead-lettering;
+- two-session PostgreSQL proof that `Project → child` locking blocks a child
+  mutation across operation snapshot capture;
+- API-side 64 KiB mutation-body enforcement and periodic guest cleanup;
 - empty SQLite migration lifecycle;
 - configured GitHub Actions PostgreSQL integration job.
 
@@ -549,6 +650,11 @@ secret-scan, and PostgreSQL 17 jobs then passed in [GitHub Actions run
 #30867243068](https://github.com/amanda-yin-x/aletheia/actions/runs/30867243068)
 on implementation commit `5d45a776407955f86227e1890900d9857196a007`.
 
+The guest candidate passes all 116 backend tests across two local runs: 115 in
+the default run and the separately executed PostgreSQL-marked integration test.
+Playwright still lists five browser flows; hosted guest verification remains a
+separate release gate.
+
 The focused evidence-correctness gate passed Ruff, strict mypy, 33 targeted
 tests, and the SQLite `0003` upgrade/downgrade/backfill/Alembic-check lifecycle.
 That is narrower than the final repository-wide CI claim.
@@ -559,38 +665,73 @@ The real PostgreSQL 14 marker passed against an empty database. It migrated
 through head, verified current and default table-privilege revocation for
 locally created `anon` and `authenticated` roles, bootstrapped a workspace,
 processed queued build and run operations through the worker, polled their
-results, and cleaned up through downgrade. The GitHub Actions equivalent also
-passed against PostgreSQL 17. Neither result implies that the migration or
-privilege boundary has run successfully on the target Supabase database.
+results, proved the operation snapshot fence with two concurrent sessions using
+the shared `Project → child` lock order, and cleaned up through downgrade. The
+GitHub Actions equivalent also
+passed against PostgreSQL 17. The target Supabase database has since migrated
+through the same Alembic head, and its disabled Data API plus current/default
+role-denial boundary passed direct hosted inspection.
 
-### Pending hosted verification
+### Hosted staging verification for the preceding permanent-user revision
 
-- external Supabase, Render, Turnstile, OAuth, and SMTP provisioning;
-- target Postgres migration and restore test;
-- real Supabase role/grant inspection and Data API denial testing;
-- current Cloudflare revision deployment;
-- named staging Worker deployment and smoke test;
-- real email, OTP, OAuth, refresh, and logout flows;
-- real two-user tenant isolation;
-- Render sleep/wake recovery;
-- report streaming through both network hops;
-- end-to-end browser suite through the hosted Cloudflare/Render/Supabase path;
-- load, soak, fault-injection, security, privacy, and accessibility audits.
+- dedicated Supabase Auth/Postgres and Render services are provisioned;
+- Alembic head, empty Data API schema, negative REST access, zero current
+  `anon`/`authenticated` table grants, and zero probe-table default grants
+  passed on the target database;
+- the named Cloudflare staging Worker proxies to Render with the matching
+  server-only origin credential;
+- external Supabase JWT validation and missing/invalid origin or bearer
+  rejection passed;
+- two hosted identities received distinct personal workspaces and could not
+  access one another's resources; and
+- the complete deterministic review, compile, 16-case/three-arm run, blocked
+  trace, report, and streamed Markdown export path passed against hosted
+  Postgres.
 
-Playwright now starts the API against a dedicated SQLite database after an
-Alembic upgrade and reset seed. All five local Chromium flows pass. This is
-strong local integration evidence, but it is not evidence of hosted success.
+No equivalent hosted claim is made for the newer guest candidate. Anonymous
+sign-in, anonymous JWT acceptance, quotas, guest reset denial, seven-day expiry,
+30-day startup/24-hour periodic cleanup, auth-only identity removal, and
+fail-open behavior, plus waitlist persistence, remain to be deployed and
+exercised on staging. The new per-location rate policies, two-hop 64 KiB cap,
+85-second response-header deadline, and lock-fence revision are part of the same
+hosted gate.
+
+### Remaining release and production verification
+
+- deploy the guest candidate and migration to staging; verify anonymous
+  Turnstile sign-in, isolated bootstrap, all guest limits, cleanup, waitlist,
+  and the complete workflow before promotion;
+- promote only the exact guest-verified revision to the canonical hostname and
+  rerun the connected smoke path there;
+- configure custom SMTP for email addresses outside the project team;
+- configure and verify GitHub OAuth before enabling it;
+- keep manual OTP disabled or verify it explicitly before enabling it;
+- record Render sleep/wake recovery on the promoted revision;
+- run backup/restore, load, soak, fault-injection, independent security,
+  privacy, and accessibility audits; and
+- establish production monitoring, incident response, paid-plan/SLO, and
+  rollback evidence.
+
+The settled Playwright run starts the API against a dedicated SQLite database
+after an Alembic upgrade and reset seed; all five local Chromium flows passed.
+The guest candidate currently lists those flows but still needs the full run.
+Hosted staging evidence is a separate connected-system check and not a
+substitute for the remaining production audits.
 
 ## 6. Free-tier operating boundary
 
 The target free topology is an evaluation environment:
 
 - Render can sleep after 15 idle minutes and take about a minute to wake;
+- the Render Free Blueprint omits `maxShutdownDelaySeconds` after the platform
+  rejected it for that plan, leaving the 30-second default;
 - Render's filesystem is ephemeral and the Free service cannot scale;
 - Cloudflare Workers Free has a small CPU budget for dynamic SSR/auth work;
 - Supabase Free can pause for inactivity and has limited database and backup
   characteristics;
-- auth email delivery needs custom SMTP for real users;
+- Supabase default SMTP currently limits magic-link delivery to authorized
+  project-team addresses; custom SMTP is required for broader users, and
+  GitHub OAuth remains disabled. The guest demo itself does not require email;
 - combined Supabase and Render cold starts can exceed one service's advertised
   wake time.
 
@@ -600,23 +741,31 @@ current official platform links and the exact limits.
 
 ## 7. Priority roadmap to a production-capable system
 
-### P0 — Complete and verify the hosted foundation
+### P0 — Verify, promote, and harden the guest preview
 
-1. Provision separate development/staging Supabase projects and a Render API.
-2. Configure custom SMTP, GitHub OAuth, Turnstile, exact redirect URLs, and
-   restrictive Auth settings.
-3. Decide and implement the database boundary: RLS on every exposed table or a
-   private non-exposed schema with least-privilege database roles. Verify it
-   independently of FastAPI.
-4. Apply Alembic migrations through a trusted, repeatable CI/admin job and test
-   backup/restore before storing important data.
-5. Deploy the current Cloudflare revision with server-only API variables and a
-   high-entropy origin token shared with Render.
-6. Run the complete hosted smoke test in [deployment.md](deployment.md),
-   including two-user cross-tenant attempts and Render sleep/wake.
-7. Add production telemetry and secret-redaction checks across both services.
-8. Establish a paid-plan decision and SLO before inviting users; Free tiers are
-   not an uptime target.
+1. Apply the guest migration and deploy the candidate to staging. Verify
+   Turnstile anonymous sign-in, signed anonymous JWT enforcement, isolated
+   bootstrap, 30-write/six-operation limits, reset denial, seven-day expiry,
+   30-day startup plus 24-hour periodic cleanup/fail-open alerting (including
+   auth-only anonymous identities), waitlist persistence, and the complete
+   Northstar workflow.
+2. Promote only the exact passing revision to the canonical hostname, record
+   rollback metadata, and rerun the connected guest smoke path.
+3. Configure custom SMTP, then verify delivery, expiry, scanner behavior,
+   abuse controls, and recovery for non-team users.
+4. Configure and staging-test GitHub OAuth before turning its feature flag on;
+   leave manual OTP disabled unless it receives its own hosted verification.
+5. Separate development/staging infrastructure from the canonical preview as
+   soon as real user data or release concurrency makes a shared project unsafe.
+6. Add tenant-level database defense: RLS on every relevant table or a private
+   non-exposed schema with a least-privilege server role. Keep the Data API
+   disabled and verify the boundary independently of FastAPI.
+7. Move migrations to a trusted pre-deploy/CI-admin phase after upgrading from
+   Render Free, and test backup/restore before storing important data.
+8. Record Render sleep/wake behavior, production telemetry, request correlation,
+   and secret-redaction checks across both services.
+9. Establish a paid-plan decision and SLO before inviting broader users; Free
+   tiers are not an uptime target.
 
 Exit gate: every status in the hosted smoke-test matrix is recorded with commit,
 environment, timestamp, and evidence; rollback and secret rotation are tested.
@@ -628,7 +777,8 @@ artifact hashing, build-pinned runner inputs, stored test snapshots, aligned
 build/evidence schema v0.3 validation, and report digests. The remaining work is:
 
 1. Keep generated JSON Schemas and OpenAPI drift-checked in final CI.
-2. Close the operation fingerprint capture/execution transaction boundary.
+2. Retain the real two-session `Project → child` lock-order regression in every
+   PostgreSQL release run.
 3. Store bundles in append-only content-addressed object storage, sign them, and record a
    transparency/audit receipt.
 4. Add release environments, promotion, activation, rollback, and compatibility
@@ -710,5 +860,6 @@ complete first production system requires:
 - a bounded, measured pilot whose claims match its evidence.
 
 Until those conditions are met, the accurate description is: **a deterministic
-fixture policy-CI workflow with broad local and repository-CI verification,
-pending hosted verification.**
+fixture policy-CI workflow with broad settled local/CI evidence, a
+permanent-user hosted path verified on staging, and a newer public-guest
+candidate awaiting hosted verification before canonical promotion.**

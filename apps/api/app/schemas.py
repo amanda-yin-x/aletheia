@@ -907,7 +907,39 @@ class WorkspaceOut(APIModel):
 class MeOut(APIModel):
     id: str
     email: str | None
+    is_anonymous: bool
     workspaces: list[WorkspaceOut]
+
+
+class WaitlistCreate(APIModel):
+    email: str = Field(min_length=3, max_length=320)
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, value: str) -> str:
+        normalized = value.strip().casefold()
+        if any(character.isspace() for character in normalized):
+            raise ValueError("Enter a valid email address")
+        local, separator, domain = normalized.rpartition("@")
+        if (
+            separator != "@"
+            or not local
+            or len(local) > 64
+            or not domain
+            or "." not in domain
+            or domain.startswith(".")
+            or domain.endswith(".")
+        ):
+            raise ValueError("Enter a valid email address")
+        try:
+            ascii_domain = domain.encode("idna").decode("ascii")
+        except UnicodeError as error:
+            raise ValueError("Enter a valid email address") from error
+        return f"{local}@{ascii_domain}"
+
+
+class WaitlistOut(APIModel):
+    joined: Literal[True] = True
 
 
 class WorkspaceBootstrapOut(APIModel):

@@ -14,7 +14,12 @@ settings = get_settings()
 sync_url = settings.migration_database_url or settings.database_url.replace(
     "+aiosqlite", ""
 ).replace("+asyncpg", "+psycopg")
-config.set_main_option("sqlalchemy.url", sync_url)
+# Alembic stores main options in a ConfigParser, where ``%`` starts
+# interpolation. Database credentials must be URL-encoded, so passwords with
+# characters such as ``@`` legitimately reach this boundary as ``%40``.
+# Escape only the ConfigParser representation; SQLAlchemy receives the original
+# URL again when Alembic reads the option.
+config.set_main_option("sqlalchemy.url", sync_url.replace("%", "%%"))
 target_metadata = Base.metadata
 
 

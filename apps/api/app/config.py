@@ -37,6 +37,12 @@ class Settings(BaseSettings):
     worker_poll_seconds: float = 1.0
     worker_lease_seconds: int = 60
     worker_max_attempts: int = 3
+    guest_max_operations: int = Field(default=6, ge=2, le=20)
+    guest_max_mutations: int = Field(default=30, ge=10, le=100)
+    guest_session_ttl_hours: int = Field(default=168, ge=1, le=720)
+    guest_retention_days: int = Field(default=30, ge=1, le=365)
+    guest_cleanup_interval_hours: int = Field(default=24, ge=1, le=168)
+    api_max_body_bytes: int = Field(default=64 * 1024, ge=4 * 1024, le=1024 * 1024)
     log_level: str = "INFO"
     openai_api_key: str = Field(default="", repr=False)
     openai_base_url: str = "https://api.openai.com/v1"

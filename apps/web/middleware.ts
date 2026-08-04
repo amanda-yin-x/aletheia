@@ -1,14 +1,24 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { getSupabasePublicConfig, isLocalAuthBypassEnabled } from "@/lib/supabase/config";
+import {
+  getSupabaseCookieOptions,
+  getSupabasePublicConfig,
+  isLocalAuthBypassEnabled,
+} from "@/lib/supabase/config";
 
-const protectedPrefixes = ["/demo", "/projects/", "/runs/", "/reports/", "/scenario-results/"];
+const protectedPrefixes = ["/projects/", "/runs/", "/reports/", "/scenario-results/"];
 
 function isProtectedPath(pathname: string): boolean {
-  return pathname === "/demo" || protectedPrefixes.some((prefix) => pathname.startsWith(prefix));
+  return protectedPrefixes.some((prefix) => pathname.startsWith(prefix));
 }
 
 export async function middleware(request: NextRequest) {
+  if (process.env.NODE_ENV === "production" && request.nextUrl.protocol === "http:") {
+    const secureUrl = request.nextUrl.clone();
+    secureUrl.protocol = "https:";
+    return NextResponse.redirect(secureUrl, 308);
+  }
+
   if (!isProtectedPath(request.nextUrl.pathname) || isLocalAuthBypassEnabled()) return NextResponse.next();
 
   const config = getSupabasePublicConfig();
@@ -20,6 +30,7 @@ export async function middleware(request: NextRequest) {
 
   let response = NextResponse.next({ request: { headers: new Headers(request.headers) } });
   const supabase = createServerClient(config.url, config.publishableKey, {
+    cookieOptions: getSupabaseCookieOptions(config.siteUrl),
     cookies: {
       getAll: () => request.cookies.getAll(),
       setAll(cookiesToSet) {
@@ -45,5 +56,7 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/demo/:path*", "/projects/:path*", "/runs/:path*", "/reports/:path*", "/scenario-results/:path*"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|map|woff|woff2|ttf)$).*)",
+  ],
 };

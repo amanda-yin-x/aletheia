@@ -1,7 +1,7 @@
 export interface Project { id: string; workspace_id: string; slug: string; name: string; domain: string; description: string; mode: string; created_at: string }
 export interface Workspace { id: string; slug: string; name: string; role: string; created_at: string }
 export interface BootstrapResult { workspace: Workspace; project: Project; created: boolean; project_id?: string }
-export interface Account { id: string; email: string | null; workspaces: Workspace[] }
+export interface Account { id: string; email: string | null; is_anonymous: boolean; workspaces: Workspace[] }
 export type OperationStatus = "queued" | "running" | "succeeded" | "failed" | "dead_lettered" | "cancelled" | "canceled" | "expired" | "timed_out" | "stale" | "aborted" | (string & {});
 export interface OperationErrorPayload { code: string; message: string }
 export interface Operation {

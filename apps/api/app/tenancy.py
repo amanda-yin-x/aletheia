@@ -1,10 +1,14 @@
 from __future__ import annotations
 
-from sqlalchemy import select
+from datetime import UTC, datetime, timedelta
+from typing import cast
+
+from sqlalchemy import select, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth import LOCAL_USER_EMAIL, LOCAL_USER_ID, AuthIdentity
+from app.config import get_settings
 from app.models import (
     Build,
     Document,
@@ -35,7 +39,31 @@ def _not_found(resource: str) -> ServiceError:
 async def ensure_account(session: AsyncSession, identity: AuthIdentity) -> UserAccount:
     account = await session.get(UserAccount, identity.subject)
     if account is None:
-        account = UserAccount(id=identity.subject, email=identity.email)
+        created_at: datetime | None = None
+        if (
+            identity.is_anonymous
+            and session.bind is not None
+            and session.bind.dialect.name == "postgresql"
+        ):
+            created_at = await session.scalar(
+                text(
+                    "SELECT created_at FROM auth.users "
+                    "WHERE id::text = :subject AND is_anonymous IS TRUE"
+                ),
+                {"subject": identity.subject},
+            )
+            if created_at is None:
+                raise ServiceError(
+                    "authentication_required",
+                    "A valid user session is required.",
+                    status_code=401,
+                )
+        account = UserAccount(
+            id=identity.subject,
+            email=identity.email,
+            is_anonymous=identity.is_anonymous,
+            **({"created_at": created_at} if created_at is not None else {}),
+        )
         session.add(account)
         try:
             await session.flush()
@@ -48,7 +76,61 @@ async def ensure_account(session: AsyncSession, identity: AuthIdentity) -> UserA
                 raise
     elif identity.email and identity.email != account.email:
         account.email = identity.email
+    if account.is_anonymous != identity.is_anonymous:
+        account.is_anonymous = identity.is_anonymous
     return account
+
+
+async def enforce_guest_session(session: AsyncSession, identity: AuthIdentity) -> None:
+    """Create a durable guest ledger and expire browser-scoped demos after a fixed TTL."""
+    if not identity.is_anonymous:
+        return
+    account = await session.get(UserAccount, identity.subject)
+    created = account is None
+    if account is None:
+        account = await ensure_account(session, identity)
+    created_at = account.created_at
+    if created_at.tzinfo is None:
+        created_at = created_at.replace(tzinfo=UTC)
+    expires_at = created_at + timedelta(hours=get_settings().guest_session_ttl_hours)
+    if expires_at <= datetime.now(UTC):
+        # A first request can arrive from an old Supabase anonymous identity
+        # that never bootstrapped an application account. Do not commit the
+        # newly flushed ledger before applying the same TTL as every later
+        # request; rollback prevents an expired first access leaving residue.
+        if created:
+            await session.rollback()
+        raise ServiceError(
+            "guest_session_expired",
+            "This guest demo has expired. Sign out and open a new guest workspace.",
+            status_code=401,
+        )
+    if created:
+        await session.commit()
+
+
+async def consume_guest_mutation(session: AsyncSession, identity: AuthIdentity) -> None:
+    """Bound every successful guest write independently of resettable project rows."""
+    if not identity.is_anonymous:
+        return
+    account = await ensure_account(session, identity)
+    await session.flush()
+    locked_account = await session.scalar(
+        select(UserAccount).where(UserAccount.id == account.id).with_for_update()
+    )
+    if locked_account is None:
+        raise ServiceError(
+            "authentication_required",
+            "A valid user session is required.",
+            status_code=401,
+        )
+    if locked_account.guest_mutation_count >= get_settings().guest_max_mutations:
+        raise ServiceError(
+            "guest_mutation_limit_reached",
+            "This guest workspace has reached its change allowance. Sign in for a persistent workspace or start a new guest session.",
+            status_code=429,
+        )
+    locked_account.guest_mutation_count += 1
 
 
 async def ensure_local_workspace(session: AsyncSession) -> Workspace:
@@ -137,6 +219,38 @@ async def _scoped_project_resource[Resource](
     resource_name: str,
 ) -> Resource:
     allowed = WRITE_ROLES if write else READ_ROLES
+    if write:
+        # Every project-data mutation takes locks in the same order as build
+        # and run execution: Project first, then the child row. This prevents
+        # a revision from changing after an operation validates its snapshot.
+        project_id = await session.scalar(
+            select(model.project_id)  # type: ignore[attr-defined]
+            .join(Project, model.project_id == Project.id)  # type: ignore[attr-defined]
+            .join(
+                WorkspaceMembership,
+                WorkspaceMembership.workspace_id == Project.workspace_id,
+            )
+            .where(
+                model.id == resource_id,  # type: ignore[attr-defined]
+                WorkspaceMembership.user_id == identity.subject,
+                WorkspaceMembership.role.in_(allowed),
+            )
+        )
+        if project_id is None:
+            raise _not_found(resource_name)
+        await scoped_project(session, identity, str(project_id), write=True)
+        resource = await session.scalar(
+            select(model)
+            .where(
+                model.id == resource_id,  # type: ignore[attr-defined]
+                model.project_id == project_id,  # type: ignore[attr-defined]
+            )
+            .with_for_update()
+        )
+        if resource is None:
+            raise _not_found(resource_name)
+        return resource
+
     statement = (
         select(model)
         .join(Project, model.project_id == Project.id)  # type: ignore[attr-defined]
@@ -147,12 +261,10 @@ async def _scoped_project_resource[Resource](
             WorkspaceMembership.role.in_(allowed),
         )
     )
-    if write:
-        statement = statement.with_for_update()
     resource = await session.scalar(statement)
     if resource is None:
         raise _not_found(resource_name)
-    return resource
+    return cast(Resource, resource)
 
 
 async def scoped_document(session: AsyncSession, identity: AuthIdentity, value: str) -> Document:

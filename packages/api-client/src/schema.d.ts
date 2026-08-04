@@ -519,6 +519,26 @@ export interface paths {
         patch: operations["patch_test_api_v1_test_cases__test_case_id__patch"];
         trace?: never;
     };
+    "/api/v1/waitlist": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Join Waitlist
+         * @description Record one privacy-minimal waitlist signup per authenticated identity.
+         */
+        post: operations["join_waitlist_api_v1_waitlist_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/workspaces/bootstrap": {
         parameters: {
             query?: never;
@@ -1250,6 +1270,8 @@ export interface components {
             email: string | null;
             /** Id */
             id: string;
+            /** Is Anonymous */
+            is_anonymous: boolean;
             /** Workspaces */
             workspaces: components["schemas"]["WorkspaceOut"][];
         };
@@ -1720,6 +1742,20 @@ export interface components {
             msg: string;
             /** Error Type */
             type: string;
+        };
+        /** WaitlistCreate */
+        WaitlistCreate: {
+            /** Email */
+            email: string;
+        };
+        /** WaitlistOut */
+        WaitlistOut: {
+            /**
+             * Joined
+             * @default true
+             * @constant
+             */
+            joined: true;
         };
         /** WorkspaceBootstrap */
         WorkspaceBootstrap: {
@@ -2943,6 +2979,41 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TestCaseOut"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    join_waitlist_api_v1_waitlist_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                "x-aletheia-origin-token"?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WaitlistCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WaitlistOut"];
                 };
             };
             /** @description Validation Error */

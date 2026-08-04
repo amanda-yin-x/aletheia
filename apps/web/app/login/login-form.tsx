@@ -1,12 +1,13 @@
 "use client";
 
 import { FormEvent, useCallback, useMemo, useState } from "react";
+import Link from "next/link";
 import { ArrowRight, Github, KeyRound, Mail, ShieldCheck } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { SupabasePublicConfig } from "@/lib/supabase/config";
 import { TurnstileWidget } from "@/components/turnstile-widget";
 
-export function LoginForm({ config, nextPath, initialError }: { config: SupabasePublicConfig; nextPath: string; initialError?: string | null }) {
+export function LoginForm({ config, nextPath, initialError, hasAnonymousSession }: { config: SupabasePublicConfig; nextPath: string; initialError?: string | null; hasAnonymousSession: boolean }) {
   const supabase = useMemo(() => createSupabaseBrowserClient(config), [config]);
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
@@ -17,30 +18,41 @@ export function LoginForm({ config, nextPath, initialError }: { config: Supabase
   const [message, setMessage] = useState<string | null>(initialError || null);
   const onTurnstileToken = useCallback((token: string | null) => setCaptchaToken(token), []);
   const callbackUrl = `${config.siteUrl}/auth/callback?next=${encodeURIComponent(nextPath)}`;
+  // The anonymous session was CAPTCHA-verified when it was created. Supabase's
+  // in-place email-linking API does not accept another CAPTCHA token.
+  const requiresCaptcha = Boolean(config.turnstileSiteKey && !hasAnonymousSession);
 
   async function sendEmail(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (config.turnstileSiteKey && !captchaToken) {
+    if (requiresCaptcha && !captchaToken) {
       setMessage("Complete the verification before requesting a sign-in link.");
       return;
     }
     setPending("email");
     setMessage(null);
     try {
-      const { error } = await supabase.auth.signInWithOtp({
-        email: email.trim(),
-        options: {
-          emailRedirectTo: callbackUrl,
-          shouldCreateUser: true,
-          ...(captchaToken ? { captchaToken } : {}),
-        },
-      });
+      const emailAddress = email.trim();
+      const { error } = hasAnonymousSession
+        ? await supabase.auth.updateUser(
+            { email: emailAddress },
+            { emailRedirectTo: callbackUrl },
+          )
+        : await supabase.auth.signInWithOtp({
+            email: emailAddress,
+            options: {
+              emailRedirectTo: callbackUrl,
+              shouldCreateUser: true,
+              ...(captchaToken ? { captchaToken } : {}),
+            },
+          });
       if (error) {
         setMessage(error.message);
         return;
       }
       setSent(true);
-      setMessage("Check your email for a secure link or enter the one-time code below.");
+      setMessage(config.emailOtpEnabled
+        ? "Check your email for a secure link or enter the one-time code below."
+        : "Check your email for a secure, single-use sign-in link.");
     } catch {
       setMessage("The sign-in request could not be sent. Please try again.");
     } finally {
@@ -55,7 +67,11 @@ export function LoginForm({ config, nextPath, initialError }: { config: Supabase
     event.preventDefault();
     setPending("otp");
     setMessage(null);
-    const { error } = await supabase.auth.verifyOtp({ email: email.trim(), token: otp.trim(), type: "email" });
+    const { error } = await supabase.auth.verifyOtp({
+      email: email.trim(),
+      token: otp.trim(),
+      type: hasAnonymousSession ? "email_change" : "email",
+    });
     setPending(null);
     if (error) {
       setMessage(error.message);
@@ -67,7 +83,10 @@ export function LoginForm({ config, nextPath, initialError }: { config: Supabase
   async function signInWithGitHub() {
     setPending("github");
     setMessage(null);
-    const { error } = await supabase.auth.signInWithOAuth({ provider: "github", options: { redirectTo: callbackUrl } });
+    const credentials = { provider: "github" as const, options: { redirectTo: callbackUrl } };
+    const { error } = hasAnonymousSession
+      ? await supabase.auth.linkIdentity(credentials)
+      : await supabase.auth.signInWithOAuth(credentials);
     if (error) {
       setPending(null);
       setMessage(error.message);
@@ -78,25 +97,35 @@ export function LoginForm({ config, nextPath, initialError }: { config: Supabase
     <main className="auth-page">
       <section className="auth-card" aria-labelledby="login-title">
         <div className="auth-brand"><span><ShieldCheck size={20} /></span>Aletheia</div>
-        <p className="eyebrow">Protected policy workspace</p>
-        <h1 id="login-title">Sign in to open the release gate.</h1>
-        <p className="auth-lede">Review source evidence, compile guardrails, and run the Northstar release scenario in your workspace.</p>
+        <p className="eyebrow">Optional persistent access</p>
+        <h1 id="login-title">Keep a workspace across visits.</h1>
+        <p className="auth-lede">Sign in for a persistent team identity and workspace. You can also explore the complete Northstar workflow without creating an account.</p>
 
-        <button className="auth-oauth" type="button" onClick={signInWithGitHub} disabled={pending !== null}>
-          <Github size={18} /> {pending === "github" ? "Opening GitHub…" : "Continue with GitHub"}
-        </button>
-        <div className="auth-divider"><span>or use email</span></div>
+        <Link className="auth-guest-link" href="/demo">
+          <span><strong>Open the no-account demo</strong><small>A temporary guest workspace, ready in the browser.</small></span>
+          <ArrowRight size={18} />
+        </Link>
+        <div className="auth-divider"><span>or keep your workspace</span></div>
+
+        {config.githubAuthEnabled && (
+          <>
+            <button className="auth-oauth" type="button" onClick={signInWithGitHub} disabled={pending !== null}>
+              <Github size={18} /> {pending === "github" ? "Opening GitHub…" : "Continue with GitHub"}
+            </button>
+            <div className="auth-divider"><span>or use email</span></div>
+          </>
+        )}
 
         <form onSubmit={sendEmail} className="auth-form">
           <label htmlFor="email">Work email</label>
           <div className="auth-input"><Mail size={17} /><input id="email" type="email" autoComplete="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@company.com" /></div>
-          {config.turnstileSiteKey && <TurnstileWidget key={captchaVersion} siteKey={config.turnstileSiteKey} onToken={onTurnstileToken} />}
+          {requiresCaptcha && <TurnstileWidget key={captchaVersion} siteKey={config.turnstileSiteKey} action="login" onToken={onTurnstileToken} />}
           <button className="button button-primary auth-submit" type="submit" disabled={pending !== null}>
             {pending === "email" ? "Sending…" : "Email me a sign-in link"} <ArrowRight size={16} />
           </button>
         </form>
 
-        {sent && (
+        {sent && config.emailOtpEnabled && (
           <form onSubmit={verifyCode} className="auth-form auth-otp-form">
             <label htmlFor="otp">One-time code</label>
             <div className="auth-input"><KeyRound size={17} /><input id="otp" inputMode="numeric" autoComplete="one-time-code" required minLength={6} value={otp} onChange={(event) => setOtp(event.target.value)} placeholder="6-digit code" /></div>

@@ -3,16 +3,17 @@
 **Policy CI for AI agents.**
 
 [![CI](https://github.com/amanda-yin-x/aletheia/actions/workflows/ci.yml/badge.svg)](https://github.com/amanda-yin-x/aletheia/actions/workflows/ci.yml)
-[![Status: hosted verification pending](https://img.shields.io/badge/status-hosted_verification_pending-b45309)](docs/hosted-workspace.md)
+[![Status: guest candidate pending](https://img.shields.io/badge/status-guest_candidate_pending-b45309)](docs/hosted-workspace.md)
 [![License: MIT](https://img.shields.io/badge/license-MIT-0f766e)](LICENSE)
 
 **Public site:** [aletheia.aletheia-web.workers.dev](https://aletheia.aletheia-web.workers.dev)
 
-The public URL is the canonical Next.js site. The repository now contains the
-authenticated hosted-workspace architecture, but the new Supabase and Render
-integration has not yet been provisioned and verified end to end. The public
-hostname may continue to serve an earlier landing-only release until that
-deployment is completed.
+The public URL is the canonical Next.js site. Supabase Auth/Postgres and the
+Render FastAPI service are provisioned. An authenticated staging revision has
+passed the connected Northstar workflow. A newer public-guest source candidate
+exists, but it has not yet been deployed or verified against the hosted stack,
+and the canonical Worker still serves the preceding release. Promotion must
+wait for the guest-specific checks in [the deployment runbook](docs/deployment.md).
 
 Aletheia turns scattered agent instructions into source-linked rules, reviewed
 release artifacts, deterministic tool guards, and repeatable release tests. The
@@ -116,11 +117,11 @@ public browser
     │
     ├── GET / ───────────────────────────────► public Cloudflare landing page
     │
-    └── protected route
+    └── GET /demo ───────────────────────────► public guest entry
           │
           ▼
-    Supabase Auth (email link/OTP or GitHub, Turnstile on email requests)
-          │ session cookies refreshed before protected rendering
+    Turnstile ─► Supabase anonymous sign-in
+          │ signed session: role=authenticated, is_anonymous=true
           ▼
     Next.js 16 + OpenNext on Cloudflare Workers
           │ same-origin /api/v1/* proxy
@@ -144,11 +145,41 @@ production requests must first carry the shared origin credential and a bearer
 token. Hosted document-upload requests are then rejected before FastAPI routes
 or multipart body parsing run; secure customer ingestion is not implemented.
 
-Each authenticated subject receives an idempotently bootstrapped personal
-workspace and Northstar project. Backend reads and writes join through
-`workspace_members`; unauthorized cross-tenant resource IDs return not found.
-The role model contains owner, admin, editor, and viewer scopes, although team
-invitations and role-management UI are not built yet.
+Each signed Supabase subject—anonymous guest or permanent account—receives an
+idempotently bootstrapped personal workspace and Northstar project. Backend
+reads and writes join through `workspace_members`; unauthorized cross-tenant
+resource IDs return not found. A guest can exercise the seeded review,
+build/run, trace, and report workflow without supplying an email address. A
+guest can later attach a new email identity in place, preserving the same
+Supabase subject and workspace; manual identity linking is enabled for the
+equivalent future OAuth upgrade path. Guest workspaces intentionally disable
+uploads, arbitrary project creation, and
+reset; allow at most 30 successful writes and six live operations; and expire
+after seven days. Cleanup targets anonymous identities older than 30 days at
+startup and every 24 hours. In hosted Postgres, guest age is anchored to
+`auth.users.created_at`, and cleanup also removes old anonymous Auth identities
+that never created an application account/workspace.
+
+The candidate proxy configures per-subject Cloudflare thresholds of 120 general,
+90 polling, and 30 heavy requests per minute. Cloudflare evaluates these
+per-location with permissive, eventually consistent counters; they are abuse
+controls, not an exact global quota. Mutation bodies are capped at 64 KiB at
+both the Worker and FastAPI boundaries. The 85-second bound applies until the
+Worker receives upstream response headers; it does not time a streamed body
+after headers arrive.
+
+Supabase's native CAPTCHA integration verifies that Turnstile succeeded, but it
+does not separately enforce Turnstile's returned `action` or `hostname` fields.
+The `guest_demo`, `waitlist`, and `login` actions are client-side labels. The
+widget allowlist contains only the canonical and staging hostnames; local
+development uses local auth or Cloudflare's Turnstile test key.
+
+The waitlist accepts a normalized, unique email through the authenticated API
+for either a guest or permanent session. Its consent record remains after guest
+workspace cleanup; submitting an email does not silently convert the anonymous
+account into a permanent account. The role model contains owner, admin, editor,
+and viewer scopes, although team invitations and role-management UI are not
+built yet.
 
 Builds and runs use a durable operation contract. Their `POST` endpoints return
 HTTP `202`, a `Location` header, and `OperationOut`. The web app polls
@@ -216,27 +247,38 @@ is optional and does not execute or score the benchmark.
 
 ## Verification boundary
 
-The current hosted changes have local automated coverage for JWT validation,
+The hosted changes have automated coverage for JWT validation,
 tenant scoping, operation idempotency and lease recovery, migrations, CSRF and
 Origin checks, the code-only PKCE callback, pre-routing hosted upload rejection,
 session-cookie refresh, Turnstile token reuse prevention, operation polling,
 strict Draft 2020-12 tool schemas, exact USD minor-unit fixtures,
 build/evidence contracts, strict TypeScript, the Next.js production build, the
-OpenNext Cloudflare bundle, and a five-flow local Playwright suite. The current
-web unit/component suite passed all 32 tests across ten files. A real local
-PostgreSQL 14 run also passed the empty-database migration, Supabase-named role
+OpenNext Cloudflare bundle, and a five-flow local Playwright suite. In the
+current guest candidate, all 60 web unit/component tests pass across 16 files.
+All 116 backend tests pass across two local runs: 115 in the default run and one
+PostgreSQL-marked integration test in the real PostgreSQL run. The five browser
+flows still list; the candidate remains unverified on hosted infrastructure. A
+real local PostgreSQL 14 run also passed the empty-database migration,
+Supabase-named role
 privilege denial, bootstrap, queued build/run worker, polling, and downgrade
-path.
+path. A real two-session PostgreSQL test also proves that snapshot-consuming
+operations and child-row mutations take locks in the same `Project → child`
+order, so a mutation cannot cross the captured-input fence.
 
 The settled backend, web, build, Worker dry-run, and clean five-flow browser
 checks all passed locally. The repository's quality, secret-scan, and
 PostgreSQL 17 jobs also passed in [GitHub Actions run
 #30867243068](https://github.com/amanda-yin-x/aletheia/actions/runs/30867243068).
-Clean Docker startup remains a separate release gate. Provisioned
-Supabase/Render services, the hosted database migration, auth-provider flow,
-cold-start behavior, and the cross-origin smoke test are pending hosted
-verification. Do not interpret checked-in deployment configuration as proof
-that those external services exist or have passed production testing.
+The target Supabase project is migrated through Alembic head; its Data API is
+disabled, `anon`/`authenticated` have no application-table privileges, and the
+future-table default denial was verified transactionally. The Render service
+and named Cloudflare staging Worker passed the permanent-user authenticated
+bootstrap,
+two-user isolation, build/run/trace/report, download, and direct-origin security
+path. The new anonymous-guest path, limits, expiry/cleanup, reset denial, and
+waitlist persistence have not yet passed against the hosted stack. This is
+authenticated staging evidence, not a claim that the guest candidate, pending
+canonical Worker promotion, or a production reliability program has completed.
 
 For approved, machine-decidable rules, the covered policy adapter can
 deterministically allow, block, or request approval before a covered tool call
@@ -247,19 +289,29 @@ that adapter. See [docs/evidence-boundary.md](docs/evidence-boundary.md).
 
 | Area | Status | Meaning |
 |---|---|---|
-| Public landing and product UI | Implemented; locally verified | Next.js and OpenNext builds pass locally. |
-| Supabase SSR auth and session refresh | Implemented; locally verified | Code-only PKCE exchange, raw-token rejection, cookie refresh, and UI behavior are covered locally; external providers remain pending. |
-| Same-origin API proxy | Implemented; locally verified | Streaming, bearer forwarding, Origin/CSRF, and origin-secret injection are checked in. |
-| FastAPI JWT, origin authentication, and tenancy | Implemented; locally verified | The full backend suite passed, including the fail-closed boundary and hosted upload rejection before multipart parsing; external JWKS and two-user hosted checks remain pending. |
-| PostgreSQL migrations and operation lifecycle | Implemented; locally and CI verified | A PostgreSQL 14 empty-database lifecycle and `anon`/`authenticated` privilege test passed locally, and the PostgreSQL 17 Actions job passed; target Supabase migration and Data API verification remain pending. |
-| Cloudflare Worker configuration | Implemented; locally built | Production and named staging bindings are explicit and deployment preview URLs are disabled; neither current Worker revision is claimed deployed. |
-| Cloudflare + Render + Supabase integration | Pending hosted verification | Runtime variables, secrets, OAuth, SMTP, Turnstile, deploys, and end-to-end smoke tests remain. |
+| Public landing and guest entry | Candidate implemented; hosted verification pending | `/demo` starts a Turnstile-protected anonymous Supabase session and bootstraps Northstar. This build is not deployed on staging or production yet. |
+| Permanent-account auth and session refresh | Authenticated staging path verified with limits | Email magic link works for authorized project-team addresses. Manual OTP and GitHub remain disabled. |
+| Same-origin API proxy | Authenticated staging path verified | Streaming, bearer forwarding, Origin/CSRF enforcement, origin-secret injection, and report downloads passed through Cloudflare to Render. Reverify with an anonymous JWT. |
+| FastAPI JWT, origin authentication, and tenancy | Authenticated staging path verified; guest candidate pending | The API candidate accepts signed anonymous JWTs with `role=authenticated`, while retaining issuer/audience/signature checks and workspace isolation. |
+| Guest limits and retention | Candidate implemented; hosted verification pending | 30 successful writes, six live operations, no reset, seven-day access TTL, and 30-day cleanup at startup/every 24 hours with a dry-run CLI and fail-open alerts. |
+| Edge/API request controls | Candidate implemented; hosted verification pending | Per-user 120 general/90 polling/30 heavy per-location thresholds, 64 KiB mutation bodies at both hops, and an 85-second response-header deadline. |
+| Waitlist | Candidate implemented; hosted verification pending | Normalized unique consent email behind the authenticated guest/permanent API; consent survives guest cleanup. |
+| PostgreSQL migrations and operation lifecycle | Existing hosted target verified; guest migration pending | The previous Alembic head and Data API/grant boundary passed. The guest-access migration must be applied and verified. |
+| Cloudflare + Render + Supabase integration | Permanent-user staging workflow verified | The full authenticated Northstar lifecycle passed on staging. The guest candidate is not yet deployed; canonical production remains stale. |
 
 See [docs/deployment.md](docs/deployment.md) for the exact runbook.
 
 ## Current limitations
 
-- Hosted provisioning and production verification are not complete.
+- The permanent-user hosted preview is provisioned and staging-verified. The
+  public guest candidate is not yet deployed or hosted-verified, and the
+  canonical Worker still serves the preceding revision.
+- Email magic-link delivery currently uses Supabase's default SMTP and is
+  limited to authorized project-team addresses. Custom SMTP is required before
+  general sign-up; manual email OTP and GitHub OAuth are currently disabled.
+- Render Free sleeps after idle periods and can take roughly a minute to wake.
+  The bounded “Waking your workspace…” recovery UI improves the demo path but
+  is not an availability guarantee.
 - The Northstar findings, compiler templates, and replay trajectories remain
   domain-specific evaluation code, not a general policy-analysis system.
 - Runs verify the selected build root and load its stored policy, test
@@ -271,17 +323,26 @@ See [docs/deployment.md](docs/deployment.md) for the exact runbook.
   remain unsigned database records rather than signed objects in an append-only
   release store.
 - Tenant authorization is enforced in FastAPI query scopes; Postgres RLS is not
-  defined. The migration conditionally revokes current and default table
-  privileges from Supabase's `anon` and `authenticated` roles, and that behavior
-  passed against local PostgreSQL. The target Supabase grants and Data API have
-  not been inspected, so the tables must remain unexposed until that denial is
-  verified on the hosted database or a stronger RLS/private-schema boundary is
-  established.
+  defined. On the hosted Supabase target, the Data API is disabled,
+  `anon`/`authenticated` hold no application-table privileges, and a
+  transactionally created probe table inherited the expected default denial.
+  RLS or a private-schema/least-privilege server role remains the stronger next
+  boundary before broader customer data or team functionality.
 - The hosted Render blueprint uses inline operations on a Free web service. A
   separately deployed durable worker is not part of that free hosted topology.
+- Guest workspaces are temporary and bounded: 30 successful writes, six live
+  operations, no reset, seven-day access, and cleanup eligibility after 30
+  days. They are for evaluating Northstar, not storing customer data.
+- Hosted uploads and arbitrary project creation are disabled. The waitlist
+  stores a normalized unique consent email separately so consent survives
+  guest-workspace cleanup.
+- Guest cleanup runs once during API startup and then every 24 hours; failures
+  are alerted without taking readiness down. It also removes anonymous
+  Supabase Auth identities older than 30 days that never bootstrapped an app
+  account.
 - No team invitation, role administration, approval inbox, audit-ledger,
-  billing, quota, object-storage, artifact-signing, release-promotion, or
-  customer runtime SDK exists yet.
+  billing/plan administration, object-storage, artifact-signing,
+  release-promotion, or customer runtime SDK exists yet.
 - No OCR, URL ingestion, arbitrary policy code, or live-model tool loop exists.
 - The fixture runner validates every proposed call against its build-pinned
   Draft 2020-12 tool schema before policy evaluation or execution, including

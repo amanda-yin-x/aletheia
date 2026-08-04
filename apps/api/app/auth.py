@@ -26,6 +26,10 @@ class AuthIdentity:
     email: str | None
     claims: dict[str, Any]
 
+    @property
+    def is_anonymous(self) -> bool:
+        return self.claims.get("is_anonymous") is True
+
 
 bearer = HTTPBearer(auto_error=False)
 
@@ -65,7 +69,7 @@ def _decode_token(token: str, settings: Settings) -> dict[str, Any]:
     subject = claims.get("sub")
     if not isinstance(subject, str) or not subject.strip():
         raise _unauthorized()
-    if claims.get("role") != "authenticated" or claims.get("is_anonymous") is True:
+    if claims.get("role") != "authenticated":
         raise _unauthorized()
     return dict(claims)
 

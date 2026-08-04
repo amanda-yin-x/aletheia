@@ -6,6 +6,9 @@ export const API_URL = "";
 
 const RETRYABLE_GATEWAY_STATUSES = new Set([502, 503, 504]);
 const MAX_RETRY_DELAY_MS = 4_000;
+export const API_PROXY_RESPONSE_HEADER_TIMEOUT_MS = 85_000;
+export const API_CLIENT_READ_TIMEOUT_MS = API_PROXY_RESPONSE_HEADER_TIMEOUT_MS + 5_000;
+export const API_CLIENT_MUTATION_TIMEOUT_MS = 10_000;
 let csrfRequest: Promise<string> | null = null;
 
 export class RequestError extends Error {
@@ -73,6 +76,29 @@ function wait(milliseconds: number, signal?: AbortSignal | null): Promise<void> 
   });
 }
 
+async function withinDeadline<T>(
+  externalSignal: AbortSignal | null | undefined,
+  timeoutMs: number,
+  task: (signal: AbortSignal) => Promise<T>,
+): Promise<T> {
+  const controller = new AbortController();
+  const abortFromCaller = () => controller.abort(
+    externalSignal?.reason || new DOMException("Aborted", "AbortError"),
+  );
+  if (externalSignal?.aborted) abortFromCaller();
+  else externalSignal?.addEventListener("abort", abortFromCaller, { once: true });
+  const timeout = globalThis.setTimeout(
+    () => controller.abort(new DOMException("The request timed out.", "TimeoutError")),
+    timeoutMs,
+  );
+  try {
+    return await task(controller.signal);
+  } finally {
+    globalThis.clearTimeout(timeout);
+    externalSignal?.removeEventListener("abort", abortFromCaller);
+  }
+}
+
 function normalizePath(path: string): string {
   if (!path.startsWith("/api/v1/") && path !== "/api/v1") throw new Error("API requests must use the same-origin /api/v1 route.");
   return path;
@@ -104,38 +130,46 @@ export async function apiWithResponse<T>(path: string, init: ApiRequestInit = {}
 
   const retries = Math.max(0, Math.min(24, coldStartRetries ?? (mutation ? (retryMutation ? 2 : 0) : 3)));
   const extendedWakeWindow = typeof coldStartTimeoutMs === "number" && coldStartTimeoutMs > 10_000;
-  const deadline = Date.now() + Math.max(0, Math.min(90_000, coldStartTimeoutMs ?? 10_000));
-  let response: Response | null = null;
-  let lastNetworkError: unknown;
-  for (let attempt = 0; attempt <= retries; attempt += 1) {
-    try {
-      response = await fetch(normalizePath(path), {
-        ...requestInit,
-        method,
-        headers,
-        credentials: "same-origin",
-        cache: "no-store",
-      });
-      if (!RETRYABLE_GATEWAY_STATUSES.has(response.status) || attempt === retries) break;
-      const delayMs = retryDelay(response, attempt, extendedWakeWindow);
-      if (Date.now() + delayMs > deadline) break;
-      onRetry?.({ attempt: attempt + 1, delayMs, status: response.status });
-      await wait(delayMs, requestInit.signal);
-    } catch (error) {
-      if (requestInit.signal?.aborted || (error instanceof DOMException && error.name === "AbortError")) throw error;
-      lastNetworkError = error;
-      if (attempt === retries) throw error;
-      const delayMs = retryDelay(null, attempt, extendedWakeWindow);
-      if (Date.now() + delayMs > deadline) throw error;
-      onRetry?.({ attempt: attempt + 1, delayMs, status: null });
-      await wait(delayMs, requestInit.signal);
+  // A normal read must outlive the Worker's complete cold-start/header window.
+  // Mutations stay short by default unless an idempotent caller deliberately
+  // opts into the extended window with coldStartTimeoutMs.
+  const defaultTimeoutMs = mutation ? API_CLIENT_MUTATION_TIMEOUT_MS : API_CLIENT_READ_TIMEOUT_MS;
+  const timeoutMs = Math.max(1, Math.min(API_CLIENT_READ_TIMEOUT_MS, coldStartTimeoutMs ?? defaultTimeoutMs));
+  return withinDeadline(requestInit.signal, timeoutMs, async (signal) => {
+    const deadline = Date.now() + timeoutMs;
+    let response: Response | null = null;
+    let lastNetworkError: unknown;
+    for (let attempt = 0; attempt <= retries; attempt += 1) {
+      try {
+        response = await fetch(normalizePath(path), {
+          ...requestInit,
+          method,
+          headers,
+          credentials: "same-origin",
+          cache: "no-store",
+          signal,
+        });
+        if (!RETRYABLE_GATEWAY_STATUSES.has(response.status) || attempt === retries) break;
+        const delayMs = retryDelay(response, attempt, extendedWakeWindow);
+        if (Date.now() + delayMs > deadline) break;
+        onRetry?.({ attempt: attempt + 1, delayMs, status: response.status });
+        await wait(delayMs, signal);
+      } catch (error) {
+        if (signal.aborted) throw signal.reason || error;
+        lastNetworkError = error;
+        if (attempt === retries) throw error;
+        const delayMs = retryDelay(null, attempt, extendedWakeWindow);
+        if (Date.now() + delayMs > deadline) throw error;
+        onRetry?.({ attempt: attempt + 1, delayMs, status: null });
+        await wait(delayMs, signal);
+      }
     }
-  }
 
-  if (!response) throw lastNetworkError instanceof Error ? lastNetworkError : new Error("The request did not receive a response.");
-  if (!response.ok) throw new RequestError(await errorPayload(response), response.status);
-  const data = response.status === 204 ? undefined as T : await response.json() as T;
-  return { data, response };
+    if (!response) throw lastNetworkError instanceof Error ? lastNetworkError : new Error("The request did not receive a response.");
+    if (!response.ok) throw new RequestError(await errorPayload(response), response.status);
+    const data = response.status === 204 ? undefined as T : await response.json() as T;
+    return { data, response };
+  });
 }
 
 export async function api<T>(path: string, init?: ApiRequestInit): Promise<T> {

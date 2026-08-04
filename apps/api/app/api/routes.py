@@ -22,6 +22,7 @@ from app.models import (
     ScenarioResult,
     TestCase,
     TraceEventModel,
+    WaitlistSignup,
     Workspace,
     WorkspaceMembership,
 )
@@ -49,6 +50,8 @@ from app.schemas import (
     ScenarioResultOut,
     TestCaseOut,
     TestCasePatch,
+    WaitlistCreate,
+    WaitlistOut,
     WorkspaceBootstrap,
     WorkspaceBootstrapOut,
     WorkspaceOut,
@@ -66,6 +69,8 @@ from app.services.reporting import create_report
 from app.services.review import resolve_finding, revise_rule
 from app.services.seed import seed_demo
 from app.tenancy import (
+    consume_guest_mutation,
+    enforce_guest_session,
     ensure_account,
     require_workspace,
     scoped_build,
@@ -80,9 +85,21 @@ from app.tenancy import (
     scoped_test,
 )
 
+
+async def _enforce_guest_session(
+    identity: AuthIdentity = Depends(require_identity),
+    session: AsyncSession = Depends(get_session),
+) -> None:
+    await enforce_guest_session(session, identity)
+
+
 router = APIRouter(
     prefix="/api/v1",
-    dependencies=[Depends(require_origin_token), Depends(require_identity)],
+    dependencies=[
+        Depends(require_origin_token),
+        Depends(require_identity),
+        Depends(_enforce_guest_session),
+    ],
 )
 
 
@@ -106,6 +123,7 @@ async def _submit_operation(
     payload: dict[str, Any],
     idempotency_key: str | None,
 ) -> OperationOut:
+    await consume_guest_mutation(session, identity)
     settings = get_settings()
     normalized_idempotency_key = idempotency_key.strip() if idempotency_key is not None else None
     if settings.demo_inline_jobs:
@@ -172,8 +190,52 @@ async def get_me(
     return MeOut(
         id=identity.subject,
         email=identity.email,
+        is_anonymous=identity.is_anonymous,
         workspaces=[_workspace_out(workspace, membership.role) for workspace, membership in rows],
     )
+
+
+@router.post("/waitlist", response_model=WaitlistOut)
+async def join_waitlist(
+    payload: WaitlistCreate,
+    identity: AuthIdentity = Depends(require_identity),
+    session: AsyncSession = Depends(get_session),
+) -> WaitlistOut:
+    """Record one privacy-minimal waitlist signup per authenticated identity."""
+    await consume_guest_mutation(session, identity)
+    await ensure_account(session, identity)
+    existing = await session.scalar(
+        select(WaitlistSignup).where(
+            (WaitlistSignup.user_id == identity.subject)
+            | (WaitlistSignup.email == payload.email)
+        )
+    )
+    if existing is not None:
+        return WaitlistOut()
+
+    session.add(
+        WaitlistSignup(
+            user_id=identity.subject,
+            email=payload.email,
+            source="landing",
+            consent_version="2026-08-04",
+        )
+    )
+    try:
+        await session.commit()
+    except IntegrityError:
+        # Concurrent duplicate submissions are deliberately indistinguishable
+        # from a first signup so this endpoint cannot enumerate addresses.
+        await session.rollback()
+        duplicate = await session.scalar(
+            select(WaitlistSignup.id).where(
+                (WaitlistSignup.user_id == identity.subject)
+                | (WaitlistSignup.email == payload.email)
+            )
+        )
+        if duplicate is None:
+            raise
+    return WaitlistOut()
 
 
 @router.post("/workspaces/bootstrap", response_model=WorkspaceBootstrapOut)
@@ -182,6 +244,7 @@ async def bootstrap_workspace(
     identity: AuthIdentity = Depends(require_identity),
     session: AsyncSession = Depends(get_session),
 ) -> WorkspaceBootstrapOut:
+    await consume_guest_mutation(session, identity)
     await ensure_account(session, identity)
     existing = (
         await session.execute(
@@ -263,6 +326,12 @@ async def reset_personal_workspace(
     session: AsyncSession = Depends(get_session),
 ) -> Project:
     workspace, _ = await require_workspace(session, identity, workspace_id, admin=True)
+    if identity.is_anonymous:
+        raise ServiceError(
+            "guest_reset_disabled",
+            "Guest workspaces cannot be reset. Start a new guest session for a fresh fixture.",
+            status_code=403,
+        )
     northstar = await session.scalar(
         select(Project).where(
             Project.workspace_id == workspace.id,
@@ -284,6 +353,12 @@ async def reset_project(
 ) -> Project:
     project = await scoped_project(session, identity, project_id, write=True)
     await require_workspace(session, identity, project.workspace_id, admin=True)
+    if identity.is_anonymous:
+        raise ServiceError(
+            "guest_reset_disabled",
+            "Guest workspaces cannot be reset. Start a new guest session for a fresh fixture.",
+            status_code=403,
+        )
     if project.slug != "northstar-retail":
         raise ServiceError("project_not_found", "Project not found.", status_code=404)
     reset = await seed_demo(session, workspace_id=project.workspace_id, reset=True)
@@ -575,6 +650,7 @@ async def patch_rule(
     session: AsyncSession = Depends(get_session),
 ) -> Rule:
     await scoped_rule(session, identity, rule_id, write=True)
+    await consume_guest_mutation(session, identity)
     return await revise_rule(
         session,
         rule_id,
@@ -591,6 +667,7 @@ async def _review_rule(
     status: str,
 ) -> Rule:
     await scoped_rule(session, identity, rule_id, write=True)
+    await consume_guest_mutation(session, identity)
     expected = payload.expected_revision
     default_note = (
         "Approved after source and boundary review."
@@ -652,6 +729,7 @@ async def patch_finding(
     session: AsyncSession = Depends(get_session),
 ) -> Finding:
     await scoped_finding(session, identity, finding_id, write=True)
+    await consume_guest_mutation(session, identity)
     return await resolve_finding(
         session,
         finding_id,
@@ -782,6 +860,7 @@ async def patch_test(
     session: AsyncSession = Depends(get_session),
 ) -> TestCase:
     test = await scoped_test(session, identity, test_case_id, write=True)
+    await consume_guest_mutation(session, identity)
     test.review_status = payload.review_status
     await session.commit()
     await session.refresh(test)
@@ -891,6 +970,7 @@ async def make_report(
     session: AsyncSession = Depends(get_session),
 ) -> Report:
     await scoped_run(session, identity, run_id, write=True)
+    await consume_guest_mutation(session, identity)
     return await create_report(session, run_id)
 
 

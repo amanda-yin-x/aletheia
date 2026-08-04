@@ -46,6 +46,41 @@ def db_upgrade() -> None:
     typer.echo("Database schema is current.")
 
 
+@db_cli.command("cleanup-guests")
+def db_cleanup_guests(
+    older_than_days: int = typer.Option(30, min=1, max=365),
+    execute: bool = typer.Option(
+        False,
+        "--execute",
+        help="Apply deletion. Without this flag the command is a count-only dry run.",
+    ),
+    json_output: bool = typer.Option(False, "--json"),
+) -> None:
+    """Count or delete expired anonymous workspaces without exposing identities."""
+    from app.services.guest_cleanup import cleanup_expired_guests
+
+    async def run() -> dict[str, object]:
+        async with SessionLocal() as session:
+            result = await cleanup_expired_guests(
+                session,
+                older_than_days=older_than_days,
+                execute=execute,
+            )
+            return result.as_dict()
+
+    output = asyncio.run(run())
+    if json_output:
+        typer.echo(json.dumps(output, sort_keys=True))
+        return
+    mode = "deleted" if execute else "would delete"
+    typer.echo(
+        f"{mode} {output['guest_accounts']} guest account(s), "
+        f"{output['auth_only_accounts']} auth-only identity row(s), "
+        f"{output['workspaces']} workspace(s), and {output['projects']} project(s); "
+        f"{output['linked_waitlist_signups']} waitlist consent row(s) are preserved."
+    )
+
+
 @demo_cli.command("seed")
 def demo_seed(reset: bool = typer.Option(False, "--reset", help="Replace the existing evaluation workspace."), json_output: bool = typer.Option(False, "--json")) -> None:
     """Seed the Northstar Retail evaluation workspace."""
@@ -145,9 +180,37 @@ def worker_command(once: bool = typer.Option(False, help="Claim at most one queu
 @cli.command("serve")
 def serve_command() -> None:
     """Migrate under a PostgreSQL advisory lock, then replace this process with Uvicorn."""
+    from app.config import get_settings
     from app.deploy import exec_uvicorn, migrate_database
+    from app.services.guest_cleanup import cleanup_expired_guests
 
     migrate_database()
+    settings = get_settings()
+
+    async def cleanup() -> None:
+        async with SessionLocal() as session:
+            result = await cleanup_expired_guests(
+                session,
+                older_than_days=settings.guest_retention_days,
+                execute=True,
+            )
+            typer.echo(json.dumps({"event": "guest_cleanup", **result.as_dict()}, sort_keys=True))
+
+    try:
+        asyncio.run(cleanup())
+    except Exception as error:
+        # Cleanup is maintenance, not a readiness dependency. Keep the API
+        # available and emit a machine-readable alert for operator follow-up.
+        typer.echo(
+            json.dumps(
+                {
+                    "event": "guest_cleanup_failed",
+                    "error_type": type(error).__name__,
+                },
+                sort_keys=True,
+            ),
+            err=True,
+        )
     exec_uvicorn()
 
 

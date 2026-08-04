@@ -2,7 +2,7 @@ import "server-only";
 
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import { getSupabasePublicConfig } from "./config";
+import { getSupabaseCookieOptions, getSupabasePublicConfig } from "./config";
 
 export class SupabaseConfigurationError extends Error {
   constructor() {
@@ -17,6 +17,7 @@ export async function createSupabaseServerClient() {
   const cookieStore = await cookies();
 
   return createServerClient(config.url, config.publishableKey, {
+    cookieOptions: getSupabaseCookieOptions(config.siteUrl),
     cookies: {
       getAll() {
         return cookieStore.getAll();

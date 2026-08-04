@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import asyncio
 import hmac
 import logging
+from contextlib import asynccontextmanager, suppress
 from uuid import uuid4
 
 from fastapi import FastAPI, Request
@@ -17,6 +19,45 @@ from app.services.errors import ServiceError
 logger = logging.getLogger(__name__)
 settings = get_settings()
 
+
+async def _run_guest_cleanup() -> None:
+    from app.services.guest_cleanup import cleanup_expired_guests
+
+    async with SessionLocal() as session:
+        result = await cleanup_expired_guests(
+            session,
+            older_than_days=settings.guest_retention_days,
+            execute=True,
+        )
+    logger.info("guest_cleanup_completed", extra={"guest_cleanup": result.as_dict()})
+
+
+async def _guest_cleanup_loop() -> None:
+    while True:
+        await asyncio.sleep(settings.guest_cleanup_interval_hours * 60 * 60)
+        try:
+            await _run_guest_cleanup()
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            logger.exception("guest_cleanup_failed")
+
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):  # type: ignore[no-untyped-def]
+    cleanup_task = (
+        asyncio.create_task(_guest_cleanup_loop(), name="guest-cleanup")
+        if settings.hosted_mode
+        else None
+    )
+    try:
+        yield
+    finally:
+        if cleanup_task:
+            cleanup_task.cancel()
+            with suppress(asyncio.CancelledError):
+                await cleanup_task
+
 app = FastAPI(
     title="Aletheia Policy CI API",
     version="0.1.0",
@@ -24,6 +65,7 @@ app = FastAPI(
     docs_url=None if settings.hosted_mode else "/docs",
     redoc_url=None if settings.hosted_mode else "/redoc",
     openapi_url=None if settings.hosted_mode else "/openapi.json",
+    lifespan=lifespan,
 )
 app.add_middleware(
     CORSMiddleware,
@@ -85,11 +127,58 @@ def _enforce_hosted_api_boundary(request: Request) -> None:
         )
 
 
+async def _enforce_hosted_body_limit(request: Request) -> None:
+    """Bound mutation bodies before FastAPI/Pydantic can materialize them."""
+
+    if (
+        not settings.hosted_mode
+        or not request.url.path.startswith("/api/v1/")
+        or request.method.upper() in {"GET", "HEAD", "OPTIONS"}
+    ):
+        return
+    declared_length = request.headers.get("content-length")
+    if declared_length is not None:
+        try:
+            parsed_length = int(declared_length)
+        except ValueError as error:
+            raise ServiceError(
+                "invalid_content_length",
+                "The request Content-Length is invalid.",
+                status_code=400,
+            ) from error
+        if parsed_length < 0:
+            raise ServiceError(
+                "invalid_content_length",
+                "The request Content-Length is invalid.",
+                status_code=400,
+            )
+        if parsed_length > settings.api_max_body_bytes:
+            raise ServiceError(
+                "request_body_too_large",
+                f"Mutation bodies are limited to {settings.api_max_body_bytes} bytes.",
+                status_code=413,
+            )
+
+    chunks: list[bytes] = []
+    received = 0
+    async for chunk in request.stream():
+        received += len(chunk)
+        if received > settings.api_max_body_bytes:
+            raise ServiceError(
+                "request_body_too_large",
+                f"Mutation bodies are limited to {settings.api_max_body_bytes} bytes.",
+                status_code=413,
+            )
+        chunks.append(chunk)
+    request._body = b"".join(chunks)  # noqa: SLF001 -- replay the bounded body downstream.
+
+
 @app.middleware("http")
 async def request_context(request: Request, call_next):  # type: ignore[no-untyped-def]
     request_id = request.headers.get("x-request-id", str(uuid4()))
     try:
         _enforce_hosted_api_boundary(request)
+        await _enforce_hosted_body_limit(request)
         response = await call_next(request)
     except ServiceError as error:
         response = JSONResponse(

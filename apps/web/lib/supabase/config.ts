@@ -3,6 +3,14 @@ export interface SupabasePublicConfig {
   publishableKey: string;
   turnstileSiteKey: string;
   siteUrl: string;
+  githubAuthEnabled: boolean;
+  emailOtpEnabled: boolean;
+}
+
+export interface SupabaseCookieOptions {
+  path: "/";
+  sameSite: "lax";
+  secure: boolean;
 }
 
 const trimTrailingSlash = (value: string) => value.replace(/\/+$/, "");
@@ -30,6 +38,28 @@ export function getSupabasePublicConfig(): SupabasePublicConfig | null {
     publishableKey,
     turnstileSiteKey: turnstileSiteKey || "",
     siteUrl: trimTrailingSlash(siteUrl),
+    githubAuthEnabled: process.env.GITHUB_AUTH_ENABLED?.trim().toLowerCase() === "true",
+    emailOtpEnabled: process.env.EMAIL_OTP_ENABLED?.trim().toLowerCase() === "true",
+  };
+}
+
+/**
+ * Keep the browser, Server Components, and middleware on one cookie policy.
+ * Production cookies are always secure; HTTPS development URLs opt in while
+ * plain HTTP localhost remains usable.
+ */
+export function getSupabaseCookieOptions(siteUrl: string): SupabaseCookieOptions {
+  let siteUsesHttps = false;
+  try {
+    siteUsesHttps = new URL(siteUrl).protocol === "https:";
+  } catch {
+    // Runtime config validation reports malformed URLs before this is called.
+  }
+
+  return {
+    path: "/",
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production" || siteUsesHttps,
   };
 }
 

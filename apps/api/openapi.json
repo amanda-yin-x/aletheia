@@ -1884,6 +1884,10 @@
             "title": "Id",
             "type": "string"
           },
+          "is_anonymous": {
+            "title": "Is Anonymous",
+            "type": "boolean"
+          },
           "workspaces": {
             "items": {
               "$ref": "#/components/schemas/WorkspaceOut"
@@ -1895,6 +1899,7 @@
         "required": [
           "id",
           "email",
+          "is_anonymous",
           "workspaces"
         ],
         "title": "MeOut",
@@ -3361,6 +3366,35 @@
           "type"
         ],
         "title": "ValidationError",
+        "type": "object"
+      },
+      "WaitlistCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "email": {
+            "maxLength": 320,
+            "minLength": 3,
+            "title": "Email",
+            "type": "string"
+          }
+        },
+        "required": [
+          "email"
+        ],
+        "title": "WaitlistCreate",
+        "type": "object"
+      },
+      "WaitlistOut": {
+        "additionalProperties": false,
+        "properties": {
+          "joined": {
+            "const": true,
+            "default": true,
+            "title": "Joined",
+            "type": "boolean"
+          }
+        },
+        "title": "WaitlistOut",
         "type": "object"
       },
       "WorkspaceBootstrap": {
@@ -5729,6 +5763,68 @@
           }
         ],
         "summary": "Patch Test"
+      }
+    },
+    "/api/v1/waitlist": {
+      "post": {
+        "description": "Record one privacy-minimal waitlist signup per authenticated identity.",
+        "operationId": "join_waitlist_api_v1_waitlist_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-aletheia-origin-token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Aletheia-Origin-Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WaitlistCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WaitlistOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "summary": "Join Waitlist"
       }
     },
     "/api/v1/workspaces/bootstrap": {

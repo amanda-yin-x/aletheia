@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import asyncio
 import os
 import sqlite3
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import httpx
@@ -12,11 +14,23 @@ from sqlalchemy import inspect, select, text
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.schema import MetaData
 
+from app.auth import LOCAL_USER_EMAIL, LOCAL_USER_ID, AuthIdentity, require_identity
 from app.config import get_settings
 from app.db import get_session
 from app.main import app
-from app.models import Finding, Job, Project, Rule
+from app.models import (
+    Finding,
+    Job,
+    Project,
+    Rule,
+    UserAccount,
+    Workspace,
+    WorkspaceMembership,
+)
+from app.operations import lock_operation_project
+from app.services.guest_cleanup import cleanup_expired_guests
 from app.services.review import resolve_finding, revise_rule
+from app.tenancy import scoped_rule
 
 API_ROOT = Path(__file__).resolve().parents[1]
 
@@ -43,11 +57,27 @@ def test_empty_database_migrations_do_not_seed_global_rows(
         command.upgrade(_alembic_config(), "head")
         with sqlite3.connect(database) as connection:
             assert connection.execute("SELECT version_num FROM alembic_version").fetchone() == (
-                "0004_document_provenance",
+                "0005_guest_access_waitlist",
             )
             assert connection.execute("SELECT count(*) FROM user_accounts").fetchone() == (0,)
+            assert connection.execute("SELECT count(*) FROM waitlist_signups").fetchone() == (0,)
             assert connection.execute("SELECT count(*) FROM workspaces").fetchone() == (0,)
             assert connection.execute("SELECT count(*) FROM projects").fetchone() == (0,)
+    finally:
+        get_settings.cache_clear()
+
+
+def test_migration_url_accepts_percent_encoded_values(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    database = tmp_path / "encoded%40credential.db"
+    _use_sqlite_migration_url(monkeypatch, database)
+    try:
+        command.upgrade(_alembic_config(), "head")
+        with sqlite3.connect(database) as connection:
+            assert connection.execute("SELECT version_num FROM alembic_version").fetchone() == (
+                "0005_guest_access_waitlist",
+            )
     finally:
         get_settings.cache_clear()
 
@@ -172,6 +202,17 @@ async def test_postgres_empty_migration_and_operation_lifecycle(
         )
 
     command.upgrade(_alembic_config(), "head")
+    with sync_engine.begin() as connection:
+        connection.execute(text("CREATE SCHEMA IF NOT EXISTS auth"))
+        connection.execute(
+            text(
+                "CREATE TABLE IF NOT EXISTS auth.users ("
+                "id uuid PRIMARY KEY, "
+                "is_anonymous boolean NOT NULL, "
+                "created_at timestamptz NOT NULL"
+                ")"
+            )
+        )
     with sync_engine.connect() as connection:
         assert connection.scalar(text("SELECT count(*) FROM user_accounts")) == 0
         assert connection.scalar(text("SELECT count(*) FROM workspaces")) == 0
@@ -221,6 +262,159 @@ async def test_postgres_empty_migration_and_operation_lifecycle(
     async def override_session():  # type: ignore[no-untyped-def]
         async with maker() as session:
             yield session
+
+    orphan_guest_id = "00000000-0000-0000-0000-000000000099"
+    async with maker() as session:
+        await session.execute(
+            text(
+                "INSERT INTO auth.users (id, is_anonymous, created_at) "
+                "VALUES (CAST(:id AS uuid), TRUE, :created_at)"
+            ),
+            {
+                "id": orphan_guest_id,
+                "created_at": datetime.now(UTC) - timedelta(days=31),
+            },
+        )
+        await session.commit()
+        cleanup = await cleanup_expired_guests(
+            session,
+            older_than_days=30,
+            execute=True,
+        )
+        assert cleanup.guest_accounts == 0
+        assert cleanup.auth_only_accounts == 1
+        assert await session.scalar(
+            text("SELECT count(*) FROM auth.users WHERE id::text = :id"),
+            {"id": orphan_guest_id},
+        ) == 0
+
+    expired_auth_only_id = "00000000-0000-0000-0000-000000000096"
+    async with maker() as session:
+        await session.execute(
+            text(
+                "INSERT INTO auth.users (id, is_anonymous, created_at) "
+                "VALUES (CAST(:id AS uuid), TRUE, :created_at)"
+            ),
+            {
+                "id": expired_auth_only_id,
+                "created_at": datetime.now(UTC) - timedelta(days=8),
+            },
+        )
+        await session.commit()
+
+    async def override_expired_identity() -> AuthIdentity:
+        return AuthIdentity(expired_auth_only_id, None, {"is_anonymous": True})
+
+    app.dependency_overrides[get_session] = override_session
+    app.dependency_overrides[require_identity] = override_expired_identity
+    try:
+        async with httpx.AsyncClient(
+            transport=httpx.ASGITransport(app=app), base_url="http://test"
+        ) as client:
+            expired = await client.get("/api/v1/me")
+        assert expired.status_code == 401
+        assert expired.json()["code"] == "guest_session_expired"
+    finally:
+        app.dependency_overrides.pop(require_identity, None)
+        app.dependency_overrides.pop(get_session, None)
+
+    async with maker() as session:
+        assert await session.get(UserAccount, expired_auth_only_id) is None
+        assert await session.scalar(
+            text("SELECT count(*) FROM auth.users WHERE id::text = :id"),
+            {"id": expired_auth_only_id},
+        ) == 1
+
+    # A Supabase anonymous identity can be converted in place to a permanent
+    # account. Hold that Auth-row update open while cleanup starts: cleanup must
+    # wait for the authoritative conversion and then preserve the stale public
+    # guest ledger and its workspace instead of deleting them in between its
+    # Auth check and guarded Auth deletion.
+    converted_guest_id = "00000000-0000-0000-0000-000000000098"
+    converted_workspace_id = "00000000-0000-0000-0000-000000000097"
+    old_guest_created_at = datetime.now(UTC) - timedelta(days=31)
+    async with maker() as session:
+        await session.execute(
+            text(
+                "INSERT INTO auth.users (id, is_anonymous, created_at) "
+                "VALUES (CAST(:id AS uuid), TRUE, :created_at)"
+            ),
+            {"id": converted_guest_id, "created_at": old_guest_created_at},
+        )
+        session.add_all(
+            [
+                UserAccount(
+                    id=converted_guest_id,
+                    email=None,
+                    is_anonymous=True,
+                    created_at=old_guest_created_at,
+                    updated_at=old_guest_created_at,
+                ),
+                Workspace(
+                    id=converted_workspace_id,
+                    slug="converted-guest-workspace",
+                    name="Converted guest workspace",
+                    created_by_user_id=converted_guest_id,
+                    created_at=old_guest_created_at,
+                    updated_at=old_guest_created_at,
+                ),
+                WorkspaceMembership(
+                    workspace_id=converted_workspace_id,
+                    user_id=converted_guest_id,
+                    role="owner",
+                    created_at=old_guest_created_at,
+                    updated_at=old_guest_created_at,
+                ),
+            ]
+        )
+        await session.commit()
+
+    async with maker() as conversion_session, maker() as cleanup_session:
+        await conversion_session.execute(
+            text(
+                "UPDATE auth.users SET is_anonymous = FALSE "
+                "WHERE id::text = :id"
+            ),
+            {"id": converted_guest_id},
+        )
+        preview = await asyncio.wait_for(
+            cleanup_expired_guests(
+                cleanup_session,
+                older_than_days=30,
+                execute=False,
+            ),
+            timeout=2,
+        )
+        assert preview.executed is False
+        assert preview.guest_accounts == 1
+        assert await cleanup_session.get(UserAccount, converted_guest_id) is not None
+        cleanup_task = asyncio.create_task(
+            cleanup_expired_guests(
+                cleanup_session,
+                older_than_days=30,
+                execute=True,
+            )
+        )
+        try:
+            with pytest.raises(TimeoutError):
+                await asyncio.wait_for(asyncio.shield(cleanup_task), timeout=0.25)
+            assert not cleanup_task.done()
+            await conversion_session.commit()
+            cleanup = await asyncio.wait_for(cleanup_task, timeout=2)
+        finally:
+            if not cleanup_task.done():
+                cleanup_task.cancel()
+                with pytest.raises(asyncio.CancelledError):
+                    await cleanup_task
+
+    assert cleanup.guest_accounts == 0
+    async with maker() as session:
+        assert await session.get(UserAccount, converted_guest_id) is not None
+        assert await session.get(Workspace, converted_workspace_id) is not None
+        assert await session.scalar(
+            text("SELECT is_anonymous FROM auth.users WHERE id::text = :id"),
+            {"id": converted_guest_id},
+        ) is False
 
     app.dependency_overrides[get_session] = override_session
     try:
@@ -337,6 +531,41 @@ async def test_postgres_empty_migration_and_operation_lifecycle(
             assert polled.status_code == 200
             assert polled.json()["status"] == "succeeded"
             assert polled.json()["resource_id"] == run_job["id"]
+
+            # A snapshot-consuming operation and every child-row mutation use
+            # the same Project -> child lock order. Prove with two real
+            # PostgreSQL sessions that the mutation cannot cross that fence.
+            async with maker() as operation_session, maker() as mutation_session:
+                operation_job = await operation_session.get(Job, run_job["id"])
+                assert operation_job is not None
+                await lock_operation_project(operation_session, operation_job)
+                mutable_rule = await operation_session.scalar(
+                    select(Rule).where(Rule.project_id == project_id).limit(1)
+                )
+                assert mutable_rule is not None
+                mutation_acquired = asyncio.Event()
+
+                async def lock_mutation() -> Rule:
+                    resource = await scoped_rule(
+                        mutation_session,
+                        AuthIdentity(LOCAL_USER_ID, LOCAL_USER_EMAIL, {}),
+                        mutable_rule.id,
+                        write=True,
+                    )
+                    mutation_acquired.set()
+                    return resource
+
+                mutation_task = asyncio.create_task(lock_mutation())
+                with pytest.raises(TimeoutError):
+                    await asyncio.wait_for(
+                        asyncio.shield(mutation_acquired.wait()), timeout=0.25
+                    )
+                assert not mutation_task.done()
+                await operation_session.commit()
+                locked_rule = await asyncio.wait_for(mutation_task, timeout=2)
+                assert locked_rule.id == mutable_rule.id
+                await mutation_session.rollback()
+
             async with maker() as session:
                 assert await session.get(Project, project_id)
     finally:

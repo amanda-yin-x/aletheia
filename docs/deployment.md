@@ -1,15 +1,19 @@
 # Deployment and hosting runbook
 
-**Snapshot:** 2026-08-03  
+**Snapshot:** 2026-08-04  
 **Target:** Cloudflare Workers + Render FastAPI + Supabase Auth/Postgres  
-**Current status:** implementation and broad local verification complete;
-external provisioning, deployment, and hosted end-to-end verification pending
+**Current status:** Supabase and Render are provisioned; a permanent-user
+revision passed on the named Cloudflare staging Worker. The newer public-guest
+candidate has not been deployed or hosted-verified, and the
+canonical Worker still serves the preceding release.
 
-This runbook deliberately distinguishes code that exists from infrastructure
-that has actually been provisioned. Nothing in `render.yaml`, `wrangler.jsonc`,
-or the environment examples proves that a Supabase project, Render service,
-database, OAuth application, SMTP provider, Turnstile widget, or production
-secret currently exists.
+This runbook distinguishes checked-in configuration, the previously verified
+authenticated staging deployment, the unverified guest candidate, and the
+canonical release. The Aletheia Supabase project, its Postgres schema, the
+Render service, Turnstile, runtime secrets, and the named Cloudflare staging
+Worker exist. Supabase anonymous sign-in is enabled and requires Turnstile.
+GitHub OAuth and custom SMTP do not exist. Do not promote the guest candidate
+until its migration and end-to-end guest checks pass on staging.
 
 ## 1. Target request path
 
@@ -18,22 +22,24 @@ Browser
   │
   ├─ GET / ──────────────────────────────► public landing page
   │
-  └─ /demo or another protected route
+  └─ GET /demo ──────────────────────────────► public guest entry
        │
-       ├─ Supabase Auth
-       │    email magic link / email OTP / GitHub OAuth
-       │    Turnstile token on email requests
-       │    code-only PKCE callback exchange
+       ├─ Turnstile challenge
+       ├─ Supabase anonymous sign-in
+       │    signed JWT: role=authenticated, is_anonymous=true
+       │    email magic link remains an optional permanent-account path
        │
        ▼
 Cloudflare Worker: Next.js 16 through OpenNext
        │
-       ├─ refreshes Supabase cookies before protected rendering
-       ├─ redirects unauthenticated users to /login
+       ├─ refreshes Supabase cookies before private workspace rendering
+       ├─ creates the anonymous session before workspace bootstrap
        └─ proxies browser calls through same-origin /api/v1/*
               │
               ├─ verifies the user session
               ├─ rejects untrusted mutation Origin/CSRF values
+              ├─ applies per-user, per-location general/poll/heavy thresholds
+              ├─ caps mutations at 64 KiB; requires response headers by 85 s
               ├─ adds Authorization: Bearer <Supabase access token>
               └─ adds X-Aletheia-Origin-Token from a Worker secret
                        │
@@ -43,7 +49,8 @@ Render HTTPS origin: FastAPI
        ├─ checks origin credential and bearer presence before routing
        ├─ rejects hosted document uploads before multipart parsing
        ├─ verifies routed JWTs against Supabase JWKS
-       ├─ requires role=authenticated and rejects anonymous JWTs
+       ├─ requires a signed role=authenticated JWT
+       ├─ accepts is_anonymous=true for the bounded guest path
        └─ scopes resources through workspace membership
                        │
                        ▼
@@ -59,20 +66,26 @@ by the current application.
 
 | Component | Implementation | Verification |
 |---|---|---|
-| Public landing and protected route shells | Implemented | Locally verified |
-| Supabase browser/server clients | Implemented | Locally verified |
-| Cookie refresh before protected rendering | Implemented | Locally verified with a focused middleware test |
-| Email link/OTP and GitHub login UI | Implemented | Code-only PKCE exchange and raw `token_hash` rejection are locally verified; provider flows remain pending |
-| Turnstile token forwarding and single-use reset | Implemented | Locally verified; widget/secret pairing pending hosted verification |
-| Same-origin streaming API proxy | Implemented | Header filtering, credential injection, streaming, and mutation rejection are locally verified; public Render origin pending |
-| Origin and CSRF mutation protection | Implemented | Locally verified |
-| FastAPI JWT and origin-token checks | Implemented | Full local backend suite passed; external JWKS behavior remains unverified |
-| Pre-routing hosted upload denial | Implemented | A local streaming-body test confirms origin/auth/upload rejection occurs without reading the multipart body |
-| Workspace tenancy and scoped resources | Implemented | Full local backend suite passed; hosted two-user verification remains pending |
-| Alembic PostgreSQL migration | Implemented | A PostgreSQL 14 empty-database lifecycle and role-privilege test passed locally, and the PostgreSQL 17 Actions job passed; the target Supabase database remains pending |
-| Render service blueprint | Implemented | Pending hosted verification |
-| Cloudflare runtime configuration | Implemented | Production and named staging Worker bindings, `preview_urls: false`, OpenNext builds, and both Wrangler dry-runs are locally verified; deployment remains pending |
-| Full Cloudflare → Render → Supabase flow | Implemented in code | Pending hosted verification |
+| Public landing and `/demo` guest entry | Candidate implemented | Guest build not deployed or hosted-verified; canonical production is stale |
+| Supabase browser/server clients | Implemented | Permanent-user path verified on staging; anonymous sign-in is enabled but the new path needs hosted verification |
+| Cookie refresh before private rendering | Implemented | Focused tests pass and the permanent-user hosted session path is verified; repeat with a guest session |
+| Email magic link | Enabled with a preview limitation | Turnstile-protected; Supabase default SMTP sends only to authorized project-team addresses until custom SMTP is configured |
+| Manual email OTP and GitHub login | Implemented in code; disabled in deployment | OTP is hidden by runtime configuration; GitHub remains off until its OAuth application and secret are configured |
+| Turnstile anonymous sign-in | Candidate implemented | Supabase CAPTCHA is required for anonymous sign-in; token replay and hosted guest bootstrap must pass before promotion |
+| Same-origin streaming API proxy | Implemented | Permanent-user staging path passed, including downloads and credential filtering; anonymous JWT path remains to verify |
+| Origin and CSRF mutation protection | Implemented | Local adversarial checks and hosted boundary checks passed |
+| Per-user edge rate policy | Candidate implemented | Per-location 120 general, 90 polling, and 30 heavy thresholds per minute; permissive/eventually consistent rather than an exact global quota; hosted verification pending |
+| Request size/deadline | Candidate implemented | 64 KiB mutation cap at Worker/API plus 85 seconds to receive upstream response headers; streamed bodies are outside that deadline; hosted verification pending |
+| FastAPI JWT and origin-token checks | Candidate extended | Existing hosted Supabase JWKS/direct-origin checks passed; candidate now accepts signed anonymous `role=authenticated` JWTs |
+| Pre-routing hosted upload denial | Implemented | Verified without accepting hosted upload data; focused streaming-body coverage also passes |
+| Workspace tenancy and scoped resources | Implemented | Permanent-user two-user isolation passed; guest isolation, no-reset, quotas, and expiry remain to verify hosted |
+| Guest write/operation limits | Candidate implemented | 30 successful writes and six live operations per guest; hosted exhaustion tests pending |
+| Guest retention cleanup | Candidate implemented | Seven-day access TTL; 30-day cleanup at startup and every 24 hours; dry-run CLI; failure alerts and fails open; hosted verification pending |
+| Waitlist consent | Candidate implemented | Normalized unique email behind guest/permanent authenticated API; survives guest cleanup; hosted verification pending |
+| Alembic PostgreSQL migration | Guest migration pending | Existing hosted head/Data API/grant checks passed; apply and verify the guest-access/waitlist migration |
+| Render service | Provisioned | Free Virginia service is connected to Supabase through SSL; guest candidate not deployed |
+| Cloudflare runtime configuration | Candidate configured | Guest build is not on staging or canonical production |
+| Full Cloudflare → Render → Supabase flow | Permanent-user staging workflow verified | Guest workflow and retention boundaries remain unverified |
 
 ## 3. Local mode and hosted mode are intentionally different
 
@@ -142,16 +155,28 @@ server-only origin secret before proxying.
 |---|---:|---:|---|
 | `AUTH_MODE=supabase` | No | Yes | Disables local auth bypass. Committed in `wrangler.jsonc`. |
 | `SITE_URL` | No | Yes | Exact web origin and auth callback base. Committed separately for the canonical and named staging Workers. |
-| `API_ORIGIN_URL` | Treat as configuration | Yes | HTTPS Render origin; read only by server route handlers. |
+| `API_ORIGIN_URL` | **Yes** | Yes | HTTPS Render origin, stored as a Worker secret and read only by server route handlers. |
 | `API_ORIGIN_TOKEN` | **Yes** | Yes | Shared secret sent to FastAPI as `X-Aletheia-Origin-Token`. |
 | `SUPABASE_URL` | No | Yes | Supabase project URL. |
 | `SUPABASE_PUBLISHABLE_KEY` | No | Yes | Browser-safe publishable key used by Supabase Auth. |
 | `TURNSTILE_SITE_KEY` | No | Yes | Browser widget key. Production auth fails closed when it is absent. The matching secret is configured in Supabase, not in this Worker. |
+| `GITHUB_AUTH_ENABLED=false` | No | Yes | Keeps the GitHub control hidden until the OAuth application and Supabase provider are configured and verified. |
+| `EMAIL_OTP_ENABLED=false` | No | Yes | Keeps manual code entry hidden; email magic-link authentication remains available. |
 
 There are intentionally no `NEXT_PUBLIC_*` variables. Browser-safe Supabase and
 Turnstile values are passed to the login component from server-rendered runtime
 configuration; the API origin and origin token are never serialized to the
 browser.
+
+`wrangler.jsonc` also binds three Cloudflare Rate Limiting resources, keyed by
+the verified Supabase subject: 120 general, 90 job-polling, and 30 heavy
+result/report/export requests per 60 seconds. Poll/heavy traffic consumes its
+specialized budget and the general budget. Cloudflare evaluates these counters
+per location and permissively/eventually consistently; they are not exact
+global quotas. Missing bindings fail closed in production. The proxy streams
+mutation bodies only up to 65,536 bytes. Its 85-second fetch deadline ends when
+upstream response headers arrive; it does not bound a streamed response body
+after those headers.
 
 ### 4.2 Render FastAPI runtime
 
@@ -167,7 +192,13 @@ browser.
 | `WEB_ORIGIN` | No | Yes | Exact Cloudflare site origin. |
 | `DEMO_MODE=true` | No | Current evaluation | Keeps uploads disabled for the hosted Northstar workspace. |
 | `DEMO_INLINE_JOBS=true` | No | Current Free topology | Executes operations in the web process because a Free background worker is not configured. |
-| `DEMO_RESET_SECRET` | **Yes** | No | Local-only compatibility setting. The legacy demo reset route is disabled in production; personal reset requires workspace admin membership. |
+| `GUEST_MAX_MUTATIONS=30` | No | Yes | Caps successful guest writes. |
+| `GUEST_MAX_OPERATIONS=6` | No | Yes | Caps live build/run operations available to a guest. |
+| `GUEST_SESSION_TTL_HOURS=168` | No | Yes | Denies guest workspace access after seven days. |
+| `GUEST_RETENTION_DAYS=30` | No | Yes | Selects expired guest data for cleanup after 30 days. |
+| `GUEST_CLEANUP_INTERVAL_HOURS=24` | No | Yes | Repeats hosted guest cleanup every 24 hours after the startup pass. |
+| `API_MAX_BODY_BYTES=65536` | No | Yes | Independently rejects oversized hosted mutations before FastAPI/Pydantic materializes them. Must match the Worker cap. |
+| `DEMO_RESET_SECRET` | **Yes** | No | Local-only compatibility setting. Hosted guest reset is always denied; permanent owner/admin reset remains separately authorized. |
 | `LOG_LEVEL` | No | No | Runtime log level. |
 
 The pool settings default to three persistent connections plus two overflow
@@ -188,63 +219,86 @@ worker.
 `.env`, `.dev.vars`, generated databases, and deployment output are ignored.
 `apps/web/.dev.vars.example` contains placeholders only.
 
-## 5. Provision Supabase
+## 5. Supabase state and remaining provider work
 
-This section is pending hosted verification.
+The dedicated Aletheia Supabase project is provisioned in `us-east-1`. Its Auth
+issuer/JWKS settings, canonical and staging callback allowlist, publishable
+configuration, Supavisor session-pooler connections, and managed `Aletheia
+sign-in` Turnstile integration are configured. Database and origin credentials
+remain in platform secret stores; no service-role or secret API key is used by
+the application.
 
-1. Create or select a Supabase project in the intended region.
-2. Record the project URL, publishable key, Auth issuer, and JWKS URL.
-3. Set the Auth Site URL to the exact Cloudflare hostname.
-4. Add the exact production callback URL:
-   `https://aletheia.aletheia-web.workers.dev/auth/callback`. For a separate
-   staging Supabase project, add
-   `https://aletheia-staging.aletheia-web.workers.dev/auth/callback` there.
-   Deployment preview URLs are deliberately disabled and must not become Auth
-   redirect origins.
-5. Enable email authentication. The callback deliberately accepts only the
-   browser-bound PKCE authorization `code` and rejects portable raw
-   `token_hash` links. Keep the email link on Supabase's browser-initiated PKCE
-   flow; the manually entered OTP is verified directly by the login form. Set
-   an appropriately short OTP expiry.
-6. Configure GitHub OAuth and add the callback URI shown by Supabase to the
-   GitHub OAuth application.
-7. Create a managed Turnstile widget named `Aletheia sign-in`. Restrict its
-   hostname allowlist to `aletheia.aletheia-web.workers.dev`,
-   `aletheia-staging.aletheia-web.workers.dev`, `localhost`, and `127.0.0.1`;
-   use no pre-clearance. Configure its secret in Supabase Auth CAPTCHA settings
-   and put only the site key in the web runtime. Keep this integration
-   unverified until a real token succeeds and replaying that token is rejected.
-8. Configure custom SMTP before inviting real users. Supabase's built-in email
-   service is deliberately rate-limited and is not a production delivery
-   system; current official limits and SMTP guidance are documented in the
-   [Supabase Auth rate-limit guide](https://supabase.com/docs/guides/auth/rate-limits)
-   and [SMTP guide](https://supabase.com/docs/guides/auth/auth-smtp).
-9. Obtain separate runtime and migration database connection strings. Test both
-   from a non-production environment before storing them in Render.
-10. Run Supabase Security Advisor. Migration `0002` conditionally revokes all
-    current table privileges and migration-user default table privileges in
-    `public` from the `anon` and `authenticated` roles. A local PostgreSQL 14
-    integration test creates those roles and verifies every current table plus
-    a post-migration probe table. This does not prove the target Supabase role,
-    schema, ownership, or Data API configuration, and it is not tenant-level
-    RLS. Inspect the actual grants and test Data API denial before exposure;
-    otherwise keep the tables outside the Data API or add verified RLS/private
-    schema controls. This is an explicit release gate from the
-    [Supabase production checklist](https://supabase.com/docs/guides/deployment/going-into-prod).
+Alembic has upgraded the hosted database through head. The release database
+boundary was then checked independently of FastAPI:
 
-## 6. Migrate and deploy the Render API
+- the Data API is disabled (`db_schema` is empty and the REST probe is
+  unavailable);
+- `anon` and `authenticated` have zero privileges on application tables; and
+- a transactionally created probe table inherited zero privileges from the
+  migration role's default grants.
 
-`render.yaml` currently defines one Free Docker web service. It intentionally
-uses inline operations because Render Free does not provide a continuously
-running background worker in this blueprint.
+Those checks prevent browser Data API access, but they are not tenant-level
+Postgres RLS. FastAPI membership scopes remain the tenant boundary for this
+preview. Add RLS or move application tables behind a private-schema,
+least-privilege server role before broader customer data or team access.
 
-1. Create the Render service from the repository blueprint or configure the
-   equivalent Docker web service manually.
-2. Set every Render variable in section 4.2. Use the Supabase PostgreSQL URLs for
-   both database variables, with the appropriate driver conversion handled by
-   application settings.
+The current Supabase configuration enables anonymous sign-in, manual identity
+linking, and the managed Turnstile CAPTCHA. Supabase issues a signed session
+with `role=authenticated` and `is_anonymous=true`; this is an Auth identity,
+not direct database access through the Supabase Postgres `anon` role.
+Application tables remain reachable only through FastAPI. An anonymous visitor
+can attach a new email with `updateUser()` without changing the JWT subject or
+losing the workspace. The GitHub control remains disabled, but its future
+anonymous upgrade uses `linkIdentity()` instead of replacing the guest subject.
+
+Supabase's native CAPTCHA integration verifies successful Turnstile completion
+but does not enforce the response's `action` or `hostname` fields. Aletheia's
+`guest_demo`, `waitlist`, and `login` actions are client-side labels, not
+server-side policy assertions. The Turnstile widget allowlist contains only the
+canonical and staging hostnames. Local development uses local auth or
+Cloudflare's Turnstile test key; do not add localhost to the production widget.
+
+Permanent-account authentication remains narrower than the code's provider
+support:
+
+- email magic link is enabled and protected by Turnstile;
+- Supabase's default SMTP is still in use, so delivery is limited to authorized
+  members of the Supabase project team;
+- manually entered email OTP is disabled by Worker runtime configuration; and
+- GitHub login is disabled until a GitHub OAuth application and its secret are
+  configured in Supabase.
+
+Trying to attach an email or OAuth identity that already belongs to another
+account returns Supabase's conflict without replacing the guest workspace.
+Aletheia does not yet merge two existing workspaces automatically.
+
+The public `/demo` path does not require email: it completes Turnstile,
+anonymous sign-in, and isolated Northstar bootstrap. Before inviting users to
+create permanent email accounts outside the project team, configure custom SMTP
+and test delivery, scanner/link-rewrite behavior, expiry, abuse controls, and recovery.
+See Supabase's [Auth rate-limit guide](https://supabase.com/docs/guides/auth/rate-limits)
+and [SMTP guide](https://supabase.com/docs/guides/auth/auth-smtp). When GitHub is
+enabled, register Supabase's provider callback in the OAuth application and
+turn `GITHUB_AUTH_ENABLED` on only after the complete staging callback succeeds.
+Deployment preview URLs remain disabled and must not be added as Auth origins.
+
+## 6. Render API state and redeploy procedure
+
+`render.yaml` defines the provisioned `aletheia-api` Free Docker web service in
+Render's Virginia region. It connects over SSL to Supabase's `us-east-1`
+Supavisor session pooler. It intentionally uses inline operations because this
+Free preview topology does not include a continuously running background
+worker.
+
+For a redeploy or replacement service:
+
+1. Create the service from the repository blueprint or reproduce the same
+   Docker settings manually.
+2. Set every Render variable in section 4.2. Use the Supabase PostgreSQL URLs
+   for both database variables, with driver conversion handled by application
+   settings.
 3. Verify Alembic against a disposable/target database from a trusted admin
-   environment before the first release when possible:
+   environment before the release when possible:
 
    ```bash
    cd apps/api
@@ -265,8 +319,12 @@ running background worker in this blueprint.
    and only then replaces itself with Uvicorn. It never calls
    `Base.metadata.create_all()`. Move this command to Render's pre-deploy phase
    after a paid upgrade, but keep the lock during rolling deploys.
+   The Free Blueprint also rejects `maxShutdownDelaySeconds`; the manifest
+   intentionally omits it and retains Render's 30-second default shutdown
+   delay. Reconsider this only after changing the service plan.
 4. Deploy the API image and wait for the locked migration plus `/readyz` to
-   complete.
+   complete. The current hosted target has completed this path through Alembic
+   head.
 5. Confirm `/docs` and `/openapi.json` are disabled in production.
 6. Confirm an API call without the origin token is rejected.
 7. Confirm an API call with the origin token but without a valid user JWT is
@@ -274,6 +332,25 @@ running background worker in this blueprint.
 8. Confirm `POST /api/v1/projects/{project_id}/documents` returns
    `uploads_disabled_in_hosted_workspace`; the local integration test also
    proves this pre-routing boundary does not consume the multipart body.
+9. Run `aletheia db cleanup-guests --json` first as a dry run. The API startup
+   runs the 30-day cleanup under the migration/boot sequence, then the hosted
+   lifespan repeats it every 24 hours. Startup and periodic failures alert and
+   fail open so readiness is not held hostage. Use `--execute` only for the
+   reviewed manual deletion pass.
+
+Guest access expires after seven days even if physical deletion has not run.
+On hosted Postgres, cleanup anchors application guest age to
+`auth.users.created_at`, then removes anonymous identities and their
+workspace/project graph after 30 days. It also removes anonymous Supabase Auth
+identities past the cutoff that never created a `user_accounts` row. Permanent
+identities are excluded. Waitlist consent is retained with its user link
+cleared, so deleting a guest workspace does not withdraw or duplicate an email
+consent record.
+
+The staging verification exercised readiness, external Supabase JWTs,
+origin-token rejection, two-user membership isolation, inline operations, and
+the complete deterministic Northstar workflow through this service. Keep those
+checks in every promotion record; a healthy `/readyz` alone is insufficient.
 
 The API filesystem is ephemeral and must not hold SQLite or uploaded state.
 Long-lived state belongs in Postgres; future artifact files belong in object
@@ -281,26 +358,22 @@ storage.
 
 ## 7. Configure and deploy Cloudflare
 
-From `apps/web`:
+The browser-safe Supabase URL/publishable key, Turnstile site key, provider
+feature flags, `AUTH_MODE`, and environment-specific `SITE_URL` values are
+committed in `wrangler.jsonc`. `API_ORIGIN_URL` and `API_ORIGIN_TOKEN` remain
+server-only secrets configured separately on the named staging and canonical
+Workers. Deployment preview URLs are disabled so they cannot become unreviewed
+Auth origins.
 
-```bash
-pnpm exec wrangler secret put API_ORIGIN_URL
-pnpm exec wrangler secret put API_ORIGIN_TOKEN
-```
+The named staging Worker has the existing secrets, but the new guest candidate
+has not yet been deployed there. Use the staging procedure below for its deploy
+or secret rotation. Never place the API origin token in
+`vars`, a `NEXT_PUBLIC_*` value, a shell history argument, or the repository.
+Wrangler resolves the named environment as a separate Worker at the staging
+hostname.
 
-Set the browser-safe `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, and
-`TURNSTILE_SITE_KEY` as Worker runtime variables through the Cloudflare
-dashboard or an approved deployment workflow. Keep `API_ORIGIN_URL` and
-`API_ORIGIN_TOKEN` as server-only Worker secrets. `AUTH_MODE` and `SITE_URL` are
-committed in `wrangler.jsonc` for both the canonical environment and the named
-`staging` environment. Wrangler resolves the latter as a separate staging
-Worker with the staging hostname. Secrets and environment-specific bindings
-must be configured separately for it. `preview_urls: false` prevents deployment
-preview URLs from creating additional unreviewed application/Auth origins; this
-is separate from the explicitly configured workers.dev production and staging
-hostnames.
-
-Then verify and deploy:
+After the guest-specific staging verification in section 8, reproduce the
+production bundle and dry run before canonical promotion:
 
 ```bash
 pnpm exec opennextjs-cloudflare build
@@ -309,8 +382,7 @@ pnpm exec wrangler deploy --dry-run --env=""
 pnpm run deploy:cloudflare
 ```
 
-Before production, run the same bundle validation against staging and deploy
-the named environment deliberately:
+The staging deployment procedure is:
 
 ```bash
 pnpm exec wrangler secret put API_ORIGIN_URL --env staging
@@ -329,42 +401,84 @@ Node middleware support.
 Use one production deployment authority—Cloudflare Workers Builds or CI—not two
 independent systems racing to deploy the same commit.
 
-## 8. Required hosted smoke test
+## 8. Hosted verification record and promotion gates
 
-Run these checks against the actual public origins before changing the status
-from “pending hosted verification”:
+The named staging Worker has passed the connected permanent-user preview path:
 
-1. Public `/` loads without authentication and makes no protected API call.
-2. `/demo` redirects to `/login` with a safe relative return path.
-3. Email request requires Turnstile, sends a real message through custom SMTP,
-   and works by both a browser-initiated PKCE magic link and OTP. A callback
-   containing only `token_hash` must fail without creating a session.
-4. A consumed Turnstile token cannot be reused.
-5. GitHub OAuth returns to `/auth/callback` and opens `/demo`.
-6. Session refresh writes replacement cookies and survives a full page reload.
-7. Bootstrap creates one personal workspace/project and repeated bootstrap is
-   idempotent.
-8. Two real users cannot read, write, reset, poll, export, or enumerate each
-   other's resources.
-9. A cross-origin mutation, missing CSRF header, client-supplied bearer token,
-   and client-supplied origin token are rejected.
-10. Resolve findings, approve the threshold, submit a build, poll its operation,
-    submit a run, inspect the blocked trace, create a report, and stream both
-    exports through Cloudflare.
-11. Let Render sleep for at least 15 minutes, then verify the UI shows
-    “Waking your workspace…” and recovers within the bounded retry window.
-12. Verify request IDs across Cloudflare and Render logs without logging JWTs,
-    cookies, origin secrets, database URLs, or policy source contents.
-13. Verify logout clears Supabase cookies, React Query state, and browser Cache
-    Storage, then blocks the browser Back path from reopening protected data.
-14. A hosted document-upload attempt is rejected with
-    `uploads_disabled_in_hosted_workspace`; no uploaded body is stored.
-15. Inspect `has_table_privilege` for every real hosted `anon` and
-    `authenticated` table privilege, then make negative Data API read/mutation
-    requests. Create a disposable post-migration table with the same owner used
-    for migrations and confirm the default denial also applies.
-16. Run an accessibility and narrow-viewport pass on login and authenticated
-    routes.
+- public landing and protected-route redirect behavior;
+- Cloudflare same-origin proxying to Render with server-only credential
+  injection and direct-origin rejection;
+- external Supabase JWT verification, repeatable personal-workspace bootstrap,
+  and two-user cross-tenant denial;
+- Origin/CSRF and client-supplied credential rejection;
+- complete review → approve → build → run → blocked trace → report → streamed
+  Markdown/JSON download;
+- hosted upload rejection without storing a body; and
+- hosted database migration, empty Data API schema, negative REST access,
+  zero current `anon`/`authenticated` grants, and zero future-table default
+  grants.
+
+That record predates the guest candidate. Before promotion, deploy the current
+guest build and migration to staging and additionally verify:
+
+- `/demo` is public, completes Turnstile, creates a signed anonymous Supabase
+  session, and bootstraps an isolated personal Northstar workspace;
+- the Turnstile widget allowlist contains only canonical and staging hosts and
+  an unlisted host cannot complete the flow; local checks use local auth or the
+  Cloudflare test key, and client `action` labels are not a server-enforced gate;
+- FastAPI accepts only correctly signed anonymous tokens with
+  `role=authenticated` and continues to reject invalid issuer, audience,
+  signature, expiry, subject, role, and origin credential;
+- two guests and one permanent user cannot read, mutate, poll, reset, or export
+  one another's resources;
+- guest reset and hosted uploads/arbitrary project creation are denied;
+- the candidate's per-location 120 general/90 poll/30 heavy policies, fail-closed
+  missing bindings, 64 KiB mutation rejection at both hops, and 85-second
+  response-header deadline work as designed; verify separately that a streamed
+  response body is not described as covered by that header deadline;
+- the 30-successful-write and six-live-operation boundaries reject the next
+  attempt without creating a partial resource;
+- seven-day access expiry is independent from the 30-day deletion threshold;
+- cleanup dry-run changes nothing; app-backed eligibility uses
+  `auth.users.created_at`; execution removes only eligible guest workspace data
+  and expired auth-only anonymous identities; waitlist consent survives with a
+  cleared user link; and simulated startup/periodic failure alerts while
+  readiness continues;
+- normalized waitlist email uniqueness is idempotent and does not disclose
+  whether a concurrent duplicate already exists;
+- the complete review → approve → build → run → trace → report → download path
+  still works for a fresh guest within its limits; and
+- a two-session PostgreSQL check confirms snapshot-consuming work and child-row
+  mutations share the `Project → child` lock order, so the mutation waits until
+  the operation releases its snapshot fence.
+
+Only after those checks pass should the exact staged revision be deployed to
+the production Worker. Repeat the guest path and security boundary on
+`https://aletheia.aletheia-web.workers.dev`, then record the Worker version,
+source commit, Render deploy, Alembic head, UTC timestamp, and rollback version.
+
+These limitations remain after a successful promotion and must not be mistaken
+for failed core deployment:
+
+1. Email magic link uses Supabase default SMTP and is available only to
+   authorized project-team email addresses. Configure and verify custom SMTP
+   before opening sign-up more broadly.
+2. Manual email OTP is disabled in the current Worker configuration.
+3. GitHub OAuth is disabled until its OAuth application, callback, and secret
+   pass staging.
+4. Render Free can sleep after 15 idle minutes. Measure at least one real wake,
+   verify the UI shows “Waking your workspace…”, and retain the explicit Retry
+   recovery when the bounded window expires.
+5. Complete log-redaction, browser Back/cache logout, accessibility,
+   narrow-viewport, load, fault-injection, backup/restore, and incident drills
+   before treating the preview as a production service.
+6. Guest workspaces are deliberately disposable: no uploads, arbitrary
+   projects, or reset; 30 successful writes; six live operations; seven-day
+   access; and 30-day cleanup eligibility.
+7. Native Supabase CAPTCHA confirms Turnstile success but does not enforce its
+   `action` or `hostname` response fields. Treat Aletheia actions as labels and
+   retain only canonical and staging hosts in the widget allowlist. Use local
+   auth or the Cloudflare test key for local development.
 
 ## 9. Free-tier constraints
 
@@ -375,6 +489,8 @@ Free services are suitable for evaluation, not an availability claim.
   have an ephemeral filesystem, 750 shared Free instance hours per month, no
   scaling, and can restart at any time. Aletheia limits retrying to idempotent
   bootstrap/build/run submissions and shows an explicit wake state.
+- Render Free rejected the Blueprint `maxShutdownDelaySeconds` field. The
+  checked-in Blueprint omits it and uses Render's 30-second platform default.
 - [Cloudflare Workers Free limits](https://developers.cloudflare.com/workers/platform/limits/)
   currently include 100,000 requests per day, 10 ms CPU per dynamic request,
   128 MB memory, 50 subrequests, and a 3 MiB compressed Worker limit. SSR and
@@ -387,8 +503,8 @@ Free services are suitable for evaluation, not an availability claim.
   capacity, and a paid plan according to the required recovery and uptime
   objectives.
 - Free-tier cold starts can compound: Supabase may be paused while Render is
-  asleep. The 85-second client recovery window is a usability mitigation, not
-  an uptime guarantee.
+  asleep. The 85-second recovery/header window is a usability mitigation, not
+  an uptime guarantee or a streamed-body timeout.
 
 ## 10. Rollback and incident notes
 

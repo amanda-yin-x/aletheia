@@ -48,8 +48,27 @@ class UserAccount(Base):
     __tablename__ = "user_accounts"
     id: Mapped[str] = mapped_column(String(128), primary_key=True)
     email: Mapped[str | None] = mapped_column(String(320), nullable=True)
+    is_anonymous: Mapped[bool] = mapped_column(Boolean, default=False)
+    guest_operation_count: Mapped[int] = mapped_column(Integer, default=0)
+    guest_mutation_count: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class WaitlistSignup(Base):
+    __tablename__ = "waitlist_signups"
+    __table_args__ = (
+        UniqueConstraint("email", name="uq_waitlist_signups_email"),
+        UniqueConstraint("user_id", name="uq_waitlist_signups_user_id"),
+    )
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    user_id: Mapped[str | None] = mapped_column(
+        ForeignKey("user_accounts.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    email: Mapped[str] = mapped_column(String(320))
+    source: Mapped[str] = mapped_column(String(40), default="landing")
+    consent_version: Mapped[str] = mapped_column(String(30), default="2026-08-04")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
 class Workspace(Base):
@@ -220,7 +239,7 @@ class Report(Base):
         UniqueConstraint("run_id", "content_hash", name="uq_reports_run_content_hash"),
     )
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
-    run_id: Mapped[str] = mapped_column(ForeignKey("runs.id"), index=True)
+    run_id: Mapped[str] = mapped_column(ForeignKey("runs.id", ondelete="CASCADE"), index=True)
     verdict: Mapped[str] = mapped_column(String(40))
     evidence: Mapped[dict[str, Any]] = mapped_column(JSON)
     rendered_markdown: Mapped[str] = mapped_column(Text)

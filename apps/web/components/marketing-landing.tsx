@@ -13,6 +13,8 @@ import {
   ScanSearch,
   ShieldCheck,
 } from "lucide-react";
+import type { SupabasePublicConfig } from "@/lib/supabase/config";
+import { WaitlistForm } from "@/components/waitlist-form";
 
 const typedDecision = "decision = deny";
 
@@ -67,7 +69,7 @@ const outputs = [
   ["Evidence report", "Build, run, dataset, metrics, and limitations"],
 ] as const;
 
-export function MarketingLanding() {
+export function MarketingLanding({ config, initialHasSession }: { config: SupabasePublicConfig | null; initialHasSession: boolean }) {
   const [scenario, setScenario] = useState<"without" | "with">("with");
   const workspaceHref = "/demo";
   const handleScenarioKeyDown = (event: ReactKeyboardEvent<HTMLButtonElement>) => {
@@ -209,6 +211,8 @@ export function MarketingLanding() {
           <div><strong>Evidence with a stated boundary.</strong><p>This evidence establishes deterministic behavior for the reviewed rules and covered tool calls. Its scope is explicit: one versioned build, one evaluation suite, and the calls routed through the policy adapter.</p></div>
         </aside>
       </section>
+
+      <WaitlistForm config={config} initialHasSession={initialHasSession} />
 
       <section className="closing-cta" aria-labelledby="closing-title">
         <div>
