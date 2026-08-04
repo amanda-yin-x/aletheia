@@ -11,6 +11,7 @@ import { Badge, Button, ErrorState, PageLoading, PageTitle } from "@/components/
 import { ConflictResolutionForm, type ConflictResolutionDecision } from "@/features/conflict-resolution-form";
 
 const tone = (value: string) => value === "critical" || value === "rejected" ? "red" : value === "approved" ? "teal" : value === "needs_review" || value === "high" ? "amber" : "neutral";
+const mutationMessage = (error: unknown, fallback: string) => error instanceof Error && error.message ? error.message : fallback;
 
 export default function RulesPage() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -23,7 +24,12 @@ export default function RulesPage() {
   const [filter, setFilter] = useState("all");
   const [resolvingFindingId, setResolvingFindingId] = useState<string | null>(null);
   const drawerRef = useRef<HTMLElement>(null);
-  const openRule = (rule: Rule) => { setSelected(rule); setDraftCondition(structuredClone(rule.condition)); };
+  const openRule = (rule: Rule) => {
+    review.reset();
+    saveCondition.reset();
+    setSelected(rule);
+    setDraftCondition(structuredClone(rule.condition));
+  };
   const closeResolution = (findingId: string) => {
     resolve.reset();
     setResolvingFindingId(null);
@@ -110,11 +116,12 @@ export default function RulesPage() {
         <div className="drawer-body">
           <section className="drawer-section"><h3>Exact source quote</h3><blockquote className="quote">{selected.source_refs[0]?.quote}</blockquote><a className="arrow-label" style={{ marginTop: 9 }} href={`/projects/${projectId}/sources?document=${encodeURIComponent(selected.source_refs[0]?.document_id || "")}#line-${selected.source_refs[0]?.line_start || 1}`}>Open {selected.source_refs[0]?.document_name}, lines {selected.source_refs[0]?.line_start}–{selected.source_refs[0]?.line_end} <ExternalLink size={13} /></a></section>
           <section className="drawer-section"><h3>Normalized rule</h3><p>{selected.normative_text}</p></section>
-          <section className="drawer-section"><h3>Deterministic condition · bounded form editor</h3>{conditionRows(draftCondition || selected.condition).length ? <><div className="condition-card">{conditionRows(draftCondition || selected.condition).map((row, index) => <div className="condition-row" key={index}><code>{row.fact}</code><Badge>{label(row.op)}</Badge><input aria-label={`Value for ${row.fact}`} value={row.value} onClick={(event) => event.stopPropagation()} onChange={(event) => setDraftCondition(updateConditionValue(draftCondition || selected.condition, index, event.target.value))} /></div>)}</div><div className="condition-editor-footer"><small>Values accept JSON scalars. Facts and operators are allowlisted by the API.</small><Button variant="secondary" className="button-small" disabled={saveCondition.isPending || JSON.stringify(draftCondition) === JSON.stringify(selected.condition)} onClick={() => draftCondition && saveCondition.mutate({ rule: selected, condition: draftCondition })}>Save condition revision</Button></div></> : <p style={{ color: "var(--muted)" }}>No machine condition. This rule remains prompt, test, or human-review content.</p>}</section>
+          <section className="drawer-section"><h3>Deterministic condition · bounded form editor</h3>{conditionRows(draftCondition || selected.condition).length ? <><div className="condition-card">{conditionRows(draftCondition || selected.condition).map((row, index) => <div className="condition-row" key={index}><code>{row.fact}</code><Badge>{label(row.op)}</Badge><input aria-label={`Value for ${row.fact}`} value={row.value} onClick={(event) => event.stopPropagation()} onChange={(event) => { saveCondition.reset(); setDraftCondition(updateConditionValue(draftCondition || selected.condition, index, event.target.value)); }} /></div>)}</div><div className="condition-editor-footer"><small>Values accept JSON scalars. Facts and operators are allowlisted by the API.</small><Button variant="secondary" className="button-small" disabled={saveCondition.isPending || JSON.stringify(draftCondition) === JSON.stringify(selected.condition)} onClick={() => draftCondition && saveCondition.mutate({ rule: selected, condition: draftCondition })}>Save condition revision</Button></div>{saveCondition.error && <p className="guest-demo-error" role="alert">{mutationMessage(saveCondition.error, "The condition revision could not be saved. Try again.")}</p>}</> : <p style={{ color: "var(--muted)" }}>No machine condition. This rule remains prompt, test, or human-review content.</p>}</section>
           <section className="drawer-section"><h3>Compilation route</h3><p><ShieldCheck size={15} /> {label(selected.enforcement)} · {label(selected.decidability)} · targets {selected.target_tools.join(", ") || "agent response"}</p></section>
           {selected.reviewer_note && <section className="drawer-section"><h3>Reviewer note</h3><p>{selected.reviewer_note}</p></section>}
           <section className="drawer-section"><h3>Linked tests</h3><div className="tags">{tests.data!.filter((test) => test.spec.rule_ids.includes(selected.stable_key)).map((test) => <span className="tag" key={test.id}>{test.title}</span>)}</div></section>
         </div>
+        {review.error && <p className="guest-demo-error" role="alert">{mutationMessage(review.error, "The review decision could not be saved. Try again.")}</p>}
         <div className="drawer-actions"><Button variant="danger" disabled={review.isPending || selected.status === "rejected"} onClick={() => review.mutate({ rule: selected, action: "reject" })}>Reject</Button><Button disabled={review.isPending || selected.status === "approved"} onClick={() => review.mutate({ rule: selected, action: "approve" })}><Check size={15} /> Approve revision</Button></div>
       </aside>
     </div>}

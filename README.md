@@ -254,7 +254,7 @@ session-cookie refresh, Turnstile token reuse prevention, operation polling,
 strict Draft 2020-12 tool schemas, exact USD minor-unit fixtures,
 build/evidence contracts, strict TypeScript, the Next.js production build, the
 OpenNext Cloudflare bundle, and a five-flow local Playwright suite. In the
-current guest candidate, all 60 web unit/component tests pass across 16 files.
+current guest candidate, all 67 web unit/component tests pass across 17 files.
 All 116 backend tests pass across two local runs: 115 in the default run and one
 PostgreSQL-marked integration test in the real PostgreSQL run. The five browser
 flows still list; the candidate remains unverified on hosted infrastructure. A

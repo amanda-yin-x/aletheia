@@ -16,6 +16,7 @@ export function LoginForm({ config, nextPath, initialError, hasAnonymousSession 
   const [sent, setSent] = useState(false);
   const [pending, setPending] = useState<"email" | "otp" | "github" | null>(null);
   const [message, setMessage] = useState<string | null>(initialError || null);
+  const [messageIsError, setMessageIsError] = useState(Boolean(initialError));
   const onTurnstileToken = useCallback((token: string | null) => setCaptchaToken(token), []);
   const callbackUrl = `${config.siteUrl}/auth/callback?next=${encodeURIComponent(nextPath)}`;
   // The anonymous session was CAPTCHA-verified when it was created. Supabase's
@@ -26,10 +27,12 @@ export function LoginForm({ config, nextPath, initialError, hasAnonymousSession 
     event.preventDefault();
     if (requiresCaptcha && !captchaToken) {
       setMessage("Complete the verification before requesting a sign-in link.");
+      setMessageIsError(true);
       return;
     }
     setPending("email");
     setMessage(null);
+    setMessageIsError(false);
     try {
       const emailAddress = email.trim();
       const { error } = hasAnonymousSession
@@ -47,14 +50,17 @@ export function LoginForm({ config, nextPath, initialError, hasAnonymousSession 
           });
       if (error) {
         setMessage(error.message);
+        setMessageIsError(true);
         return;
       }
       setSent(true);
+      setMessageIsError(false);
       setMessage(config.emailOtpEnabled
         ? "Check your email for a secure link or enter the one-time code below."
         : "Check your email for a secure, single-use sign-in link.");
     } catch {
       setMessage("The sign-in request could not be sent. Please try again.");
+      setMessageIsError(true);
     } finally {
       // Turnstile tokens are single-use, including failed auth attempts.
       setCaptchaToken(null);
@@ -67,29 +73,45 @@ export function LoginForm({ config, nextPath, initialError, hasAnonymousSession 
     event.preventDefault();
     setPending("otp");
     setMessage(null);
-    const { error } = await supabase.auth.verifyOtp({
-      email: email.trim(),
-      token: otp.trim(),
-      type: hasAnonymousSession ? "email_change" : "email",
-    });
-    setPending(null);
-    if (error) {
-      setMessage(error.message);
-      return;
+    setMessageIsError(false);
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        email: email.trim(),
+        token: otp.trim(),
+        type: hasAnonymousSession ? "email_change" : "email",
+      });
+      if (error) {
+        setMessage(error.message);
+        setMessageIsError(true);
+        return;
+      }
+      window.location.assign(nextPath);
+    } catch {
+      setMessage("The one-time code could not be verified. Check your connection and try again.");
+      setMessageIsError(true);
+    } finally {
+      setPending(null);
     }
-    window.location.assign(nextPath);
   }
 
   async function signInWithGitHub() {
     setPending("github");
     setMessage(null);
-    const credentials = { provider: "github" as const, options: { redirectTo: callbackUrl } };
-    const { error } = hasAnonymousSession
-      ? await supabase.auth.linkIdentity(credentials)
-      : await supabase.auth.signInWithOAuth(credentials);
-    if (error) {
+    setMessageIsError(false);
+    try {
+      const credentials = { provider: "github" as const, options: { redirectTo: callbackUrl } };
+      const { error } = hasAnonymousSession
+        ? await supabase.auth.linkIdentity(credentials)
+        : await supabase.auth.signInWithOAuth(credentials);
+      if (error) {
+        setMessage(error.message);
+        setMessageIsError(true);
+      }
+    } catch {
+      setMessage("GitHub sign-in could not start. Check your connection and try again.");
+      setMessageIsError(true);
+    } finally {
       setPending(null);
-      setMessage(error.message);
     }
   }
 
@@ -98,8 +120,8 @@ export function LoginForm({ config, nextPath, initialError, hasAnonymousSession 
       <section className="auth-card" aria-labelledby="login-title">
         <div className="auth-brand"><span><ShieldCheck size={20} /></span>Aletheia</div>
         <p className="eyebrow">Optional persistent access</p>
-        <h1 id="login-title">Keep a workspace across visits.</h1>
-        <p className="auth-lede">Sign in for a persistent team identity and workspace. You can also explore the complete Northstar workflow without creating an account.</p>
+        <h1 id="login-title">Keep a personal Northstar workspace across visits.</h1>
+        <p className="auth-lede">Sign in to open a persistent personal Northstar workspace. From a guest session, adding a new sign-in method keeps the same workspace.</p>
 
         <Link className="auth-guest-link" href="/demo">
           <span><strong>Open the no-account demo</strong><small>A temporary guest workspace, ready in the browser.</small></span>
@@ -132,7 +154,7 @@ export function LoginForm({ config, nextPath, initialError, hasAnonymousSession 
             <button className="button button-secondary auth-submit" type="submit" disabled={pending !== null}>{pending === "otp" ? "Verifying…" : "Verify code"}</button>
           </form>
         )}
-        {message && <p className="auth-message" role="status">{message}</p>}
+        {message && <p className="auth-message" role={messageIsError ? "alert" : "status"}>{message}</p>}
         <p className="auth-boundary"><ShieldCheck size={14} /> Authentication is handled by Supabase; Aletheia never receives your provider password.</p>
       </section>
     </main>

@@ -51,7 +51,7 @@ describe("public guest demo", () => {
 
     const verification = screen.getByRole("button", { name: "Complete guest verification" });
     expect(verification).toHaveAttribute("data-action", "guest_demo");
-    expect(screen.getByRole("link", { name: /persistent team workspace/i })).toHaveAttribute("href", "/login?next=%2Fdemo");
+    expect(screen.getByRole("link", { name: /persistent personal Northstar workspace/i })).toHaveAttribute("href", "/login?next=%2Fdemo");
     fireEvent.click(verification);
     fireEvent.click(screen.getByRole("button", { name: /Open guest workspace/i }));
 

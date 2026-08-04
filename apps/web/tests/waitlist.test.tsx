@@ -42,6 +42,9 @@ afterEach(cleanup);
 describe("landing waitlist", () => {
   it("creates a verified anonymous session before a visitor submits", async () => {
     render(<WaitlistForm config={config} initialHasSession={false} />);
+    expect(screen.getByRole("heading", { name: "Keep a personal Northstar workspace." })).toBeInTheDocument();
+    expect(screen.getByText("Personal workspace across visits")).toBeInTheDocument();
+    expect(screen.queryByText(/team projects/i)).not.toBeInTheDocument();
     const verification = screen.getByRole("button", { name: "Complete waitlist verification" });
     expect(verification).toHaveAttribute("data-action", "waitlist");
     fireEvent.change(screen.getByLabelText("Work email"), { target: { value: "owner@example.com" } });

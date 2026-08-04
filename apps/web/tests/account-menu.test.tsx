@@ -30,6 +30,11 @@ describe("account menu", () => {
     render(<QueryClientProvider client={client}><SiteHeader /></QueryClientProvider>);
     expect((await screen.findAllByText("Guest demo")).length).toBeGreaterThan(0);
     expect(screen.getByText("Temporary guest session")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Keep this workspace" })).toHaveAttribute(
+      "href",
+      "/login?next=%2Fprojects%2Fproject-1%2Foverview",
+    );
+    expect(screen.getByRole("button", { name: "End guest session" })).toBeInTheDocument();
   });
 
   it("returns a guest to the public landing page when the session ends", async () => {

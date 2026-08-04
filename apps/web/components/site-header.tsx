@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, ensureCsrfToken } from "@/lib/api";
-import { CSRF_HEADER_NAME } from "@/lib/security";
+import { CSRF_HEADER_NAME, safeNextPath } from "@/lib/security";
 import type { Account } from "@/lib/types";
 
 const commands = [
@@ -55,12 +55,12 @@ export function SiteHeader() {
         <span>Aletheia</span>
         <span className="brand-tag">Policy CI</span>
       </Link>
-      {protectedPath ? <AccountMenu /> : <div className="header-note"><span className="status-dot" /> Deterministic evaluation</div>}
+      {protectedPath ? <AccountMenu currentPath={pathname} /> : <div className="header-note"><span className="status-dot" /> Deterministic evaluation</div>}
     </header>
   );
 }
 
-function AccountMenu() {
+function AccountMenu({ currentPath }: { currentPath: string }) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [loggingOut, setLoggingOut] = useState(false);
@@ -73,6 +73,7 @@ function AccountMenu() {
   });
   const isGuest = account.data?.is_anonymous === true;
   const label = isGuest ? "Guest demo" : account.data?.email || "Account";
+  const keepWorkspaceHref = `/login?next=${encodeURIComponent(safeNextPath(currentPath))}`;
 
   async function logout() {
     setLoggingOut(true);
@@ -102,6 +103,7 @@ function AccountMenu() {
         <small>{isGuest ? "Temporary guest session" : "Signed in"}</small>
         <strong>{label}</strong>
         {account.data?.workspaces?.[0] && <span>{account.data.workspaces[0].name} · {account.data.workspaces[0].role}</span>}
+        {isGuest && <Link className="account-keep-link" href={keepWorkspaceHref}><ArrowRight size={15} /> Keep this workspace</Link>}
         <button type="button" onClick={logout} disabled={loggingOut}><LogOut size={15} /> {loggingOut ? "Signing out…" : isGuest ? "End guest session" : "Sign out"}</button>
         {logoutError && <span role="alert" className="account-error">{logoutError}</span>}
       </div>

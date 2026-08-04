@@ -403,7 +403,7 @@ link and preserves the normalized unique email record.
 
 - ESLint passed.
 - Strict TypeScript passed.
-- In the current guest candidate, all 60 Vitest tests pass across 16 files.
+- In the current guest candidate, all 67 Vitest tests pass across 17 files.
 - Next.js production build passed.
 - OpenNext Cloudflare build passed and emitted a Worker bundle.
 - The settled pre-guest revision passed five Playwright Chromium flows against

@@ -84,12 +84,12 @@ export function WaitlistForm({ config, initialHasSession }: { config: SupabasePu
     <section id="waitlist" className="waitlist-section" aria-labelledby="waitlist-title">
       <div className="waitlist-copy">
         <p className="eyebrow">Hosted preview access</p>
-        <h2 id="waitlist-title">Bring your own policy workflow next.</h2>
-        <p>The public Northstar workspace is ready to explore now. Join the preview list if you want to hear when private uploads and persistent team projects open.</p>
+        <h2 id="waitlist-title">Keep a personal Northstar workspace.</h2>
+        <p>The no-account Northstar demo is ready now. Join the preview list to hear when persistent personal access opens more broadly.</p>
         <ul>
-          <li><Check size={16} aria-hidden="true" /> Private source ingestion</li>
-          <li><Check size={16} aria-hidden="true" /> Team review and approvals</li>
-          <li><Check size={16} aria-hidden="true" /> Hosted regression runs</li>
+          <li><Check size={16} aria-hidden="true" /> Personal workspace across visits</li>
+          <li><Check size={16} aria-hidden="true" /> Northstar review decisions retained</li>
+          <li><Check size={16} aria-hidden="true" /> Build, run, trace, and report history</li>
         </ul>
       </div>
       <form className="waitlist-form" onSubmit={submit} aria-describedby="waitlist-privacy">

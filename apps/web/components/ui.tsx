@@ -16,8 +16,8 @@ export function LinkButton({ children, href, variant = "primary" }: { children: 
   return <Link className={`button button-${variant}`} href={href}>{children}</Link>;
 }
 
-export function PageLoading({ label = "Loading workspace" }: { label?: string }) {
-  return <div className="state-panel" role="status"><LoaderCircle className="spin" size={22} /><strong>{label}</strong><span>Reading persisted release artifacts…</span></div>;
+export function PageLoading({ label = "Loading workspace", detail = "Reading persisted release artifacts…" }: { label?: string; detail?: string }) {
+  return <div className="state-panel" role="status"><LoaderCircle className="spin" size={22} /><strong>{label}</strong><span>{detail}</span></div>;
 }
 
 export function ErrorState({ error, onRetry }: { error: unknown; onRetry?: () => void }) {

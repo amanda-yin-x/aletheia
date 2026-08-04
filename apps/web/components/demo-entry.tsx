@@ -124,7 +124,7 @@ export function DemoEntry({ config, initialHasSession }: { config: SupabasePubli
           </button>
           {guestError && <p className="guest-demo-error" role="alert">{guestError}</p>}
           <p className="guest-demo-privacy"><ShieldCheck size={14} aria-hidden="true" /> Verification limits automated abuse. The guest identity is temporary and is not a marketing signup.</p>
-          <Link className="guest-demo-login" href="/login?next=%2Fdemo">Want a persistent team workspace? Sign in instead.</Link>
+          <Link className="guest-demo-login" href="/login?next=%2Fdemo">Want a persistent personal Northstar workspace? Sign in instead.</Link>
         </section>
       </main>
     );
@@ -133,5 +133,8 @@ export function DemoEntry({ config, initialHasSession }: { config: SupabasePubli
   if (bootstrap.error) {
     return <main className="landing"><ErrorState error={bootstrap.error} onRetry={() => { setWaking(false); idempotencyKey.current = crypto.randomUUID(); bootstrap.reset(); bootstrap.mutate(); }} /></main>;
   }
-  return <main className="landing"><PageLoading label={waking ? "Waking your workspace…" : "Preparing your Northstar policy workspace"} /></main>;
+  return <main className="landing"><PageLoading
+    label={waking ? "Waking your workspace…" : "Preparing your Northstar policy workspace"}
+    detail={waking ? "The hosted API is starting. Preview wake-up can take about a minute." : "Creating or reopening your isolated workspace…"}
+  /></main>;
 }

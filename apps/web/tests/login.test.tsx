@@ -41,7 +41,7 @@ describe("email sign in", () => {
   it("discards and remounts Turnstile after each attempted request", async () => {
     render(<LoginForm config={{ url: "https://project.supabase.co", publishableKey: "publishable", turnstileSiteKey: "site-key", siteUrl: "https://aletheia.example", githubAuthEnabled: false, emailOtpEnabled: false }} nextPath="/demo" hasAnonymousSession={false} />);
     expect(screen.getByRole("link", { name: /Open the no-account demo/i })).toHaveAttribute("href", "/demo");
-    expect(screen.getByRole("heading", { name: "Keep a workspace across visits." })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Keep a personal Northstar workspace across visits." })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Complete verification" })).toHaveAttribute("data-action", "login");
     fireEvent.change(screen.getByLabelText("Work email"), { target: { value: "user@example.com" } });
     fireEvent.click(screen.getByRole("button", { name: "Complete verification" }));
@@ -49,7 +49,7 @@ describe("email sign in", () => {
 
     await waitFor(() => expect(mocks.send).toHaveBeenCalledTimes(1));
     await waitFor(() => expect(mocks.widgetMounted).toHaveBeenCalledTimes(2));
-    expect(screen.getByText("Check your email for a secure, single-use sign-in link.")).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("Check your email for a secure, single-use sign-in link.");
     expect(screen.queryByLabelText("One-time code")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /Email me a sign-in link/i }));
@@ -99,5 +99,35 @@ describe("GitHub sign in", () => {
       options: { redirectTo: "https://aletheia.example/auth/callback?next=%2Fdemo" },
     }));
     expect(mocks.linkIdentity).not.toHaveBeenCalled();
+  });
+
+  it("recovers the GitHub control and announces a rejected network request", async () => {
+    mocks.signInWithOAuth.mockRejectedValueOnce(new Error("offline"));
+    render(<LoginForm config={{ url: "https://project.supabase.co", publishableKey: "publishable", turnstileSiteKey: "", siteUrl: "https://aletheia.example", githubAuthEnabled: true, emailOtpEnabled: false }} nextPath="/demo" hasAnonymousSession={false} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Continue with GitHub" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("GitHub sign-in could not start");
+    expect(screen.getByRole("button", { name: "Continue with GitHub" })).toBeEnabled();
+  });
+});
+
+describe("one-time code verification", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("recovers the OTP control and announces a rejected network request", async () => {
+    mocks.verifyOtp.mockRejectedValueOnce(new Error("offline"));
+    render(<LoginForm config={{ url: "https://project.supabase.co", publishableKey: "publishable", turnstileSiteKey: "", siteUrl: "https://aletheia.example", githubAuthEnabled: false, emailOtpEnabled: true }} nextPath="/demo" hasAnonymousSession={false} />);
+
+    fireEvent.change(screen.getByLabelText("Work email"), { target: { value: "user@example.com" } });
+    fireEvent.click(screen.getByRole("button", { name: /Email me a sign-in link/i }));
+    const otp = await screen.findByLabelText("One-time code");
+    fireEvent.change(otp, { target: { value: "123456" } });
+    fireEvent.click(screen.getByRole("button", { name: "Verify code" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("The one-time code could not be verified");
+    expect(screen.getByRole("button", { name: "Verify code" })).toBeEnabled();
   });
 });

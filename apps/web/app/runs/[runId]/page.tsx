@@ -60,14 +60,14 @@ export default function RunPage() {
       <PageTitle eyebrow="Run comparison · Terminal state" title="Run did not complete" detail={`${matrixSummary} · deterministic replay`} />
       <div className="build-blocked" role="alert">
         <AlertTriangle size={22} />
-        <div><strong>The run ended as {status}.</strong><p>Polling has stopped. Review the worker logs or current build, then start a new comparison from Tests.</p></div>
+        <div><strong>The run ended as {status}.</strong><p>Polling has stopped. Return to Tests and start a new comparison. If it fails again, refresh the workspace and retry later.</p></div>
         <Button variant="secondary" onClick={() => run.refetch()}><RefreshCw size={15} /> Refresh status</Button>
       </div>
     </main>;
   }
 
   if (!operationStatusIsTerminal(data.status)) {
-    return <main className="landing"><PageLoading label={`Running ${matrixSummary}`} /></main>;
+    return <main className="landing"><PageLoading label={`Running ${matrixSummary}`} detail="Executing the reviewed comparison suite and recording traces…" /></main>;
   }
   if (results.isLoading) return <main className="landing"><PageLoading label={`Loading results for ${matrixSummary}`} /></main>;
   if (results.error) return <main className="landing"><ErrorState error={results.error} onRetry={() => results.refetch()} /></main>;
