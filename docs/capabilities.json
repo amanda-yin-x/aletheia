@@ -18,7 +18,7 @@
   "overall_status": {
     "local_product": {
       "status": "fixture",
-      "reason": "All 111 backend tests passed across the default and real-PostgreSQL local runs; web lint, types, 32 unit/component tests, production/OpenNext builds, Cloudflare type generation, production/staging Wrangler dry-runs, and all five clean browser flows also passed. A successful GitHub Actions run and every hosted gate remain separate."
+      "reason": "All 111 backend tests passed across the default and real-PostgreSQL local runs; web lint, types, 32 unit/component tests, production/OpenNext builds, Cloudflare type generation, production/staging Wrangler dry-runs, and all five clean browser flows also passed. GitHub Actions run 30867243068 passed quality, secret scan, and PostgreSQL integration. Every hosted gate remains separate."
     },
     "evaluation_mode": {
       "status": "fixture",
@@ -212,7 +212,7 @@
       "environment": "Northstar workspace",
       "scope": "Emits prompt, workflow, knowledge, policy, regression tests, pinned sources/rules/findings/tools/facts, source map, README, and a canonical manifest whose exact bytes form the build root.",
       "evidence": ["apps/api/app/services/compiler.py", "apps/api/app/services/canonical.py", "apps/api/tests/test_evidence_correctness.py"],
-      "limitations": ["Templates and prose remain refund-specific.", "Artifacts are stored in database JSON rather than an append-only content-addressed blob store.", "Final generated-schema drift verification is pending in combined CI.", "Bundles are not signed."]
+      "limitations": ["Templates and prose remain refund-specific.", "Artifacts are stored in database JSON rather than an append-only content-addressed blob store.", "Bundles are not signed."]
     },
     {
       "id": "compiler.domain_neutral",
@@ -230,7 +230,7 @@
       "environment": "deterministic runner",
       "scope": "Verifies the build root and every artifact digest, then reads policy, test specifications and trajectories, tool registry, fact metadata, and runtime domain/lifecycle from the selected build; stores stable test snapshots on scenario results.",
       "evidence": ["apps/api/app/services/runner.py", "apps/api/migrations/versions/0003_evidence_correctness.py", "apps/api/tests/test_evidence_correctness.py"],
-      "limitations": ["A live TestCase row is still used only as relational FK mapping.", "Run, trace, and report labels use the stored result snapshot; the test-authoring screen intentionally shows current project cases.", "Final repository-wide CI is pending."]
+      "limitations": ["A live TestCase row is still used only as relational FK mapping.", "Run, trace, and report labels use the stored result snapshot; the test-authoring screen intentionally shows current project cases."]
     },
     {
       "id": "runtime.policy_interpreter",
@@ -275,7 +275,7 @@
       "environment": "Northstar workspace",
       "scope": "Separates proposals, decisions, execution, results, and state changes; reports exact source/test/tool/fact/build/run hashes, parser/normalizer provenance, computed rule/source/boundary coverage, limitations, and a canonical report digest under aligned build/evidence schema-v0.3 contracts.",
       "evidence": ["apps/api/app/services/reporting.py", "apps/api/tests/test_evidence_correctness.py", "apps/web/app/reports/[reportId]/page.tsx"],
-      "limitations": ["Reports are not signed or trusted-timestamped.", "Failure rows do not yet deep-link directly to source anchors.", "Final generated-schema drift verification is pending in combined CI."]
+      "limitations": ["Reports are not signed or trusted-timestamped.", "Failure rows do not yet deep-link directly to source anchors."]
     },
     {
       "id": "release.artifact_integrity",
@@ -329,7 +329,7 @@
       "environment": "isolated local PostgreSQL 14; PostgreSQL 17 CI target",
       "scope": "Includes PostgreSQL-compatible models, migrations, URL normalization, advisory migration locking, bounded pooling, conditional anon/authenticated table-privilege revocation, and a PostgreSQL lifecycle CI job.",
       "evidence": ["apps/api/migrations/", "apps/api/tests/test_migrations_integration.py", ".github/workflows/ci.yml"],
-      "limitations": ["The real PostgreSQL 14 integration passed locally, including current/default role-privilege denial and the queued operation lifecycle; the configured PostgreSQL 17 Actions job has not yet been observed on the settled commit.", "No target Supabase database is claimed migrated, restored, or smoke-tested.", "No target Supabase Data API denial is claimed verified.", "Render Free has no pre-deploy migration command."]
+      "limitations": ["The real PostgreSQL 14 integration passed locally, including current/default role-privilege denial and the queued operation lifecycle; the PostgreSQL 17 Actions job also passed on the settled implementation commit.", "No target Supabase database is claimed migrated, restored, or smoke-tested.", "No target Supabase Data API denial is claimed verified.", "Render Free has no pre-deploy migration command."]
     },
     {
       "id": "deployment.cloudflare",
@@ -379,11 +379,11 @@
     {
       "id": "ci.repository",
       "name": "Repository quality and deployment checks",
-      "status": "configuration_only",
+      "status": "operating",
       "environment": "GitHub Actions target",
-      "scope": "Configures Python audit/lint/types/tests, SQLite migration drift, generated contracts, web lint/types/tests, OpenNext build, production/staging Wrangler dry-runs, Playwright, PostgreSQL lifecycle and role-privilege integration, and secret scanning.",
+      "scope": "Runs Python audit/lint/types/tests, SQLite migration drift, generated contracts, web lint/types/tests, OpenNext build, production/staging Wrangler dry-runs, Playwright, PostgreSQL lifecycle and role-privilege integration, and secret scanning.",
       "evidence": [".github/workflows/ci.yml", "Makefile"],
-      "limitations": ["The full workflow has not yet passed on the final combined commit.", "Configured checks must not be mistaken for a successful CI run."]
+      "limitations": ["Run 30867243068 passed on implementation commit 5d45a776407955f86227e1890900d9857196a007; this verifies repository checks, not hosted Cloudflare, Render, or Supabase behavior."]
     },
     {
       "id": "ci.customer_release_check",
@@ -473,9 +473,9 @@
     },
     {
       "id": "final_combined_ci",
-      "status": "unverified",
+      "status": "operating",
       "scope": "Aggregated GitHub Actions workflow on the settled commit",
-      "result": "No successful settled-commit workflow run is claimed. Its core backend, web, PostgreSQL, Worker-build/dry-run, and browser constituents passed locally across independent runs."
+      "result": "GitHub Actions run 30867243068 passed quality, secret-scan, and PostgreSQL 17 integration on implementation commit 5d45a776407955f86227e1890900d9857196a007."
     },
     {
       "id": "clean_browser_e2e",
@@ -487,13 +487,13 @@
       "id": "postgres_integration",
       "status": "operating",
       "scope": "Local empty PostgreSQL 14 migration, privilege, and operation lifecycle",
-      "result": "The real local marker passed: migration through head, current/default privilege denial for anon/authenticated roles, bootstrap, queued build/run worker processing, polling, and downgrade cleanup. The configured PostgreSQL 17 Actions job and target Supabase database remain unverified."
+      "result": "The real local marker passed: migration through head, current/default privilege denial for anon/authenticated roles, bootstrap, queued build/run worker processing, polling, and downgrade cleanup. The PostgreSQL 17 Actions job also passed; the target Supabase database remains unverified."
     },
     {
       "id": "hosted_end_to_end",
       "status": "unverified",
       "scope": "Cloudflare to Render to Supabase",
-      "result": "No current-revision public workflow has been recorded as passing."
+      "result": "The complete Cloudflare-to-Render-to-Supabase path has not been provisioned or passed hosted smoke tests."
     },
     {
       "id": "production_assurance",
@@ -503,7 +503,6 @@
     }
   ],
   "highest_priority_gaps": [
-    "Pass the final aggregated GitHub Actions workflow on the settled commit; the full backend suite, local PostgreSQL integration, web/build checks, both Worker dry-runs, and the clean Playwright workflow are already green locally.",
     "Complete the operation input-fingerprint transaction boundary and keep all evidence presentation build-snapshot-derived.",
     "Add database-enforced tenant isolation or a verified private-schema and least-privilege grant boundary.",
     "Provision and smoke-test the complete Cloudflare, Render, Supabase Auth, Supabase Postgres, OAuth, SMTP, and Turnstile staging path.",

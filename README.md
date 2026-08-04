@@ -222,8 +222,10 @@ privilege denial, bootstrap, queued build/run worker, polling, and downgrade
 path.
 
 The settled backend, web, build, Worker dry-run, and clean five-flow browser
-checks all passed locally. A successful GitHub Actions run on the settled commit
-and clean Docker startup remain separate release gates. Provisioned
+checks all passed locally. The repository's quality, secret-scan, and
+PostgreSQL 17 jobs also passed in [GitHub Actions run
+#30867243068](https://github.com/amanda-yin-x/aletheia/actions/runs/30867243068).
+Clean Docker startup remains a separate release gate. Provisioned
 Supabase/Render services, the hosted database migration, auth-provider flow,
 cold-start behavior, and the cross-origin smoke test are pending hosted
 verification. Do not interpret checked-in deployment configuration as proof
@@ -242,7 +244,7 @@ that adapter. See [docs/evidence-boundary.md](docs/evidence-boundary.md).
 | Supabase SSR auth and session refresh | Implemented; locally verified | Code-only PKCE exchange, raw-token rejection, cookie refresh, and UI behavior are covered locally; external providers remain pending. |
 | Same-origin API proxy | Implemented; locally verified | Streaming, bearer forwarding, Origin/CSRF, and origin-secret injection are checked in. |
 | FastAPI JWT, origin authentication, and tenancy | Implemented; locally verified | The full backend suite passed, including the fail-closed boundary and hosted upload rejection before multipart parsing; external JWKS and two-user hosted checks remain pending. |
-| PostgreSQL migrations and operation lifecycle | Implemented; locally verified | A PostgreSQL 14 empty-database lifecycle and `anon`/`authenticated` privilege test passed locally; the PostgreSQL 17 Actions job is configured, while target Supabase migration and Data API verification remain pending. |
+| PostgreSQL migrations and operation lifecycle | Implemented; locally and CI verified | A PostgreSQL 14 empty-database lifecycle and `anon`/`authenticated` privilege test passed locally, and the PostgreSQL 17 Actions job passed; target Supabase migration and Data API verification remain pending. |
 | Cloudflare Worker configuration | Implemented; locally built | Production and named staging bindings are explicit and deployment preview URLs are disabled; neither current Worker revision is claimed deployed. |
 | Cloudflare + Render + Supabase integration | Pending hosted verification | Runtime variables, secrets, OAuth, SMTP, Turnstile, deploys, and end-to-end smoke tests remain. |
 
@@ -258,9 +260,9 @@ See [docs/deployment.md](docs/deployment.md) for the exact runbook.
   remains only as relational identity; run, trace, and report presentation uses
   the stored result snapshot.
 - The settled backend suite reproduces equivalent build roots byte-for-byte,
-  but a successful GitHub Actions run remains distinct from the local checks.
-  Bundles remain unsigned database records rather than signed objects in an
-  append-only release store.
+  and the repository CI passed on the settled implementation commit. Bundles
+  remain unsigned database records rather than signed objects in an append-only
+  release store.
 - Tenant authorization is enforced in FastAPI query scopes; Postgres RLS is not
   defined. The migration conditionally revokes current and default table
   privileges from Supabase's `anon` and `authenticated` roles, and that behavior

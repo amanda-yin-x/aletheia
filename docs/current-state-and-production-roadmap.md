@@ -541,8 +541,10 @@ The settled backend tree passed Ruff, strict mypy over 28 source files, and all
 111 backend tests across two local runs: 110 passed with the Postgres-marked
 case skipped in the default run, and that real PostgreSQL 14 case passed
 separately. The settled web, build, production/staging Worker dry-run, and clean
-five-flow browser checks also passed locally. A successful GitHub Actions run
-on the settled commit remains a distinct external gate.
+five-flow browser checks also passed locally. The repository quality,
+secret-scan, and PostgreSQL 17 jobs then passed in [GitHub Actions run
+#30867243068](https://github.com/amanda-yin-x/aletheia/actions/runs/30867243068)
+on implementation commit `5d45a776407955f86227e1890900d9857196a007`.
 
 The focused evidence-correctness gate passed Ruff, strict mypy, 33 targeted
 tests, and the SQLite `0003` upgrade/downgrade/backfill/Alembic-check lifecycle.
@@ -554,9 +556,9 @@ The real PostgreSQL 14 marker passed against an empty database. It migrated
 through head, verified current and default table-privilege revocation for
 locally created `anon` and `authenticated` roles, bootstrapped a workspace,
 processed queued build and run operations through the worker, polled their
-results, and cleaned up through downgrade. The GitHub Actions equivalent is
-configured against PostgreSQL 17, but no successful final workflow run or
-target Supabase execution is inferred from the local result.
+results, and cleaned up through downgrade. The GitHub Actions equivalent also
+passed against PostgreSQL 17. Neither result implies that the migration or
+privilege boundary has run successfully on the target Supabase database.
 
 ### Pending hosted verification
 
@@ -705,5 +707,5 @@ complete first production system requires:
 - a bounded, measured pilot whose claims match its evidence.
 
 Until those conditions are met, the accurate description is: **a deterministic
-fixture policy-CI workflow with broad local verification, pending a successful
-GitHub Actions run and hosted verification.**
+fixture policy-CI workflow with broad local and repository-CI verification,
+pending hosted verification.**

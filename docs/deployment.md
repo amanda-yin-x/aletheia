@@ -69,7 +69,7 @@ by the current application.
 | FastAPI JWT and origin-token checks | Implemented | Full local backend suite passed; external JWKS behavior remains unverified |
 | Pre-routing hosted upload denial | Implemented | A local streaming-body test confirms origin/auth/upload rejection occurs without reading the multipart body |
 | Workspace tenancy and scoped resources | Implemented | Full local backend suite passed; hosted two-user verification remains pending |
-| Alembic PostgreSQL migration | Implemented | A PostgreSQL 14 empty-database lifecycle and role-privilege test passed locally; the PostgreSQL 17 Actions job is configured, while the target Supabase database remains pending |
+| Alembic PostgreSQL migration | Implemented | A PostgreSQL 14 empty-database lifecycle and role-privilege test passed locally, and the PostgreSQL 17 Actions job passed; the target Supabase database remains pending |
 | Render service blueprint | Implemented | Pending hosted verification |
 | Cloudflare runtime configuration | Implemented | Production and named staging Worker bindings, `preview_urls: false`, OpenNext builds, and both Wrangler dry-runs are locally verified; deployment remains pending |
 | Full Cloudflare → Render → Supabase flow | Implemented in code | Pending hosted verification |
