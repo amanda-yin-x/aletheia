@@ -3,17 +3,22 @@
 **Policy CI for AI agents.**
 
 [![CI](https://github.com/amanda-yin-x/aletheia/actions/workflows/ci.yml/badge.svg)](https://github.com/amanda-yin-x/aletheia/actions/workflows/ci.yml)
-[![Status: guest candidate pending](https://img.shields.io/badge/status-guest_candidate_pending-b45309)](docs/hosted-workspace.md)
+[![Status: deployed; guest E2E pending](https://img.shields.io/badge/status-deployed%3B_guest_E2E_pending-2563eb)](docs/deployment.md)
 [![License: MIT](https://img.shields.io/badge/license-MIT-0f766e)](LICENSE)
 
 **Public site:** [aletheia.aletheia-web.workers.dev](https://aletheia.aletheia-web.workers.dev)
 
-The public URL is the canonical Next.js site. Supabase Auth/Postgres and the
-Render FastAPI service are provisioned. An authenticated staging revision has
-passed the connected Northstar workflow. A newer public-guest source candidate
-exists, but it has not yet been deployed or verified against the hosted stack,
-and the canonical Worker still serves the preceding release. Promotion must
-wait for the guest-specific checks in [the deployment runbook](docs/deployment.md).
+The public URL is the canonical Next.js site. Commit `147448a` is deployed as
+the same bundle on the named staging Worker (version
+`3788c6b0-291c-43a9-bef3-b48aaa4a0498`) and the canonical production Worker
+(version `935c3c39-f63e-4041-804b-ef40431d50fc`). Public checks confirm `/` and
+`/demo` return `200`, unauthenticated `/api/v1/me` returns `401`, HTTP redirects
+to HTTPS with `308`, the current composite refund scenario and `ALETHEIA` brand
+are served, and the real Turnstile challenge reaches its waiting state. An
+automated browser was challenged, so Turnstile token redemption and the
+complete anonymous hosted workflow are not yet claimed as verified. The
+permanent-user Northstar lifecycle was previously verified on staging; see
+[the deployment runbook](docs/deployment.md) for the exact boundary.
 
 Aletheia turns scattered agent instructions into source-linked rules, reviewed
 release artifacts, deterministic tool guards, and repeatable release tests. The
@@ -160,7 +165,7 @@ startup and every 24 hours. In hosted Postgres, guest age is anchored to
 `auth.users.created_at`, and cleanup also removes old anonymous Auth identities
 that never created an application account/workspace.
 
-The candidate proxy configures per-subject Cloudflare thresholds of 120 general,
+The hosted proxy configures per-subject Cloudflare thresholds of 120 general,
 90 polling, and 30 heavy requests per minute. Cloudflare evaluates these
 per-location with permissive, eventually consistent counters; they are abuse
 controls, not an exact global quota. Mutation bodies are capped at 64 KiB at
@@ -254,11 +259,15 @@ session-cookie refresh, Turnstile token reuse prevention, operation polling,
 strict Draft 2020-12 tool schemas, exact USD minor-unit fixtures,
 build/evidence contracts, strict TypeScript, the Next.js production build, the
 OpenNext Cloudflare bundle, and a five-flow local Playwright suite. In the
-current guest candidate, all 68 web unit/component tests pass across 17 files.
+current public-guest release, all 71 web unit/component tests pass across 18
+files.
 All 116 backend tests pass across two local runs: 115 in the default run and one
 PostgreSQL-marked integration test in the real PostgreSQL run. The five browser
-flows still list; the candidate remains unverified on hosted infrastructure. A
-real local PostgreSQL 14 run also passed the empty-database migration,
+flows also pass locally. The same bundle is now deployed on staging and
+production, where public routing, current content, the unauthenticated API
+boundary, and Turnstile rendering have been checked. Token redemption and the
+complete anonymous flow remain unverified on hosted infrastructure. A real
+local PostgreSQL 14 run also passed the empty-database migration,
 Supabase-named role
 privilege denial, bootstrap, queued build/run worker, polling, and downgrade
 path. A real two-session PostgreSQL test also proves that snapshot-consuming
@@ -276,9 +285,10 @@ and named Cloudflare staging Worker passed the permanent-user authenticated
 bootstrap,
 two-user isolation, build/run/trace/report, download, and direct-origin security
 path. The new anonymous-guest path, limits, expiry/cleanup, reset denial, and
-waitlist persistence have not yet passed against the hosted stack. This is
-authenticated staging evidence, not a claim that the guest candidate, pending
-canonical Worker promotion, or a production reliability program has completed.
+waitlist persistence have not yet passed against the hosted stack. Deployment
+of commit `147448a` is therefore evidence of release parity and the recorded
+public-edge checks, not a claim that the guest lifecycle or a production
+reliability program has completed.
 
 For approved, machine-decidable rules, the covered policy adapter can
 deterministically allow, block, or request approval before a covered tool call
@@ -289,23 +299,26 @@ that adapter. See [docs/evidence-boundary.md](docs/evidence-boundary.md).
 
 | Area | Status | Meaning |
 |---|---|---|
-| Public landing and guest entry | Candidate implemented; hosted verification pending | `/demo` starts a Turnstile-protected anonymous Supabase session and bootstraps Northstar. This build is not deployed on staging or production yet. |
+| Public landing and guest entry | Deployed on staging and production; guest E2E pending | `/` and `/demo` return `200`; the current scenario and brand are served; the real Turnstile frame reaches `waiting`. Token redemption and anonymous bootstrap were not completed by the challenged automated browser. |
 | Permanent-account auth and session refresh | Authenticated staging path verified with limits | Email magic link works for authorized project-team addresses. Manual OTP and GitHub remain disabled. |
-| Same-origin API proxy | Authenticated staging path verified | Streaming, bearer forwarding, Origin/CSRF enforcement, origin-secret injection, and report downloads passed through Cloudflare to Render. Reverify with an anonymous JWT. |
-| FastAPI JWT, origin authentication, and tenancy | Authenticated staging path verified; guest candidate pending | The API candidate accepts signed anonymous JWTs with `role=authenticated`, while retaining issuer/audience/signature checks and workspace isolation. |
-| Guest limits and retention | Candidate implemented; hosted verification pending | 30 successful writes, six live operations, no reset, seven-day access TTL, and 30-day cleanup at startup/every 24 hours with a dry-run CLI and fail-open alerts. |
-| Edge/API request controls | Candidate implemented; hosted verification pending | Per-user 120 general/90 polling/30 heavy per-location thresholds, 64 KiB mutation bodies at both hops, and an 85-second response-header deadline. |
-| Waitlist | Candidate implemented; hosted verification pending | Normalized unique consent email behind the authenticated guest/permanent API; consent survives guest cleanup. |
-| PostgreSQL migrations and operation lifecycle | Existing hosted target verified; guest migration pending | The previous Alembic head and Data API/grant boundary passed. The guest-access migration must be applied and verified. |
-| Cloudflare + Render + Supabase integration | Permanent-user staging workflow verified | The full authenticated Northstar lifecycle passed on staging. The guest candidate is not yet deployed; canonical production remains stale. |
+| Same-origin API proxy | Deployed; authenticated staging path previously verified | The current release returns `401` for unauthenticated `/api/v1/me`. Streaming, bearer forwarding, Origin/CSRF enforcement, origin-secret injection, and report downloads previously passed through Cloudflare to Render with a permanent account; reverify with an anonymous JWT. |
+| FastAPI JWT, origin authentication, and tenancy | Guest-capable API deployed and ready; anonymous path pending | Render deploy `dep-d9p481tbedkc73e3677g` completed, `/readyz` returns `200`, and the service accepts correctly signed anonymous JWTs with `role=authenticated` while retaining issuer/audience/signature checks and workspace isolation. A redeemed hosted anonymous token has not yet exercised that path. |
+| Guest limits and retention | Implemented in source; hosted lifecycle verification pending | 30 successful writes, six live operations, no reset, seven-day access TTL, and 30-day cleanup at startup/every 24 hours with a dry-run CLI and fail-open alerts. |
+| Edge/API request controls | Worker bundle deployed; complete hosted verification pending | Per-user 120 general/90 polling/30 heavy per-location thresholds, 64 KiB mutation bodies at both hops, and an 85-second response-header deadline. HTTP-to-HTTPS and the unauthenticated API boundary pass; the remaining Worker/API controls still need exercise. |
+| Waitlist | Implemented in source; hosted submission verification pending | Normalized unique consent email behind the authenticated guest/permanent API; consent survives guest cleanup. |
+| PostgreSQL migrations and operation lifecycle | Guest migration applied; anonymous lifecycle pending | Render startup logs record Alembic `0004 → 0005_guest_access_waitlist`, followed by successful application startup and readiness. The hosted Data API/grant boundary previously passed; the connected guest data lifecycle still needs end-to-end verification. |
+| Cloudflare + Render + Supabase integration | Exact bundle deployed; guest E2E pending | Commit `147448a` is on staging version `3788c6b0-291c-43a9-bef3-b48aaa4a0498` and production version `935c3c39-f63e-4041-804b-ef40431d50fc`. The permanent-user lifecycle previously passed on staging; complete guest token redemption and workflow remain unverified. |
 
 See [docs/deployment.md](docs/deployment.md) for the exact runbook.
 
 ## Current limitations
 
-- The permanent-user hosted preview is provisioned and staging-verified. The
-  public guest candidate is not yet deployed or hosted-verified, and the
-  canonical Worker still serves the preceding revision.
+- Commit `147448a` is deployed on both named staging and canonical production.
+  Public routes, current content, HTTPS redirect, the unauthenticated API
+  boundary, and Turnstile rendering are verified. Automated testing did not
+  redeem a Turnstile token, so anonymous sign-in, bootstrap, and the complete
+  guest workflow remain hosted-verification gaps. The permanent-user lifecycle
+  was previously verified on staging.
 - Email magic-link delivery currently uses Supabase's default SMTP and is
   limited to authorized project-team addresses. Custom SMTP is required before
   general sign-up; manual email OTP and GitHub OAuth are currently disabled.

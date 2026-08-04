@@ -2,9 +2,15 @@
   "schema_version": "1.0",
   "document": {
     "name": "Aletheia capability and verification inventory",
-    "version": "2026-08-04-guest-candidate",
+    "version": "2026-08-04-canonical-147448a",
     "repository": "https://github.com/amanda-yin-x/aletheia",
     "canonical_site": "https://aletheia.aletheia-web.workers.dev",
+    "source_commit": "147448a",
+    "deployed_worker_versions": {
+      "staging": "3788c6b0-291c-43a9-bef3-b48aaa4a0498",
+      "canonical_production": "935c3c39-f63e-4041-804b-ef40431d50fc"
+    },
+    "hosted_verification_boundary": "The exact source commit is deployed to the staging and canonical Cloudflare Workers. Public landing and /demo routes, HTTPS redirection, unauthenticated API rejection, current branding/scenario content, and Turnstile challenge rendering were observed. Automated browsers were challenged, so successful CAPTCHA token redemption and the complete anonymous Northstar workflow are not claimed.",
     "evidence_boundary": "The bundled results cover deterministic Northstar fixture data, reviewed rules, build-pinned artifacts, scripted trajectories, and calls routed through the fixture policy adapter. They do not establish live-model quality, customer safety, compliance, production reliability, or market validation."
   },
   "status_vocabulary": {
@@ -18,7 +24,7 @@
   "overall_status": {
     "local_product": {
       "status": "fixture",
-      "reason": "The settled revision passed its 111-test backend matrix, web/build/Worker checks, and five browser flows. In the current guest candidate, all 68 Vitest tests pass across 17 files and all 116 backend tests pass across two local runs: 115 default plus one real-PostgreSQL test. Hosted guest verification remains separate."
+      "reason": "The settled revision passed its 111-test backend matrix, web/build/Worker checks, and five browser flows. In release 147448a, all 71 Vitest tests pass across 18 files and all 116 backend tests pass across two local runs: 115 default plus one real-PostgreSQL test. Hosted anonymous-workflow verification remains separate."
     },
     "evaluation_mode": {
       "status": "fixture",
@@ -26,7 +32,7 @@
     },
     "hosted_product": {
       "status": "unverified",
-      "reason": "Supabase, Render, Turnstile, and a named Cloudflare staging Worker are provisioned, and the permanent-user Northstar workflow passed there. The newer public-guest candidate is not deployed or hosted-verified, and canonical production remains on the preceding release."
+      "reason": "Commit 147448a is deployed to the staging and canonical Cloudflare Workers, and the public landing, /demo gate, unauthenticated API boundary, HTTPS redirect, current content, and real Turnstile challenge rendering were observed. The permanent-user Northstar workflow previously passed on staging. CAPTCHA token redemption and the complete anonymous hosted workflow remain unverified."
     },
     "production_readiness": {
       "status": "absent",
@@ -65,10 +71,10 @@
       "id": "web.public_landing",
       "name": "Public product landing page",
       "status": "operating",
-      "environment": "local web and static/public route",
+      "environment": "local web plus staging and canonical Cloudflare public routes",
       "scope": "Explains the policy-CI workflow, refund failure scenario, source boundary, and product path without reading private API data.",
       "evidence": ["apps/web/app/page.tsx", "apps/web/components/marketing-landing.tsx", "apps/web/tests/e2e/demo.spec.ts"],
-      "limitations": ["The canonical hostname still serves the preceding release; the guest candidate is not deployed.", "No analytics, legal, privacy, or service-status pages are implemented."]
+      "limitations": ["Commit 147448a is live on the canonical hostname, but the public-route check does not prove the authenticated anonymous workflow.", "No analytics, legal, privacy, or service-status pages are implemented."]
     },
     {
       "id": "web.workspace",
@@ -101,19 +107,19 @@
       "id": "auth.turnstile",
       "name": "Turnstile protection for anonymous and email authentication",
       "status": "unverified",
-      "environment": "guest candidate; provisioned hosted Turnstile",
+      "environment": "staging and canonical public entry; token redemption unverified",
       "scope": "Forwards a single-use CAPTCHA token to Supabase anonymous/email auth and destroys/remounts the widget after each attempt. Supabase verifies challenge success; Aletheia action values are client labels. The widget allowlist contains only canonical/staging hosts; local use relies on local auth or Cloudflare's test key.",
       "evidence": ["apps/web/components/turnstile-widget.tsx", "apps/web/tests/login.test.tsx", "apps/web/tests/turnstile-widget.test.tsx", "apps/web/tests/guest-demo.test.tsx"],
-      "limitations": ["The hosted site-key/secret pairing passed on the prior email path; the anonymous sign-in path has not been deployed and exercised.", "Native Supabase CAPTCHA does not enforce Turnstile action or hostname response fields."]
+      "limitations": ["The real script and challenge frame render and the widget reaches waiting state on the deployed release; automated browser challenges prevented a claim of successful anonymous CAPTCHA redemption.", "Native Supabase CAPTCHA does not enforce Turnstile action or hostname response fields."]
     },
     {
       "id": "auth.guest",
       "name": "Turnstile-protected anonymous guest entry",
       "status": "unverified",
-      "environment": "current guest candidate",
+      "environment": "staging and canonical Worker; end-to-end unverified",
       "scope": "Keeps /demo public, obtains a signed Supabase anonymous session with role=authenticated, and bootstraps an isolated personal Northstar workspace without email or password.",
       "evidence": ["apps/web/app/demo/page.tsx", "apps/web/components/demo-entry.tsx", "apps/web/tests/guest-demo.test.tsx", "apps/api/app/auth.py"],
-      "limitations": ["The candidate path is implemented and locally covered but not deployed or hosted-verified.", "It exposes only the seeded evaluation workspace, not uploads or arbitrary project creation."]
+      "limitations": ["The public guest entry is deployed and its Turnstile challenge reaches waiting state, but anonymous token redemption, session issuance, bootstrap, and the complete hosted workflow have not been verified.", "It exposes only the seeded evaluation workspace, not uploads or arbitrary project creation."]
     },
     {
       "id": "web.same_origin_proxy",
@@ -155,7 +161,7 @@
       "id": "guest.governance",
       "name": "Guest limits, expiry, and cleanup",
       "status": "unverified",
-      "environment": "current guest candidate",
+      "environment": "release 147448a; hosted enforcement unverified",
       "scope": "Caps guests at 30 successful writes and six live operations, denies reset, expires access after seven days, and cleans anonymous identities after 30 days at startup/every 24 hours. Hosted age is anchored to auth.users.created_at, and auth-only anonymous identities that never bootstrapped the app are included.",
       "evidence": ["apps/api/app/tenancy.py", "apps/api/app/operations.py", "apps/api/app/services/guest_cleanup.py", "apps/api/app/cli.py", "apps/api/migrations/versions/0005_guest_access_waitlist.py", "apps/api/tests/test_hosted_backend.py"],
       "limitations": ["The limits and cleanup behavior have not been exercised against hosted Postgres.", "Startup and periodic cleanup are fail-open by design and therefore require alert monitoring."]
@@ -164,10 +170,10 @@
       "id": "product.waitlist",
       "name": "Authenticated waitlist consent",
       "status": "unverified",
-      "environment": "current guest candidate",
+      "environment": "release 147448a; hosted persistence unverified",
       "scope": "Accepts normalized unique email consent behind a guest or permanent authenticated API and preserves the consent while clearing its user link during guest cleanup.",
       "evidence": ["apps/api/app/api/routes.py", "apps/api/app/models.py", "apps/web/components/waitlist-form.tsx", "apps/web/tests/waitlist.test.tsx"],
-      "limitations": ["The candidate path is locally covered but not deployed or hosted-verified.", "Joining the waitlist does not convert an anonymous identity into a permanent account."]
+      "limitations": ["The client path is included in the deployed release, but hosted consent submission and persistence have not been verified.", "Joining the waitlist does not convert an anonymous identity into a permanent account."]
     },
     {
       "id": "sources.provenance_viewer",
@@ -356,25 +362,25 @@
       "environment": "hosted Supabase plus isolated local PostgreSQL 14 and PostgreSQL 17 CI",
       "scope": "Includes PostgreSQL-compatible models, migrations, URL normalization, advisory migration locking, bounded pooling, conditional anon/authenticated table-privilege revocation, and a PostgreSQL lifecycle CI job.",
       "evidence": ["apps/api/migrations/", "apps/api/tests/test_migrations_integration.py", ".github/workflows/ci.yml"],
-      "limitations": ["The hosted database reached the preceding Alembic head and passed Data API/current/default grant denial; the guest migration is not yet applied or verified there.", "No backup/restore drill is claimed.", "Render Free has no pre-deploy migration command."]
+      "limitations": ["Render startup logs record the hosted 0004 to 0005_guest_access_waitlist migration and successful readiness, and the database previously passed Data API/current/default grant denial; the connected anonymous data lifecycle is not yet verified.", "No backup/restore drill is claimed.", "Render Free has no pre-deploy migration command."]
     },
     {
       "id": "deployment.cloudflare",
       "name": "Cloudflare OpenNext deployment",
-      "status": "unverified",
-      "environment": "named staging verified for preceding revision; guest candidate pending",
+      "status": "operating",
+      "environment": "staging and canonical Cloudflare Workers at commit 147448a",
       "scope": "Defines the Next.js/OpenNext Worker entry point, static assets, explicit production and named staging bindings, disabled deployment preview URLs, observability sampling, source maps, and deploy commands.",
       "evidence": ["apps/web/wrangler.jsonc", "apps/web/open-next.config.ts", "apps/web/package.json"],
-      "limitations": ["A permanent-user revision passed on the named staging Worker, but the guest candidate is not deployed there and canonical production is stale.", "Workers Free CPU and bundle limits must be measured with real traffic."]
+      "limitations": ["Public routes and Turnstile challenge rendering passed, but successful anonymous token redemption and the complete hosted workflow did not.", "Workers Free CPU and bundle limits must be measured with real traffic."]
     },
     {
       "id": "deployment.render",
       "name": "Render FastAPI deployment",
-      "status": "unverified",
-      "environment": "provisioned Render Free service; guest candidate pending",
+      "status": "operating",
+      "environment": "Render Free deploy dep-d9p481tbedkc73e3677g; anonymous release path unverified",
       "scope": "Defines a Free Docker web service, readiness probe, fail-closed production variables, inline operations, a 64 KiB API mutation cap, guest limits, and fail-open cleanup at startup/every 24 hours, including auth-only anonymous identities. The Free Blueprint omits maxShutdownDelaySeconds and uses the 30-second platform default.",
       "evidence": ["render.yaml", "apps/api/Dockerfile"],
-      "limitations": ["The service passed the preceding permanent-user staging workflow; guest code and migration are not deployed.", "No availability SLO, rollback drill, or durable hosted worker is claimed."]
+      "limitations": ["Deploy dep-d9p481tbedkc73e3677g completed, ran 0005_guest_access_waitlist, and returns ready; the service previously passed the permanent-user staging workflow, but the anonymous lifecycle is not yet verified.", "No availability SLO, rollback drill, or durable hosted worker is claimed."]
     },
     {
       "id": "deployment.supabase",
@@ -514,7 +520,7 @@
       "id": "postgres_integration",
       "status": "operating",
       "scope": "Local empty PostgreSQL 14 migration, privilege, and operation lifecycle",
-      "result": "The real local marker passed: migration through head, current/default privilege denial for anon/authenticated roles, bootstrap, queued build/run worker processing, polling, and downgrade cleanup. PostgreSQL 17 CI passed. The target Supabase database reached the preceding head and passed Data API/grant denial; the guest migration remains pending."
+      "result": "The real local marker passed: migration through head, current/default privilege denial for anon/authenticated roles, bootstrap, queued build/run worker processing, polling, and downgrade cleanup. PostgreSQL 17 CI passed. The target Supabase database passed Data API/grant denial, and Render startup logs record hosted migration through 0005_guest_access_waitlist; connected guest data behavior remains pending."
     },
     {
       "id": "hosted_end_to_end",
@@ -525,14 +531,20 @@
     {
       "id": "guest_candidate_local",
       "status": "operating",
-      "scope": "Current local guest candidate",
-      "result": "All 68 web Vitest tests pass across 17 files. All 116 backend tests pass across two local runs: 115 default and one real-PostgreSQL integration test, including the two-session Project-to-child snapshot-lock fence. Hosted verification remains separate."
+      "scope": "Release 147448a local guest implementation",
+      "result": "All 71 web Vitest tests pass across 18 files. All 116 backend tests pass across two local runs: 115 default and one real-PostgreSQL integration test, including the two-session Project-to-child snapshot-lock fence. Hosted verification remains separate."
+    },
+    {
+      "id": "public_worker_release",
+      "status": "operating",
+      "scope": "Commit-pinned staging and canonical Cloudflare public entry",
+      "result": "Commit 147448a is deployed as staging Worker version 3788c6b0-291c-43a9-bef3-b48aaa4a0498 and canonical production version 935c3c39-f63e-4041-804b-ef40431d50fc. Both / and /demo returned 200, unauthenticated /api/v1/me returned 401, HTTP redirected to HTTPS with 308, the current composite refund scenario and ALETHEIA brand were served, stale API-boundary copy was absent, and the real Turnstile script/challenge frame rendered with waiting status. This gate does not include token redemption."
     },
     {
       "id": "guest_hosted_end_to_end",
       "status": "unverified",
       "scope": "Guest Cloudflare to Render to Supabase staging and canonical paths",
-      "result": "The guest build is not deployed. Anonymous sign-in/JWT handling, tenant isolation, guest limits/reset denial, seven-day expiry, auth-created-at plus auth-only cleanup, waitlist persistence, per-location edge policies, two-hop 64 KiB limits, the 85-second response-header deadline, and the full Northstar workflow remain promotion gates."
+      "result": "The public guest release is deployed and its real Turnstile challenge reaches waiting state, but automated browsers were challenged before token redemption. Anonymous sign-in/JWT handling, tenant isolation, guest limits/reset denial, seven-day expiry, auth-created-at plus auth-only cleanup, waitlist persistence, per-location edge policies, two-hop 64 KiB limits, the 85-second response-header deadline, and the full Northstar workflow remain verification gates."
     },
     {
       "id": "production_assurance",
@@ -543,7 +555,7 @@
   ],
   "highest_priority_gaps": [
     "Add database-enforced tenant isolation or a verified private-schema and least-privilege grant boundary.",
-    "Deploy the guest migration and candidate to staging; verify anonymous Turnstile sign-in, signed-JWT isolation, guest limits/expiry/cleanup/reset denial, waitlist persistence, and the complete Northstar workflow before canonical promotion.",
+    "Verify the deployed release with a completed anonymous Turnstile redemption, signed-JWT isolation, guest limits/expiry/cleanup/reset denial, waitlist persistence, and the complete Northstar workflow before describing the canonical preview as end-to-end operating.",
     "Build a second domain and domain-neutral compiler/analyzer before making general policy-analysis claims.",
     "Add typed fact catalogs, multi-currency/time semantics, a real local-model loop, customer CI command, and guarded runtime SDK only after fixture evidence contracts are stable.",
     "Store and sign build roots with release promotion, rollback, revocation, and deployment receipts."

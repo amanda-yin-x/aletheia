@@ -2,18 +2,22 @@
 
 **Snapshot:** 2026-08-04  
 **Target:** Cloudflare Workers + Render FastAPI + Supabase Auth/Postgres  
-**Current status:** Supabase and Render are provisioned; a permanent-user
-revision passed on the named Cloudflare staging Worker. The newer public-guest
-candidate has not been deployed or hosted-verified, and the
-canonical Worker still serves the preceding release.
+**Current status:** Supabase and Render are provisioned. Commit `147448a` is
+deployed as the same bundle on staging Worker version
+`3788c6b0-291c-43a9-bef3-b48aaa4a0498` and canonical production Worker version
+`935c3c39-f63e-4041-804b-ef40431d50fc`. The public surface and real Turnstile
+render are verified; Turnstile token redemption and the complete anonymous
+hosted workflow are not.
 
-This runbook distinguishes checked-in configuration, the previously verified
-authenticated staging deployment, the unverified guest candidate, and the
-canonical release. The Aletheia Supabase project, its Postgres schema, the
-Render service, Turnstile, runtime secrets, and the named Cloudflare staging
-Worker exist. Supabase anonymous sign-in is enabled and requires Turnstile.
-GitHub OAuth and custom SMTP do not exist. Do not promote the guest candidate
-until its migration and end-to-end guest checks pass on staging.
+This runbook distinguishes the deployed Worker bundle, public-edge
+verification, the previously verified permanent-user staging lifecycle, and
+the still-unverified anonymous lifecycle. The Aletheia Supabase project, its
+Postgres schema, the Render service, Turnstile, runtime secrets, and both
+Cloudflare Workers exist.
+Supabase anonymous sign-in is enabled and requires Turnstile. GitHub OAuth and
+custom SMTP do not exist. Do not describe the guest workflow as end-to-end
+verified until a real token is redeemed and the remaining checks in section 8
+pass.
 
 ## 1. Target request path
 
@@ -66,26 +70,26 @@ by the current application.
 
 | Component | Implementation | Verification |
 |---|---|---|
-| Public landing and `/demo` guest entry | Candidate implemented | Guest build not deployed or hosted-verified; canonical production is stale |
-| Supabase browser/server clients | Implemented | Permanent-user path verified on staging; anonymous sign-in is enabled but the new path needs hosted verification |
-| Cookie refresh before private rendering | Implemented | Focused tests pass and the permanent-user hosted session path is verified; repeat with a guest session |
+| Public landing and `/demo` guest entry | Deployed on staging and production | `/` and `/demo` return `200`; current composite scenario and `ALETHEIA` brand are served; anonymous E2E remains unverified |
+| Supabase browser/server clients | Deployed | Permanent-user path previously verified on staging; anonymous sign-in is enabled, but hosted token redemption and bootstrap still need verification |
+| Cookie refresh before private rendering | Deployed | Focused tests pass and the permanent-user hosted session path was previously verified; repeat with a guest session |
 | Email magic link | Enabled with a preview limitation | Turnstile-protected; Supabase default SMTP sends only to authorized project-team addresses until custom SMTP is configured |
 | Manual email OTP and GitHub login | Implemented in code; disabled in deployment | OTP is hidden by runtime configuration; GitHub remains off until its OAuth application and secret are configured |
-| Turnstile anonymous sign-in | Candidate implemented | Supabase CAPTCHA is required for anonymous sign-in; token replay and hosted guest bootstrap must pass before promotion |
-| Same-origin streaming API proxy | Implemented | Permanent-user staging path passed, including downloads and credential filtering; anonymous JWT path remains to verify |
+| Turnstile anonymous sign-in | Deployed; render verified | Real script and challenge frame render and UI reaches `waiting`; the previous `ready()` load failure is gone. Automated browsers were challenged, so token redemption, replay rejection, and guest bootstrap remain unverified |
+| Same-origin streaming API proxy | Deployed | Unauthenticated `/api/v1/me` returns `401`; permanent-user staging previously passed downloads and credential filtering; anonymous JWT path remains to verify |
 | Origin and CSRF mutation protection | Implemented | Local adversarial checks and hosted boundary checks passed |
-| Per-user edge rate policy | Candidate implemented | Per-location 120 general, 90 polling, and 30 heavy thresholds per minute; permissive/eventually consistent rather than an exact global quota; hosted verification pending |
-| Request size/deadline | Candidate implemented | 64 KiB mutation cap at Worker/API plus 85 seconds to receive upstream response headers; streamed bodies are outside that deadline; hosted verification pending |
-| FastAPI JWT and origin-token checks | Candidate extended | Existing hosted Supabase JWKS/direct-origin checks passed; candidate now accepts signed anonymous `role=authenticated` JWTs |
+| Per-user edge rate policy | Deployed | Per-location 120 general, 90 polling, and 30 heavy thresholds per minute; permissive/eventually consistent rather than an exact global quota; hosted exhaustion verification pending |
+| Request size/deadline | Worker and guest-capable API deployed | 64 KiB mutation cap at Worker/API plus 85 seconds to receive upstream response headers; streamed bodies are outside that deadline; hosted anonymous-boundary verification remains pending |
+| FastAPI JWT and origin-token checks | Guest-capable API deployed and ready | Existing hosted Supabase JWKS/direct-origin checks passed; Render deploy `dep-d9p481tbedkc73e3677g` is ready, while the anonymous `role=authenticated` token path remains to verify with a redeemed CAPTCHA session |
 | Pre-routing hosted upload denial | Implemented | Verified without accepting hosted upload data; focused streaming-body coverage also passes |
-| Workspace tenancy and scoped resources | Implemented | Permanent-user two-user isolation passed; guest isolation, no-reset, quotas, and expiry remain to verify hosted |
-| Guest write/operation limits | Candidate implemented | 30 successful writes and six live operations per guest; hosted exhaustion tests pending |
-| Guest retention cleanup | Candidate implemented | Seven-day access TTL; 30-day cleanup at startup and every 24 hours; dry-run CLI; failure alerts and fails open; hosted verification pending |
-| Waitlist consent | Candidate implemented | Normalized unique email behind guest/permanent authenticated API; survives guest cleanup; hosted verification pending |
-| Alembic PostgreSQL migration | Guest migration pending | Existing hosted head/Data API/grant checks passed; apply and verify the guest-access/waitlist migration |
-| Render service | Provisioned | Free Virginia service is connected to Supabase through SSL; guest candidate not deployed |
-| Cloudflare runtime configuration | Candidate configured | Guest build is not on staging or canonical production |
-| Full Cloudflare → Render → Supabase flow | Permanent-user staging workflow verified | Guest workflow and retention boundaries remain unverified |
+| Workspace tenancy and scoped resources | Implemented in source | Permanent-user two-user isolation previously passed; guest isolation, no-reset, quotas, and expiry remain to verify hosted |
+| Guest write/operation limits | Implemented in source | 30 successful writes and six live operations per guest; hosted exhaustion tests pending |
+| Guest retention cleanup | Implemented in source | Seven-day access TTL; 30-day cleanup at startup and every 24 hours; dry-run CLI; failure alerts and fails open; hosted verification pending |
+| Waitlist consent | Implemented in source | Normalized unique email behind guest/permanent authenticated API; survives guest cleanup; hosted submission and persistence verification pending |
+| Alembic PostgreSQL migration | Guest migration applied on hosted startup | Render logs record `0004 → 0005_guest_access_waitlist` before successful startup; the existing hosted Data API/grant checks passed, while the connected guest data lifecycle remains unverified |
+| Render service | Guest-capable API deployed and ready | Free Virginia deploy `dep-d9p481tbedkc73e3677g` is connected to Supabase through SSL and `/readyz` returns `200`; the permanent-user lifecycle previously passed, while the guest lifecycle remains unverified |
+| Cloudflare runtime configuration | Deployed | Exact commit bundle is on named staging and canonical production; HTTP redirects to HTTPS with `308` |
+| Full Cloudflare → Render → Supabase flow | Permanent-user staging workflow previously verified | Guest token redemption, bootstrap, workflow, and retention boundaries remain unverified |
 
 ## 3. Local mode and hosted mode are intentionally different
 
@@ -365,15 +369,16 @@ server-only secrets configured separately on the named staging and canonical
 Workers. Deployment preview URLs are disabled so they cannot become unreviewed
 Auth origins.
 
-The named staging Worker has the existing secrets, but the new guest candidate
-has not yet been deployed there. Use the staging procedure below for its deploy
-or secret rotation. Never place the API origin token in
+The named staging and canonical Workers now serve the same commit `147448a`
+bundle. Use the procedures below for a subsequent deploy or secret rotation.
+Never place the API origin token in
 `vars`, a `NEXT_PUBLIC_*` value, a shell history argument, or the repository.
 Wrangler resolves the named environment as a separate Worker at the staging
 hostname.
 
-After the guest-specific staging verification in section 8, reproduce the
-production bundle and dry run before canonical promotion:
+For subsequent releases, complete the guest-specific staging verification in
+section 8, then reproduce the production bundle and dry run before canonical
+promotion:
 
 ```bash
 pnpm exec opennextjs-cloudflare build
@@ -401,7 +406,7 @@ Node middleware support.
 Use one production deployment authority—Cloudflare Workers Builds or CI—not two
 independent systems racing to deploy the same commit.
 
-## 8. Hosted verification record and promotion gates
+## 8. Hosted verification record and remaining gates
 
 The named staging Worker has passed the connected permanent-user preview path:
 
@@ -418,8 +423,25 @@ The named staging Worker has passed the connected permanent-user preview path:
   zero current `anon`/`authenticated` grants, and zero future-table default
   grants.
 
-That record predates the guest candidate. Before promotion, deploy the current
-guest build and migration to staging and additionally verify:
+The current public-guest bundle is deployed from commit `147448a` with this
+release record:
+
+- the release web suite passed 71 Vitest tests across 18 files;
+- staging Worker version `3788c6b0-291c-43a9-bef3-b48aaa4a0498`;
+- canonical production Worker version
+  `935c3c39-f63e-4041-804b-ef40431d50fc`;
+- `/` and `/demo` return `200`, while unauthenticated `/api/v1/me` returns
+  `401`;
+- HTTP redirects to HTTPS with `308`;
+- the stale API-boundary notice is absent, and the current composite refund
+  scenario plus `ALETHEIA` brand are served; and
+- the real Turnstile script and challenge frame render on both Workers, the UI
+  reaches `waiting`, and the former `ready()` load failure is absent.
+
+The automated browser was challenged. It did not redeem a Turnstile token, so
+this record does not prove anonymous Supabase sign-in, workspace bootstrap, or
+the complete guest workflow. Before describing that path as end-to-end hosted
+verified—and before the next production promotion—additionally verify:
 
 - `/demo` is public, completes Turnstile, creates a signed anonymous Supabase
   session, and bootstraps an isolated personal Northstar workspace;
@@ -432,7 +454,7 @@ guest build and migration to staging and additionally verify:
 - two guests and one permanent user cannot read, mutate, poll, reset, or export
   one another's resources;
 - guest reset and hosted uploads/arbitrary project creation are denied;
-- the candidate's per-location 120 general/90 poll/30 heavy policies, fail-closed
+- the release's per-location 120 general/90 poll/30 heavy policies, fail-closed
   missing bindings, 64 KiB mutation rejection at both hops, and 85-second
   response-header deadline work as designed; verify separately that a streamed
   response body is not described as covered by that header deadline;
@@ -452,9 +474,10 @@ guest build and migration to staging and additionally verify:
   mutations share the `Project → child` lock order, so the mutation waits until
   the operation releases its snapshot fence.
 
-Only after those checks pass should the exact staged revision be deployed to
-the production Worker. Repeat the guest path and security boundary on
-`https://aletheia.aletheia-web.workers.dev`, then record the Worker version,
+The current Worker bundle has already been promoted to production with the
+limited public-edge record above. Complete the guest path and security boundary
+on `https://aletheia.aletheia-web.workers.dev` before claiming full hosted
+functionality. For every subsequent promotion, record the Worker version,
 source commit, Render deploy, Alembic head, UTC timestamp, and rollback version.
 
 These limitations remain after a successful promotion and must not be mistaken
