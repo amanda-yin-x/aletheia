@@ -16,10 +16,12 @@ deployment is completed.
 
 Aletheia turns scattered agent instructions into source-linked rules, reviewed
 release artifacts, deterministic tool guards, and repeatable release tests. The
-included Northstar Retail project provides a concrete path through the product:
-resolve two policy conflicts, approve a strict refund boundary, compile a
-stored, content-digested artifact bundle, compare labelled execution arms,
-inspect a blocked `$200.01` refund trace, and export Markdown or JSON evidence.
+included Northstar Retail project starts with a composite `$249` case where
+order state, refund destination, approval policy, and a retained SOP disagree.
+The workspace then provides a concrete path through the product: resolve two
+policy conflicts, approve a strict refund boundary, compile a stored,
+content-digested artifact bundle, compare labelled execution arms, inspect a
+blocked `$200.01` boundary trace, and export Markdown or JSON evidence.
 
 ![Aletheia landing page showing the source-linked refund policy decision](docs/screenshots/landing-desktop.png)
 
@@ -34,15 +36,20 @@ records or real business side effects are included.
 
 ## Why policy CI
 
-Agent instructions rarely live in one clean prompt. A current policy can say
-30 days and approval above `$200` while a legacy SOP still says 60 days and
-automatic refunds through `$250`. If both reach an agent as plain text, the
-first visible failure can be a customer-facing side effect.
+Agent instructions rarely live in one clean prompt. In the landing scenario, a
+verified customer requests gift-card credit for order `N-1099`: `$249`, nine
+days after delivery, but marked non-returnable. A retained SOP appears to allow
+the action because it permits 60-day returns, automatic refunds through `$250`,
+and the customer-requested destination. Current policy instead requires an
+escalation, the original payment method, and matching approval above `$200`.
 
-The Northstar scenario makes that failure mode inspectable. Aletheia exposes
-the disagreement for review, compiles the selected boundary, and intercepts a
-`$200.01` refund proposal before the covered operation changes state. The
-proposal, decision, source rule, and unchanged state remain distinct evidence.
+Northstar makes the entire failure path inspectable. In the unenforced arm, the
+policy decision is recorded but the proposed refund still mutates state. In the
+guarded arm, destination and returnability rules deny the exact call before
+execution; rule IDs, evaluated facts, a decision hash, and unchanged state are
+retained. The separate `$200.01` case verifies the strict approval boundary.
+
+![Composite Northstar refund scenario comparing stale guidance with the enforced current policy](docs/screenshots/composite-refund-desktop.png)
 
 ## Quick start
 

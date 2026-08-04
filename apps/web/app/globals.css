@@ -191,10 +191,10 @@ h1, h2, h3 { font-family: var(--font-display); font-style: normal; }
 .console-trace-active { color: var(--color-paper); }
 .console-trace-active small { min-height: 1lh; color: var(--color-accent-on-dark); text-transform: none; }
 .typed-decision-visual { position: relative; display: inline-block; white-space: nowrap; }
-.typed-decision-text { display: inline-block; clip-path: inset(0 100% 0 0); animation: console-type-in calc(var(--dur-long) * 2) steps(27, end) forwards; }
-.console-trace-active i { position: absolute; inset-block-start: 0.05em; inset-inline-start: 0; width: 0.55em; height: 1em; display: block; background: var(--color-accent); animation: console-caret-travel calc(var(--dur-long) * 2) steps(27, end) forwards, console-caret 1s steps(2) infinite; }
+.typed-decision-text { display: inline-block; clip-path: inset(0 100% 0 0); animation: console-type-in calc(var(--dur-long) * 2) steps(15, end) forwards; }
+.console-trace-active i { position: absolute; inset-block-start: 0.05em; inset-inline-start: 0; width: 0.55em; height: 1em; display: block; background: var(--color-accent); animation: console-caret-travel calc(var(--dur-long) * 2) steps(15, end) forwards, console-caret 1s steps(2) infinite; }
 @keyframes console-type-in { to { clip-path: inset(0); } }
-@keyframes console-caret-travel { to { transform: translateX(calc(27ch + var(--space-2xs))); } }
+@keyframes console-caret-travel { to { transform: translateX(calc(15ch + var(--space-2xs))); } }
 @keyframes console-caret { 50% { opacity: 0; } }
 .console-trace-active em { color: var(--color-warning); }
 .console-foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-xs); padding: var(--space-sm) var(--space-md); border-block-start: var(--rule-hair) solid var(--color-graphite-2); }
@@ -211,11 +211,13 @@ h1, h2, h3 { font-family: var(--font-display); font-style: normal; }
 .incident-inputs article span, .incident-call small { color: var(--color-rule-2); font-family: var(--font-body); font-size: var(--text-xs); font-weight: 600; letter-spacing: 0.06em; }
 .incident-inputs article strong { display: block; margin-block: var(--space-xs); font-family: var(--font-display); font-size: var(--text-xl); font-variant-numeric: tabular-nums; }
 .incident-inputs article p { margin: 0; color: var(--color-rule-2); }
-.incident-inputs article:first-child strong { color: var(--color-success); }
-.incident-inputs article:nth-child(2) strong { color: var(--color-warning); }
+.incident-source-current strong { color: var(--color-success); }
+.incident-source-legacy strong { color: var(--color-warning); }
+.incident-source-state strong { font-size: var(--text-lg); }
 .incident-call { display: flex; align-items: center; gap: var(--space-sm); padding: var(--space-md) var(--space-lg); color: var(--color-warning); border: var(--rule-hair) solid var(--color-warning-soft); border-radius: var(--radius-control); background: var(--color-warning-soft); }
 .incident-call > span { display: grid; gap: var(--space-2xs); }
 .incident-call strong { color: var(--color-paper); }
+.incident-call code, .scenario-panel code { color: inherit; font: inherit; }
 .scenario-result { overflow: hidden; border: var(--rule-hair) solid var(--color-graphite-2); border-radius: var(--radius-control); }
 .scenario-tabs { display: grid; grid-template-columns: 1fr 1fr; border-block-end: var(--rule-hair) solid var(--color-graphite-2); }
 .scenario-tabs button { min-height: 3rem; padding-inline: var(--space-sm); color: var(--color-rule-2); background: transparent; border: 0; cursor: pointer; font-size: var(--text-sm); font-weight: 600; white-space: nowrap; }
@@ -288,6 +290,7 @@ h1, h2, h3 { font-family: var(--font-display); font-style: normal; }
   .command-trigger span, .command-trigger kbd { display: inline; }
   .command-trigger kbd { padding: var(--space-3xs) var(--space-2xs); }
   .incident-inputs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .incident-source-state { grid-column: 1 / -1; }
   .incident-call { grid-column: 1 / -1; }
   .evidence-spec div { grid-template-columns: minmax(7rem, 0.65fr) minmax(0, 1.35fr) auto; }
   .evidence-spec dd { grid-column: auto; }

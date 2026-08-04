@@ -14,7 +14,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 
-const typedDecision = "decision = require_approval";
+const typedDecision = "decision = deny";
 
 const workflow = [
   {
@@ -94,7 +94,7 @@ export function MarketingLanding() {
             Turn scattered instructions into reviewed rules, enforceable tool guards, and repeatable release tests — before customer-facing actions ship.
           </p>
           <div className="marketing-hero-actions marketing-intro" style={{ "--intro-order": 3 } as CSSProperties}>
-            <Link className="marketing-button marketing-button-primary" href={workspaceHref}>Run the refund scenario <ArrowRight size={16} aria-hidden="true" /></Link>
+            <Link className="marketing-button marketing-button-primary" href={workspaceHref}>Inspect the refund decision <ArrowRight size={16} aria-hidden="true" /></Link>
             <a className="marketing-text-link" href="#why">See the failure path <ArrowRight size={15} aria-hidden="true" /></a>
           </div>
           <dl className="hero-facts marketing-intro" style={{ "--intro-order": 4 } as CSSProperties} aria-label="Bundled Northstar fixture targets">
@@ -109,17 +109,17 @@ export function MarketingLanding() {
 
         <div className="policy-console marketing-intro" style={{ "--intro-order": 3 } as CSSProperties} role="group" aria-label="Aletheia policy decision preview">
           <div className="policy-console-head">
-            <div><span>POLICY RUN</span><strong>NORTHSTAR / REFUND-BOUNDARY</strong></div>
+            <div><span>POLICY RUN</span><strong>NORTHSTAR / COMPOSITE-REFUND</strong></div>
             <span className="console-status"><span aria-hidden="true" /> CASE READY</span>
           </div>
           <div className="console-rule">
-            <span>reviewed guard</span>
-            <code>issue_refund.amount &gt; 200</code>
+            <span>proposed mutation</span>
+            <code>issue_refund(N-1099, $249, gift_card)</code>
           </div>
           <ol className="console-trace">
-            <li><span>01</span><div><small>tool.proposed</small><strong>issue_refund($200.01)</strong></div><em>seen</em></li>
-            <li><span>02</span><div><small>policy.evaluated</small><strong>rule.refund.approval_threshold</strong></div><em>match</em></li>
-            <li className="console-trace-active"><span>03</span><div><small><span className="typed-decision-visual" aria-hidden="true"><span className="typed-decision-text">{typedDecision}</span><i /></span><span className="sr-only">{typedDecision}</span></small><strong>Approval must exist first</strong></div><em>hold</em></li>
+            <li><span>01</span><div><small>tool.proposed</small><strong>$249 → gift card</strong></div><em>seen</em></li>
+            <li><span>02</span><div><small>policy.evaluated</small><strong>Returnability + destination</strong></div><em>2 match</em></li>
+            <li className="console-trace-active"><span>03</span><div><small><span className="typed-decision-visual" aria-hidden="true"><span className="typed-decision-text">{typedDecision}</span><i /></span><span className="sr-only">{typedDecision}</span></small><strong>Standard refund path blocked</strong></div><em>deny</em></li>
             <li><span>04</span><div><small>state.compared</small><strong>No refund mutation recorded</strong></div><em>held</em></li>
           </ol>
           <div className="console-foot"><span>proposal ≠ execution</span><span>source-linked decision</span></div>
@@ -129,17 +129,18 @@ export function MarketingLanding() {
       <section id="why" className="incident-section" aria-labelledby="incident-title">
         <div className="incident-heading">
           <div>
-            <p className="incident-scenario-label">Refund policy failure scenario</p>
-            <h2 id="incident-title">One refund. Three documents. Two answers.</h2>
+            <p className="incident-scenario-label">Composite support-automation scenario</p>
+            <h2 id="incident-title">The agent’s plan looks valid. The action is not.</h2>
           </div>
-          <p>A current policy says 30 days and approval above $200. A legacy SOP says 60 days and allows up to $250. Both look authoritative when they are flattened into one prompt.</p>
+          <p>After identity verification, a customer asks for gift-card credit on a $249 order. It is only nine days old, so the retained desk SOP appears to authorize it. But the item is non-returnable, the destination is forbidden, and no matching approval exists.</p>
         </div>
 
         <div className="incident-workbench">
-          <div className="incident-inputs" role="group" aria-label="Conflicting policy inputs">
-            <article><span>REFUND POLICY V3</span><strong>30 days</strong><p>Approval required above $200.</p></article>
-            <article><span>LEGACY REFUND SOP</span><strong>60 days</strong><p>Automatic refund allowed up to $250.</p></article>
-            <div className="incident-call"><FileWarning size={18} aria-hidden="true" /><span><small>AGENT PROPOSAL</small><strong>Refund $200.01 without prior approval</strong></span></div>
+          <div className="incident-inputs" role="group" aria-label="Order state and conflicting policy inputs">
+            <article className="incident-source-current"><span>CURRENT POLICY · V3</span><strong>3 controls</strong><p>Non-returnable items escalate. Refunds use the original payment method. Amounts above $200 need matching approval.</p></article>
+            <article className="incident-source-legacy"><span>RETAINED DESK SOP · V1.4</span><strong>60 days · $250</strong><p>Agents may auto-refund through $250 and use the customer-requested payment option.</p></article>
+            <article className="incident-source-state"><span>RUNTIME ORDER + REQUEST</span><strong>N-1099 · day 9 · $249</strong><p>Item I-99 is marked non-returnable. The customer requests gift-card credit; no approval event exists.</p></article>
+            <div className="incident-call"><FileWarning size={18} aria-hidden="true" /><span><small>AGENT TOOL PROPOSAL</small><strong><code>issue_refund</code> · N-1099 · $249 → gift card</strong></span></div>
           </div>
 
           <div className="scenario-result">
@@ -149,29 +150,31 @@ export function MarketingLanding() {
             </div>
             {scenario === "without" ? (
               <div id="scenario-panel" className="scenario-panel" role="tabpanel" aria-labelledby="scenario-tab-without" aria-live="polite">
-                <p className="scenario-verdict scenario-verdict-danger"><span aria-hidden="true">×</span> Without the gate, the refund executes.</p>
+                <p className="scenario-verdict scenario-verdict-danger"><span aria-hidden="true">×</span> A plausible plan becomes a forbidden mutation.</p>
                 <ol>
-                  <li><span>tool.proposed</span><strong>$200.01 refund</strong></li>
-                  <li><span>tool.executed</span><strong>Refund operation executes</strong></li>
+                  <li><span>tool.proposed</span><strong>$249 → gift card</strong></li>
+                  <li><span>policy.evaluated</span><strong>Deny · not enforced</strong></li>
+                  <li><span>tool.executed</span><strong><code>issue_refund</code></strong></li>
                   <li><span>state.changed</span><strong>Refund record created</strong></li>
                 </ol>
-                <small>Observation arrives after the side effect.</small>
+                <small>The policy match is recorded but not enforced; the side effect still occurs.</small>
               </div>
             ) : (
               <div id="scenario-panel" className="scenario-panel" role="tabpanel" aria-labelledby="scenario-tab-with" aria-live="polite">
-                <p className="scenario-verdict scenario-verdict-safe"><Check size={17} aria-hidden="true" /> The guard intercepts before execution.</p>
+                <p className="scenario-verdict scenario-verdict-safe"><Check size={17} aria-hidden="true" /> The current policy stops the mutation.</p>
                 <ol>
-                  <li><span>tool.proposed</span><strong>$200.01 refund</strong></li>
-                  <li><span>approval.required</span><strong>Rule + source returned</strong></li>
-                  <li><span>state.unchanged</span><strong>No execution event</strong></li>
+                  <li><span>tool.proposed</span><strong>$249 → gift card</strong></li>
+                  <li><span>policy.denied</span><strong>2 current rules matched</strong></li>
+                  <li><span>decision.recorded</span><strong>Rule IDs + facts + hash</strong></li>
+                  <li><span>state.unchanged</span><strong>No <code>tool_executed</code> event</strong></li>
                 </ol>
-                <small>The proposal remains visible; the mutation does not occur.</small>
+                <small>The proposal remains inspectable. Deny takes precedence; approval cannot override a forbidden destination or non-returnable item.</small>
               </div>
             )}
           </div>
         </div>
 
-        <p className="incident-thesis">Logs tell you what happened. A release gate decides whether it can happen.</p>
+        <p className="incident-thesis">The risk is not an absurd prompt. It is a defensible-looking action assembled from stale authority, runtime state, and real tool access.</p>
       </section>
 
       <section id="workflow" className="narrative-workflow" aria-labelledby="workflow-title">
@@ -210,7 +213,7 @@ export function MarketingLanding() {
       <section className="closing-cta" aria-labelledby="closing-title">
         <div>
           <h2 id="closing-title">Put the next policy change through a release gate.</h2>
-          <p>Resolve the 30/60-day conflict, approve the $200 boundary, compile the candidate, and inspect the blocked $200.01 trace.</p>
+          <p>Resolve conflicting authority, compile the reviewed rules, and inspect why the N-1099 refund proposal never becomes an execution event.</p>
         </div>
         <Link className="marketing-button marketing-button-primary" href={workspaceHref}><Play size={16} aria-hidden="true" /> Open Northstar workspace</Link>
       </section>

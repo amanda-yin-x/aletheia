@@ -32,27 +32,31 @@ async function resolveAndApprove(request: APIRequestContext) {
   return project;
 }
 
-test("landing opens the workspace and shows the source-linked 30/60-day conflict", async ({ page, request }) => {
+test("landing opens the workspace and shows the composite refund failure", async ({ page, request }) => {
   await reset(request);
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto("/");
   await expect(page.getByRole("heading", { name: "The policy CI for AI agents." })).toBeVisible();
   const typedDecision = page.locator(".typed-decision-text");
-  await expect(typedDecision).toHaveText("decision = require_approval");
+  await expect(typedDecision).toHaveText("decision = deny");
   await expect.poll(() => typedDecision.evaluate((element) => element.getAnimations()[0]?.playState)).toBe("finished");
   await captureDocumentationScreenshot(page, "landing-desktop");
-  await expect(page.getByText("One refund. Three documents. Two answers.")).toBeVisible();
+  await expect(page.getByText("The agent’s plan looks valid. The action is not.")).toBeVisible();
+  await expect(page.getByText("N-1099 · day 9 · $249")).toBeVisible();
+  if (UPDATE_DOC_SCREENSHOTS) {
+    await page.locator("#why").screenshot({ path: "../../docs/screenshots/composite-refund-desktop.png", animations: "disabled" });
+  }
   await page.getByRole("tab", { name: "Without a gate" }).click();
-  await expect(page.getByText("Without the gate, the refund executes.")).toBeVisible();
+  await expect(page.getByText("A plausible plan becomes a forbidden mutation.")).toBeVisible();
   await page.getByRole("tab", { name: "With Aletheia" }).click();
-  await expect(page.getByText("The guard intercepts before execution.")).toBeVisible();
+  await expect(page.getByText("The current policy stops the mutation.")).toBeVisible();
   await page.getByRole("tab", { name: "With Aletheia" }).focus();
   await page.keyboard.press("ArrowLeft");
   await expect(page.getByRole("tab", { name: "Without a gate" })).toHaveAttribute("aria-selected", "true");
-  await expect(page.getByText("Without the gate, the refund executes.")).toBeVisible();
+  await expect(page.getByText("A plausible plan becomes a forbidden mutation.")).toBeVisible();
   await page.keyboard.press("ArrowRight");
   await expect(page.getByRole("tab", { name: "With Aletheia" })).toHaveAttribute("aria-selected", "true");
-  await page.getByRole("link", { name: /Run the refund scenario/ }).click();
+  await page.getByRole("link", { name: /Inspect the refund decision/ }).click();
   await expect(page).toHaveURL(/\/projects\/[^/]+\/overview$/, { timeout: 20_000 });
   await expect(page.getByRole("heading", { name: "Northstar Retail Refund Agent" })).toBeVisible();
   await page.getByRole("link", { name: "Rules" }).click();
@@ -72,7 +76,7 @@ test("landing command palette and reduced-motion mode remain usable", async ({ p
   const intro = page.locator(".marketing-intro").first();
   await expect(intro).toHaveCSS("opacity", "1");
   await expect(intro).toHaveCSS("transform", "none");
-  await expect(page.locator(".typed-decision-visual")).toHaveText("decision = require_approval");
+  await expect(page.locator(".typed-decision-visual")).toHaveText("decision = deny");
   await page.keyboard.press("Control+K");
   const dialog = page.getByRole("dialog", { name: "Jump to a page or section" });
   await expect(dialog).toBeVisible();
@@ -95,7 +99,7 @@ test("landing has no horizontal overflow at supported narrow widths", async ({ p
     await page.setViewportSize({ width, height: 900 });
     await page.goto("/");
     await expect(page.getByRole("heading", { name: "The policy CI for AI agents." })).toBeVisible();
-    await expect(page.getByRole("link", { name: /Run the refund scenario/ })).toBeVisible();
+    await expect(page.getByRole("link", { name: /Inspect the refund decision/ })).toBeVisible();
     await expect(page.getByRole("button", { name: "Open jump menu" })).toBeVisible();
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow, `horizontal overflow at ${width}px`).toBeLessThanOrEqual(0);

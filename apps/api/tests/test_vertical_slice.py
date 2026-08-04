@@ -5,7 +5,7 @@ import pytest
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Document, Finding, Project, Rule, ScenarioResult
+from app.models import Document, Finding, Project, Rule, ScenarioResult, TraceEventModel
 from app.models import TestCase as CaseModel
 from app.services.compiler import compile_project
 from app.services.errors import ServiceError
@@ -59,6 +59,23 @@ async def test_seed_is_idempotent_and_quotes_are_exact(session: AsyncSession) ->
     cases = list((await session.scalars(select(CaseModel))).all())
     assert {case.provenance for case in cases} == {"Aletheia-authored"}
     assert {case.spec["provenance"] for case in cases} == {"aletheia_authored_v1"}
+    composite = next(case for case in cases if case.stable_key == "refund.nonreturnable")
+    proposal = composite.spec["scripted_trajectories"]["compiled_enforced"][0]
+    assert composite.title == (
+        "Customer requests a $249 gift-card refund for non-returnable order N-1099"
+    )
+    assert proposal["name"] == "issue_refund"
+    assert proposal["arguments"] == {
+        "order_id": "N-1099",
+        "item_id": "I-99",
+        "amount": {"currency": "USD", "minor_units": 24900},
+        "destination": "gift_card",
+    }
+    assert set(composite.spec["rule_ids"]) == {
+        "rule.refund.returnability",
+        "rule.refund.destination",
+        "rule.refund.approval_threshold",
+    }
     documents = {doc.id: doc for doc in (await session.scalars(select(Document))).all()}
     assert {document.origin["data_scope"] for document in documents.values()} == {"evaluation"}
     assert {document.origin["type"] for document in documents.values()} == {"aletheia_authored"}
@@ -108,6 +125,62 @@ async def test_complete_no_key_workflow_and_boundary_trace(session: AsyncSession
     assert guarded.metrics["executed_calls"] == 0
     assert guarded.metrics["blocked_calls"] == 1
     assert baseline.metrics["executed_violation"] is True
+    composite_case = await session.scalar(
+        select(CaseModel).where(CaseModel.stable_key == "refund.nonreturnable")
+    )
+    assert composite_case
+    composite_guarded = await session.scalar(
+        select(ScenarioResult).where(
+            ScenarioResult.run_id == run.id,
+            ScenarioResult.test_case_id == composite_case.id,
+            ScenarioResult.arm == "compiled_enforced",
+        )
+    )
+    composite_baseline = await session.scalar(
+        select(ScenarioResult).where(
+            ScenarioResult.run_id == run.id,
+            ScenarioResult.test_case_id == composite_case.id,
+            ScenarioResult.arm == "baseline_unenforced",
+        )
+    )
+    assert composite_guarded and composite_baseline
+    assert composite_guarded.metrics["blocked_calls"] == 1
+    assert composite_guarded.metrics["executed_calls"] == 0
+    assert composite_baseline.metrics["executed_violation"] is True
+    decision_event = await session.scalar(
+        select(TraceEventModel).where(
+            TraceEventModel.result_id == composite_guarded.id,
+            TraceEventModel.type == "policy_evaluated",
+        )
+    )
+    assert decision_event
+    assert decision_event.payload["decision"] == "deny"
+    assert set(decision_event.rule_ids) == {
+        "rule.refund.returnability",
+        "rule.refund.destination",
+    }
+    assert len(decision_event.payload["decision_hash"]) == 64
+    guarded_event_types = set(
+        (
+            await session.scalars(
+                select(TraceEventModel.type).where(
+                    TraceEventModel.result_id == composite_guarded.id
+                )
+            )
+        ).all()
+    )
+    baseline_event_types = set(
+        (
+            await session.scalars(
+                select(TraceEventModel.type).where(
+                    TraceEventModel.result_id == composite_baseline.id
+                )
+            )
+        ).all()
+    )
+    assert "tool_executed" not in guarded_event_types
+    assert "state_changed" not in guarded_event_types
+    assert {"policy_evaluated", "tool_executed", "state_changed"} <= baseline_event_types
     report = await create_report(session, run.id)
     assert report.verdict == "Fixture suite passed"
     assert report.evidence["evidence_boundary"] == EVIDENCE_BOUNDARY

@@ -170,6 +170,12 @@ def test_specs() -> list[dict[str, Any]]:
         "amount": {"currency": "USD", "minor_units": 9900},
         "destination": "original_payment",
     }
+    composite_refund = {
+        "order_id": "N-1099",
+        "item_id": "I-99",
+        "amount": {"currency": "USD", "minor_units": 24900},
+        "destination": "gift_card",
+    }
     return [
         _case("refund.window.day_29", "Eligible refund on day 29", rule_ids=refund_guard_rules, tags=["refund", "positive", "boundary"], tool="issue_refund", arguments=refund, state={"days_since_delivery": 29}),
         _case("refund.window.day_30", "Eligible refund exactly on day 30", rule_ids=refund_guard_rules, tags=["refund", "positive", "boundary"], tool="issue_refund", arguments=refund, state={"days_since_delivery": 30}),
@@ -182,7 +188,7 @@ def test_specs() -> list[dict[str, Any]]:
         _case("refund.destination.alternate", "Alternate refund destination is rejected", rule_ids=["rule.refund.destination"], tags=["refund", "negative", "destination"], tool="issue_refund", arguments={**refund, "destination": "gift_card"}, guarded_decision="deny"),
         _case("refund.duplicate", "Duplicate line-item refund is rejected", rule_ids=["rule.refund.no_duplicate"], tags=["refund", "negative", "mutation"], tool="issue_refund", arguments=refund, state={"refunded": True}, guarded_decision="deny"),
         _case("refund.confirmation.missing", "Mutation before confirmation is rejected", rule_ids=["rule.refund.confirmation"], tags=["refund", "negative", "confirmation"], tool="issue_refund", arguments=refund, state={"confirmed": False}, guarded_decision="deny"),
-        _case("refund.nonreturnable", "Non-returnable item follows escalation", rule_ids=["rule.refund.returnability"], tags=["refund", "negative", "escalation"], tool="issue_refund", arguments=refund, state={"returnable": False}, guarded_decision="deny", compiled_tool="escalate_case"),
+        _case("refund.nonreturnable", "Customer requests a $249 gift-card refund for non-returnable order N-1099", rule_ids=["rule.refund.returnability", "rule.refund.destination", "rule.refund.approval_threshold"], tags=["refund", "negative", "escalation", "destination", "approval", "composite"], tool="issue_refund", arguments=composite_refund, state={"days_since_delivery": 9, "returnable": False}, guarded_decision="deny", compiled_tool="escalate_case"),
         _case(
             "finding.window.legacy_60",
             "Stale 60-day SOP produces a conflict finding",

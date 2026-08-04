@@ -125,9 +125,12 @@ FastAPI / Typer CLI / worker
 
 **Status:** Operating locally; current hosted revision unverified
 
-The public landing page explains the user pain through one refund scenario. It
-contains a source-linked policy trace, with/without-gate comparison, four-stage
-workflow, evidence boundary, responsive navigation, keyboard command palette,
+The public landing page explains the user pain through a composite refund
+scenario backed by the bundled `N-1099` case: a `$249`, nine-day,
+non-returnable order, a requested gift-card destination, no matching approval,
+and a retained SOP that appears to authorize the proposal. It contains a
+source-linked policy trace, with/without-gate comparison, four-stage workflow,
+evidence boundary, responsive navigation, keyboard command palette,
 reduced-motion behavior, and CTA into `/demo`.
 
 It no longer reads protected project data. Every product CTA enters the
