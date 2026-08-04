@@ -18,7 +18,7 @@
   "overall_status": {
     "local_product": {
       "status": "fixture",
-      "reason": "The settled revision passed its 111-test backend matrix, web/build/Worker checks, and five browser flows. In the current guest candidate, all 67 Vitest tests pass across 17 files and all 116 backend tests pass across two local runs: 115 default plus one real-PostgreSQL test. Hosted guest verification remains separate."
+      "reason": "The settled revision passed its 111-test backend matrix, web/build/Worker checks, and five browser flows. In the current guest candidate, all 68 Vitest tests pass across 17 files and all 116 backend tests pass across two local runs: 115 default plus one real-PostgreSQL test. Hosted guest verification remains separate."
     },
     "evaluation_mode": {
       "status": "fixture",
@@ -526,7 +526,7 @@
       "id": "guest_candidate_local",
       "status": "operating",
       "scope": "Current local guest candidate",
-      "result": "All 67 web Vitest tests pass across 17 files. All 116 backend tests pass across two local runs: 115 default and one real-PostgreSQL integration test, including the two-session Project-to-child snapshot-lock fence. Hosted verification remains separate."
+      "result": "All 68 web Vitest tests pass across 17 files. All 116 backend tests pass across two local runs: 115 default and one real-PostgreSQL integration test, including the two-session Project-to-child snapshot-lock fence. Hosted verification remains separate."
     },
     {
       "id": "guest_hosted_end_to_end",

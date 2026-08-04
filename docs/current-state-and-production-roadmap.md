@@ -599,7 +599,7 @@ No live quality, latency, token, cost, safety, or benchmark claim is supported.
 
 - ESLint passed.
 - Strict TypeScript passed.
-- In the current guest candidate, Vitest passes 67 tests across 17 files.
+- In the current guest candidate, Vitest passes 68 tests across 17 files.
 - Next.js 16 production build passed.
 - Cloudflare binding type generation passed without a committed diff.
 - OpenNext Cloudflare bundle generation passed.

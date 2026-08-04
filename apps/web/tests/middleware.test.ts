@@ -59,6 +59,16 @@ describe("Supabase session middleware", () => {
     expect(createServerClient).not.toHaveBeenCalled();
   });
 
+  it("redirects when Cloudflare preserves HTTP only in its forwarded protocol", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+    const response = await middleware(new NextRequest("https://aletheia.example/demo?case=northstar", {
+      headers: { "X-Forwarded-Proto": "http" },
+    }));
+    expect(response.status).toBe(308);
+    expect(response.headers.get("location")).toBe("https://aletheia.example/demo?case=northstar");
+    expect(createServerClient).not.toHaveBeenCalled();
+  });
+
   it("marks refreshed production session cookies Secure and SameSite=Lax", async () => {
     vi.stubEnv("NODE_ENV", "production");
     const response = await middleware(new NextRequest("https://aletheia.example/projects/project-1/overview"));

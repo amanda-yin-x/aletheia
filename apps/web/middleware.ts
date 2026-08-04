@@ -13,7 +13,11 @@ function isProtectedPath(pathname: string): boolean {
 }
 
 export async function middleware(request: NextRequest) {
-  if (process.env.NODE_ENV === "production" && request.nextUrl.protocol === "http:") {
+  // OpenNext can normalize request.nextUrl to HTTPS before middleware runs.
+  // Cloudflare's trusted forwarded-proto header retains the visitor-facing
+  // scheme, so enforce HTTPS at either representation.
+  const forwardedProtocol = request.headers.get("x-forwarded-proto")?.split(",", 1)[0]?.trim().toLowerCase();
+  if (process.env.NODE_ENV === "production" && (request.nextUrl.protocol === "http:" || forwardedProtocol === "http")) {
     const secureUrl = request.nextUrl.clone();
     secureUrl.protocol = "https:";
     return NextResponse.redirect(secureUrl, 308);
