@@ -113,9 +113,7 @@ async def _validated_job_project(session: AsyncSession, job: Job) -> Project:
     return project
 
 
-async def _owned_job(
-    session: AsyncSession, job_id: str, owner: str
-) -> Job | None:
+async def _owned_job(session: AsyncSession, job_id: str, owner: str) -> Job | None:
     job: Job | None = await session.scalar(
         select(Job)
         .where(Job.id == job_id, Job.status == "running", Job.owner == owner)
@@ -154,9 +152,7 @@ async def _lease_heartbeat(job_id: str, owner: str) -> AsyncIterator[None]:
         await task
 
 
-async def _process_owned_job(
-    session: AsyncSession, job: Job, lease_owner: str
-) -> None:
+async def _process_owned_job(session: AsyncSession, job: Job, lease_owner: str) -> None:
     job_id = job.id
     try:
         project = await _validated_job_project(session, job)
@@ -179,9 +175,7 @@ async def _process_owned_job(
         elif job.kind in {"analyze", "test_generation"}:
             resource_id = project.id
         else:
-            raise ServiceError(
-                "unsupported_operation", "This operation type is not supported."
-            )
+            raise ServiceError("unsupported_operation", "This operation type is not supported.")
     except ServiceError as error:
         await session.rollback()
         current = await _owned_job(session, job_id, lease_owner)
@@ -260,9 +254,7 @@ async def run_worker(*, once: bool = False) -> None:
             if once:
                 return
             try:
-                await asyncio.wait_for(
-                    stop.wait(), timeout=get_settings().worker_poll_seconds
-                )
+                await asyncio.wait_for(stop.wait(), timeout=get_settings().worker_poll_seconds)
             except TimeoutError:
                 pass
     finally:

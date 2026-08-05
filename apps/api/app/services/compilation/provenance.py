@@ -49,9 +49,7 @@ def verify_rule_provenance(
     if provenance_kind == "reviewer_authored_guidance":
         reviewed_at = metadata.get("reviewed_at") if isinstance(metadata, dict) else None
         try:
-            reviewed_timestamp = datetime.fromisoformat(
-                str(reviewed_at).replace("Z", "+00:00")
-            )
+            reviewed_timestamp = datetime.fromisoformat(str(reviewed_at).replace("Z", "+00:00"))
         except (TypeError, ValueError):
             reviewed_timestamp = None
         if (
@@ -111,7 +109,12 @@ def verify_rule_provenance(
         line_start = source_ref.get("line_start")
         line_end = source_ref.get("line_end")
         quote = source_ref.get("quote")
-        if not isinstance(line_start, int) or not isinstance(line_end, int) or not isinstance(quote, str) or not quote:
+        if (
+            not isinstance(line_start, int)
+            or not isinstance(line_end, int)
+            or not isinstance(quote, str)
+            or not quote
+        ):
             raise ServiceError(
                 "source_anchor_invalid",
                 "A source anchor requires an exact quote and integer line range.",
@@ -181,7 +184,12 @@ def verify_rule_provenance(
     return anchors, transform_kind
 
 
-def protected_literals(text: str, tool_names: list[str]) -> list[dict[str, str]]:
+def protected_literals(
+    text: str,
+    tool_names: list[str],
+    enum_values: list[str] | None = None,
+    structured_values: list[str] | None = None,
+) -> list[dict[str, str]]:
     """Extract review-sensitive literals without claiming semantic equivalence."""
 
     values: set[tuple[str, str]] = set()
@@ -194,8 +202,14 @@ def protected_literals(text: str, tool_names: list[str]) -> list[dict[str, str]]
         if literal:
             values.add(("quoted_literal", literal))
     for name in tool_names:
-        if name and name in text:
+        if name:
             values.add(("tool_name", name))
+    for value in enum_values or []:
+        if value:
+            values.add(("enum_value", value))
+    for value in structured_values or []:
+        if value:
+            values.add(("structured_literal", value))
     for marker in ("unless", "except", "only", "before", "after", "above", "below"):
         if re.search(rf"\b{re.escape(marker)}\b", text, re.IGNORECASE):
             values.add(("boundary_or_exception", marker))

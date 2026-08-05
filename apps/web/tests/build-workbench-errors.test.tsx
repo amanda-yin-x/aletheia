@@ -14,11 +14,11 @@ vi.mock("@/lib/api", async (importOriginal) => {
 
 const build: Build = {
   id: "build-current", project_id: "project-1", status: "succeeded", input_manifest: {}, input_hash: "1".repeat(64), compiler_version: "1.0.0", artifacts: {}, source_map: {},
-  stats: { original: { lines: 0, characters: 0, tokens: 0 }, candidate: { lines: 0, characters: 0, tokens: 0 }, reduction: { lines: 0, characters: 0, estimated_tokens: 0, label: "char_div_4_v1" }, routing: {} },
+  stats: null,
   content_hash: "2".repeat(64), created_at: "2026-08-02T12:00:00Z",
 };
 const summary: Summary = { sources: 0, approved_rules: 0, critical_findings: 0, tests: 0, current_build: build, last_run: null };
-const inspection: BuildInspection = { build_id: build.id, project_id: build.project_id, status: "succeeded", input_hash: build.input_hash, compiler_version: build.compiler_version, content_hash: build.content_hash, artifacts: [], source_map: {}, stats: {}, generated_spans: [] };
+const inspection: BuildInspection = { build_id: build.id, project_id: build.project_id, status: "succeeded", input_hash: build.input_hash, compiler_version: build.compiler_version, content_hash: build.content_hash, artifacts: [], source_map: {}, stats: null, routing_report: null, preservation_report: null, generated_spans: [] };
 
 function renderWorkbench(requestedBuildId?: string) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
@@ -64,7 +64,7 @@ describe("build workbench boundaries", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent("Build inspection is temporarily unavailable.");
     fireEvent.click(screen.getByRole("button", { name: "Retry" }));
-    await waitFor(() => expect(screen.getByRole("navigation", { name: "Compiled bundle tree" })).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByRole("navigation", { name: "Compiled instruction bundle tree" })).toBeInTheDocument());
     expect(inspectionAttempts).toBe(2);
   });
 });

@@ -49,7 +49,8 @@ def normalize_retail_tasks(tasks: list[dict[str, Any]]) -> dict[str, Any]:
                 "messages": [
                     {
                         "role": "user",
-                        "content": instructions.get("reason_for_call") or "See upstream task instructions.",
+                        "content": instructions.get("reason_for_call")
+                        or "See upstream task instructions.",
                     }
                 ],
                 "initial_state": task.get("initial_state"),
@@ -73,10 +74,19 @@ def sync() -> dict[str, Any]:
     """Fetch and provenance-check the pinned Retail benchmark without modifying upstream."""
     with tempfile.TemporaryDirectory(prefix="aletheia-retail17-") as temp:
         checkout = Path(temp) / "tau2-bench"
-        subprocess.run(["git", "clone", "--depth", "1", "--branch", TAG, REPOSITORY, str(checkout)], check=True, capture_output=True, text=True)
-        commit = subprocess.run(["git", "rev-parse", "HEAD"], cwd=checkout, check=True, capture_output=True, text=True).stdout.strip()
+        subprocess.run(
+            ["git", "clone", "--depth", "1", "--branch", TAG, REPOSITORY, str(checkout)],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        commit = subprocess.run(
+            ["git", "rev-parse", "HEAD"], cwd=checkout, check=True, capture_output=True, text=True
+        ).stdout.strip()
         if not commit.startswith(EXPECTED_SHORT_COMMIT):
-            raise RuntimeError(f"Pinned tag resolved to {commit[:7]}, expected {EXPECTED_SHORT_COMMIT}")
+            raise RuntimeError(
+                f"Pinned tag resolved to {commit[:7]}, expected {EXPECTED_SHORT_COMMIT}"
+            )
         candidates = [
             "data/tau2/domains/retail/policy.md",
             "data/tau2/domains/retail/db.json",
@@ -95,7 +105,9 @@ def sync() -> dict[str, Any]:
         raw_tasks = json.loads((OUTPUT / "tasks.json").read_text(encoding="utf-8"))
         normalized = normalize_retail_tasks(raw_tasks)
         normalized_path = OUTPUT / "selected-tasks.json"
-        normalized_path.write_text(json.dumps(normalized, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        normalized_path.write_text(
+            json.dumps(normalized, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
         selected["normalized/selected-tasks.json"] = _sha(normalized_path)
         license_source = checkout / "LICENSE"
         if license_source.exists():
@@ -121,5 +133,7 @@ def sync() -> dict[str, Any]:
             "imported_at": datetime.now(UTC).isoformat(),
             "license": "MIT; copyright Sierra Research 2025",
         }
-        (OUTPUT / "provenance.json").write_text(json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        (OUTPUT / "provenance.json").write_text(
+            json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
         return manifest

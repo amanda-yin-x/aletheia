@@ -7,7 +7,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, label } from "@/lib/api";
 import type { Document, Finding, Rule, TestCase } from "@/lib/types";
 import { conditionRows, updateConditionValue } from "@/lib/presentation";
-import { Badge, Button, ErrorState, PageLoading, PageTitle } from "@/components/ui";
+import { Badge, Button, EmptyState, ErrorState, PageLoading, PageTitle } from "@/components/ui";
 import { ConflictResolutionForm, type ConflictResolutionDecision } from "@/features/conflict-resolution-form";
 
 const tone = (value: string) => value === "critical" || value === "rejected" ? "red" : value === "approved" ? "teal" : value === "needs_review" || value === "high" ? "amber" : "neutral";
@@ -104,7 +104,7 @@ export default function RulesPage() {
       {[["all", "All"], ["review", "Needs review"], ["critical", "Critical"], ["guarded", "Guarded"], ["missing", "Missing test"]].map(([value, text]) => <button key={value} className={`filter-button ${filter === value ? "active" : ""}`} onClick={() => setFilter(value)}>{text}</button>)}
       <span style={{ marginLeft: "auto", color: "var(--muted)", fontSize: 11 }}>{openFindings.filter((item) => item.severity === "critical").length} critical build blockers</span>
     </div>
-    <section className="panel" style={{ overflow: "hidden" }}>
+    {!filtered.length ? <EmptyState title={rules.data!.length ? "No rules match this filter" : "No reviewed rules"} detail={rules.data!.length ? "Choose another status or evidence filter." : "This project does not have any Rule IR revisions to review yet."} /> : <section className="panel" style={{ overflow: "hidden" }}>
       <table className="data-table"><thead><tr><th>Status</th><th>Rule</th><th>Type</th><th>Severity</th><th>Enforcement</th><th>Source</th><th>Tests</th></tr></thead>
         <tbody>{filtered.map((rule) => { const count = tests.data!.filter((test) => test.spec.rule_ids.includes(rule.stable_key)).length; return <tr key={rule.id} onClick={() => openRule(rule)} tabIndex={0} onKeyDown={(event) => { if (event.key === "Enter") openRule(rule); }}>
           <td><Badge tone={tone(rule.status) as "red" | "teal" | "amber" | "neutral"}>{label(rule.status)}</Badge></td>
@@ -112,7 +112,7 @@ export default function RulesPage() {
           <td>{label(rule.category)}</td><td><Badge tone={tone(rule.severity) as "red" | "teal" | "amber" | "neutral"}>{label(rule.severity)}</Badge></td><td>{label(rule.enforcement)}</td><td>{rule.source_refs[0]?.document_name}<br /><small>lines {rule.source_refs[0]?.line_start}–{rule.source_refs[0]?.line_end}</small></td><td>{count}</td>
         </tr>; })}</tbody>
       </table>
-    </section>
+    </section>}
     {selected && <div className="drawer-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelected(null); }}>
       <aside ref={drawerRef} className="drawer" role="dialog" aria-modal="true" aria-labelledby="rule-drawer-title">
         <div className="drawer-head"><div><Badge tone={tone(selected.status) as "red" | "teal" | "amber" | "neutral"}>{label(selected.status)}</Badge><h2 id="rule-drawer-title">{selected.title}</h2></div><button className="icon-button" aria-label="Close rule details" onClick={() => setSelected(null)}><X size={17} /></button></div>

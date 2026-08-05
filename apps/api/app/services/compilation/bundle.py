@@ -10,6 +10,7 @@ from pydantic import ValidationError
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import get_settings
 from app.models import (
     Build,
     Document,
@@ -22,6 +23,7 @@ from app.models import (
 )
 from app.schemas import (
     BuildManifest,
+    CompilationConfig,
     CompilationMetrics,
     FactFixture,
     InputManifest,
@@ -48,8 +50,13 @@ from app.services.compilation.profile import LoadedCompilerProfile, load_compile
 from app.services.compilation.provenance import protected_literals, verify_rule_provenance
 from app.services.compilation.rendering import SpanWriter, locate_fragment_span
 from app.services.errors import ServiceError
+from app.services.fixture_inventory import (
+    clause_inventory_pin,
+    declared_clause_lines,
+    load_clause_inventory,
+)
 
-COMPILER_VERSION = "1.0.0"
+COMPILER_VERSION = "1.1.0"
 RUNNER_INPUT_VERSION = "0.3.0"
 ROOT_ARTIFACT = "manifest.json"
 POLICY_ARTIFACT = "policies/tool-policy.json"
@@ -66,6 +73,7 @@ PLACEMENT_INPUT_ARTIFACT = "inputs/placement-decisions.json"
 SOURCE_INPUT_ARTIFACT = "inputs/pinned-source-metadata.json"
 RULE_INPUT_ARTIFACT = "inputs/rules.json"
 FINDING_INPUT_ARTIFACT = "inputs/findings.json"
+INVENTORY_INPUT_ARTIFACT = "inputs/clause-inventory.json"
 EVIDENCE_LIMIT = (
     "Artifacts cover reviewed fixture inputs and declared placement decisions; "
     "behavioral fidelity is not measured."
@@ -124,52 +132,71 @@ def _yaml_text(value: Any) -> str:
     )
 
 
+def _schema_literal_text(value: Any) -> str:
+    if isinstance(value, str):
+        return value
+    return json.dumps(value, ensure_ascii=False, separators=(",", ":"))
+
+
+def _schema_literals(schema: dict[str, Any]) -> set[str]:
+    output = {_schema_literal_text(value) for value in schema.get("enum", [])}
+    if "const" in schema:
+        output.add(_schema_literal_text(schema["const"]))
+    for child in schema.get("properties", {}).values():
+        if isinstance(child, dict):
+            output.update(_schema_literals(child))
+    items = schema.get("items")
+    if isinstance(items, dict):
+        output.update(_schema_literals(items))
+    return output
+
+
+def _structured_literals(value: Any) -> set[str]:
+    if isinstance(value, dict):
+        output: set[str] = set()
+        for item in value.values():
+            output.update(_structured_literals(item))
+        return output
+    if isinstance(value, list):
+        output = set()
+        for item in value:
+            output.update(_structured_literals(item))
+        return output
+    if value is None:
+        return {"null"}
+    if isinstance(value, (str, int, float, bool)):
+        return {_schema_literal_text(value)}
+    return set()
+
+
 def _configuration(project: Project) -> dict[str, Any]:
-    config = project.compilation_config
-    required_strings = (
-        "bundle_slug",
-        "agent_label",
-        "skill_title",
-        "knowledge_title",
-        "suite_name",
+    try:
+        contract = CompilationConfig.model_validate(project.compilation_config)
+    except ValidationError as error:
+        raise ServiceError(
+            "compilation_config_invalid",
+            "The project compilation configuration violates its versioned contract.",
+            details={"errors": error.errors(include_url=False)},
+            status_code=409,
+        ) from error
+    if contract.schema_version != "1.1":
+        raise ServiceError(
+            "compilation_config_upgrade_required",
+            "Compilation requires a 1.1 configuration with pinned AGENTS and SKILL inputs.",
+            status_code=409,
+        )
+    assert contract.clause_inventory is not None
+    inventory_path = get_settings().data_root / contract.clause_inventory.path
+    actual_inventory = clause_inventory_pin(
+        inventory_path, relative_path=contract.clause_inventory.path
     )
-    if not isinstance(config, dict) or config.get("schema_version") != "1.0":
+    if actual_inventory["sha256"] != contract.clause_inventory.sha256:
         raise ServiceError(
-            "compilation_config_missing",
-            "The project has no supported compilation configuration.",
+            "clause_inventory_digest_mismatch",
+            "The fixture-authored clause inventory does not match its project pin.",
             status_code=409,
         )
-    for field in required_strings:
-        if not isinstance(config.get(field), str) or not config[field].strip():
-            raise ServiceError(
-                "compilation_config_invalid",
-                f"The project compilation configuration requires {field}.",
-                status_code=409,
-            )
-    if not isinstance(config.get("suite_version"), int) or config["suite_version"] < 1:
-        raise ServiceError(
-            "compilation_config_invalid",
-            "The project compilation configuration requires a positive suite_version.",
-            status_code=409,
-        )
-    if not SAFE_SLUG.fullmatch(config["bundle_slug"]):
-        raise ServiceError(
-            "compilation_config_invalid",
-            "The configured bundle scope must be a lowercase path-safe slug.",
-            status_code=409,
-        )
-    inputs = config.get("inputs")
-    expected_context = config.get("expected_context")
-    if not isinstance(inputs, dict) or not isinstance(expected_context, list) or any(
-        not isinstance(item, str) or item.startswith("/") or ".." in item.split("/")
-        for item in expected_context
-    ):
-        raise ServiceError(
-            "compilation_config_invalid",
-            "The project compilation inputs and expected context must be explicitly pinned.",
-            status_code=409,
-        )
-    return config
+    return contract.model_dump(mode="json")
 
 
 def _pinned_document(
@@ -178,16 +205,18 @@ def _pinned_document(
     raw = config["inputs"].get(purpose)
     if raw is None and not required:
         return None
-    if not isinstance(raw, dict) or not isinstance(raw.get("name"), str) or not isinstance(raw.get("version"), int):
+    if (
+        not isinstance(raw, dict)
+        or not isinstance(raw.get("name"), str)
+        or not isinstance(raw.get("version"), int)
+    ):
         raise ServiceError(
             "compiler_input_pin_invalid",
             f"The compilation configuration must pin one {purpose} by name and version.",
             status_code=409,
         )
     matches = [
-        item
-        for item in documents
-        if item.name == raw["name"] and item.version == raw["version"]
+        item for item in documents if item.name == raw["name"] and item.version == raw["version"]
     ]
     if len(matches) != 1:
         raise ServiceError(
@@ -199,9 +228,36 @@ def _pinned_document(
     return matches[0]
 
 
-def _source_record(
-    document: Document, documents_by_id: dict[str, Document]
-) -> dict[str, Any]:
+def _all_pinned_documents(documents: list[Document], config: dict[str, Any]) -> list[Document]:
+    inputs = config["inputs"]
+    raw_pins: list[tuple[str, dict[str, Any]]] = [
+        ("baseline_prompt", inputs["baseline_prompt"]),
+        *(("agent instructions", item) for item in inputs["agents"]),
+        *(("skill", item) for item in inputs["skills"]),
+        *(("policy", item) for item in inputs["policies"]),
+        *(("reference", item) for item in inputs["references"]),
+        ("tool_schema", inputs["tool_schema"]),
+        ("evaluation_data", inputs["evaluation_data"]),
+    ]
+    selected: list[Document] = []
+    for purpose, pin in raw_pins:
+        matches = [
+            document
+            for document in documents
+            if document.name == pin["name"] and document.version == pin["version"]
+        ]
+        if len(matches) != 1:
+            raise ServiceError(
+                "compiler_input_missing",
+                f"The pinned {purpose} document is missing or ambiguous.",
+                details={"name": pin["name"], "version": pin["version"]},
+                status_code=409,
+            )
+        selected.append(matches[0])
+    return selected
+
+
+def _source_record(document: Document, documents_by_id: dict[str, Document]) -> dict[str, Any]:
     superseded = (
         documents_by_id.get(document.supersedes_document_id)
         if document.supersedes_document_id
@@ -298,9 +354,7 @@ def _finding_record(finding: Finding, rule_keys_by_id: dict[str, str]) -> dict[s
         "message": finding.message,
         "witness": witness,
         "related_rules": sorted(
-            rule_keys_by_id[item]
-            for item in finding.related_rule_ids
-            if item in rule_keys_by_id
+            rule_keys_by_id[item] for item in finding.related_rule_ids if item in rule_keys_by_id
         ),
         "resolution_state": finding.resolution_state,
         "resolution_note": finding.resolution_note,
@@ -333,12 +387,30 @@ def _validate_placement(
     profile: LoadedCompilerProfile,
     linked_tests: list[TestCase],
 ) -> None:
+    if (
+        rule.category not in profile.value["category_routes"]
+        or rule.enforcement not in profile.value["enforcement_routes"]
+    ):
+        raise ServiceError(
+            "rule_classification_unknown",
+            "The clause uses a category or enforcement class outside the pinned profile.",
+            details={
+                "rule": rule.stable_key,
+                "category": rule.category,
+                "enforcement": rule.enforcement,
+            },
+            status_code=409,
+        )
     destinations = placement.destinations
     profile_destinations = set(profile.value["allowed_destinations"])
-    if not isinstance(destinations, list) or not destinations or any(
-        item not in DESTINATIONS or item not in profile_destinations
-        for item in destinations
-    ) or len(destinations) != len(set(destinations)):
+    if (
+        not isinstance(destinations, list)
+        or not destinations
+        or any(
+            item not in DESTINATIONS or item not in profile_destinations for item in destinations
+        )
+        or len(destinations) != len(set(destinations))
+    ):
         raise ServiceError(
             "placement_destination_unknown",
             "Every active clause requires known, unique compilation destinations.",
@@ -352,11 +424,32 @@ def _validate_placement(
             details={"rule": rule.stable_key},
             status_code=409,
         )
-    if placement.transform_kind not in TRANSFORM_KINDS or placement.disposition not in DISPOSITIONS:
+    if (
+        placement.transform_kind not in TRANSFORM_KINDS
+        or placement.transform_kind not in profile.value["allowed_transform_kinds"]
+        or placement.disposition not in DISPOSITIONS
+    ):
         raise ServiceError(
             "placement_contract_invalid",
             "A placement decision uses an unknown transform or disposition.",
             details={"rule": rule.stable_key},
+            status_code=409,
+        )
+    expected_status_disposition = profile.value["status_dispositions"][rule.status]
+    valid_dispositions = {expected_status_disposition}
+    if rule.status == "approved":
+        valid_dispositions.add("blocked")
+    if rule.status == "needs_review":
+        valid_dispositions.add("unsupported")
+    if placement.disposition not in valid_dispositions:
+        raise ServiceError(
+            "placement_status_mismatch",
+            "The clause disposition is incompatible with its reviewed status.",
+            details={
+                "rule": rule.stable_key,
+                "status": rule.status,
+                "disposition": placement.disposition,
+            },
             status_code=409,
         )
     if placement.disposition == "unsupported" and destinations != ["unsupported"]:
@@ -373,7 +466,11 @@ def _validate_placement(
             details={"rule": rule.stable_key},
             status_code=409,
         )
-    if rule.status == "approved" and placement.disposition == "routed" and placement.review_status != "approved":
+    if (
+        rule.status == "approved"
+        and placement.disposition == "routed"
+        and placement.review_status != "approved"
+    ):
         raise ServiceError(
             "placement_review_required",
             "An approved clause has an unreviewed placement decision.",
@@ -387,8 +484,43 @@ def _validate_placement(
             details={"rule": rule.stable_key, "status": rule.status},
             status_code=409,
         )
+    if placement.disposition == "routed":
+        category_routes = set(profile.value["category_routes"][rule.category])
+        if not category_routes.intersection(destinations):
+            raise ServiceError(
+                "placement_category_mismatch",
+                "The routed clause does not enter a destination allowed for its category.",
+                details={"rule": rule.stable_key, "required_one_of": sorted(category_routes)},
+                status_code=409,
+            )
+    enforcement_routes = set(profile.value["enforcement_routes"][rule.enforcement])
+    uses_critical_contract = (
+        rule.status == "approved"
+        and rule.category == "hard_constraint"
+        and rule.severity in set(profile.value["require_test_for_severities"])
+    )
+    if (
+        rule.enforcement != "prompt"
+        and placement.disposition != "retired"
+        and not uses_critical_contract
+        and not (
+            enforcement_routes.intersection(destinations)
+            or (placement.disposition == "unsupported" and destinations == ["unsupported"])
+        )
+    ):
+        raise ServiceError(
+            "placement_enforcement_mismatch",
+            "The clause placement is incompatible with its enforcement classification.",
+            details={"rule": rule.stable_key, "required_one_of": sorted(enforcement_routes)},
+            status_code=409,
+        )
     if placement.rendering and placement.rendering != rule.normative_text:
-        if placement.transform_kind != "reviewed_normalization" or placement.review_status != "approved" or not placement.reviewer.strip() or not placement.rationale.strip():
+        if (
+            placement.transform_kind != "reviewed_normalization"
+            or placement.review_status != "approved"
+            or not placement.reviewer.strip()
+            or not placement.rationale.strip()
+        ):
             raise ServiceError(
                 "placement_rendering_unreviewed",
                 "A changed rendering requires an approved reviewed-normalization decision.",
@@ -402,8 +534,15 @@ def _validate_placement(
             details={"rule": rule.stable_key},
             status_code=409,
         )
-    if rule.status == "approved" and rule.category == "hard_constraint" and rule.severity in {"high", "critical"}:
-        required = {"pre_tool_policy", "test"}
+    if rule.status == "approved" and rule.severity in set(
+        profile.value["require_test_for_severities"]
+    ):
+        required = {"test"}
+        if (
+            rule.category == "hard_constraint"
+            and profile.value["require_guard_for_approved_hard_constraints"]
+        ):
+            required.add("pre_tool_policy")
         if not required.issubset(set(destinations)):
             raise ServiceError(
                 "critical_placement_incomplete",
@@ -421,11 +560,13 @@ def _markdown_artifact(
     *,
     skill: bool = False,
     scope_slug: str = "",
+    skill_description: str = "Reviewed, source-linked instructions for this scope.",
+    load_policy: str = "on_demand",
 ) -> tuple[str, list[dict[str, Any]]]:
     writer = SpanWriter(path)
     if skill:
         writer.scaffold(
-            f"---\nname: {scope_slug}\ndescription: Reviewed, source-linked instructions for this scope.\n---\n\n"
+            f"---\nname: {scope_slug}\ndescription: {skill_description}\nload-policy: {load_policy}\n---\n\n"
         )
     writer.scaffold(f"# {title}\n\n{intro}\n\n")
     writer.scaffold("## Reviewed clauses\n\n")
@@ -504,6 +645,7 @@ async def compile_project(session: AsyncSession, project_id: str) -> Build:
             )
         ).all()
     )
+    documents = _all_pinned_documents(documents, config)
     all_rules = list(
         (
             await session.scalars(
@@ -513,19 +655,6 @@ async def compile_project(session: AsyncSession, project_id: str) -> Build:
             )
         ).all()
     )
-    active_rules = [rule for rule in all_rules if rule.status != "superseded"]
-    unreviewed_critical = [
-        rule
-        for rule in active_rules
-        if rule.severity in {"high", "critical"} and rule.status not in {"approved", "rejected"}
-    ]
-    if unreviewed_critical:
-        raise ServiceError(
-            "critical_rules_unreviewed",
-            "Review every active high- or critical-severity clause before compilation.",
-            details={"rules": [f"{item.stable_key}@{item.revision}" for item in unreviewed_critical]},
-            status_code=409,
-        )
     tests = list(
         (
             await session.scalars(
@@ -547,12 +676,38 @@ async def compile_project(session: AsyncSession, project_id: str) -> Build:
     latest_placement: dict[str, PlacementDecision] = {}
     for placement in placements:
         latest_placement.setdefault(placement.rule_id, placement)
+    latest_rules: dict[str, Rule] = {}
+    for rule in all_rules:
+        latest_rules[rule.stable_key] = rule
+    active_rules = [
+        rule
+        for rule in latest_rules.values()
+        if rule.status != "superseded"
+        or (rule.id in latest_placement and latest_placement[rule.id].disposition == "retired")
+    ]
+    unreviewed_critical = [
+        rule
+        for rule in active_rules
+        if rule.severity in {"high", "critical"}
+        and rule.status not in {"approved", "rejected", "superseded"}
+    ]
+    if unreviewed_critical:
+        raise ServiceError(
+            "critical_rules_unreviewed",
+            "Review every active high- or critical-severity clause before compilation.",
+            details={
+                "rules": [f"{item.stable_key}@{item.revision}" for item in unreviewed_critical]
+            },
+            status_code=409,
+        )
     missing_placements = [rule for rule in active_rules if rule.id not in latest_placement]
     if missing_placements:
         raise ServiceError(
             "placement_decision_missing",
             "Every active normative clause needs an explicit placement or unsupported disposition.",
-            details={"rules": [f"{item.stable_key}@{item.revision}" for item in missing_placements]},
+            details={
+                "rules": [f"{item.stable_key}@{item.revision}" for item in missing_placements]
+            },
             status_code=409,
         )
     documents_by_id = {item.id: item for item in documents}
@@ -595,6 +750,43 @@ async def compile_project(session: AsyncSession, project_id: str) -> Build:
         anchors_by_rule[rule.id] = anchors
         transforms_by_rule[rule.id] = inferred_transform
 
+    inventory = load_clause_inventory(get_settings().data_root / config["clause_inventory"]["path"])
+    declared_lines = declared_clause_lines(inventory, documents)
+    coverage: dict[tuple[str, int], list[str]] = defaultdict(list)
+    for rule in active_rules:
+        for source_ref in rule.source_refs:
+            document_id = source_ref.get("document_id")
+            line_start = source_ref.get("line_start")
+            line_end = source_ref.get("line_end")
+            if (
+                isinstance(document_id, str)
+                and isinstance(line_start, int)
+                and isinstance(line_end, int)
+            ):
+                for line in range(line_start, line_end + 1):
+                    coverage[(document_id, line)].append(f"{rule.stable_key}@{rule.revision}")
+    coverage_missing = sorted(declared_lines - set(coverage))
+    duplicate = {
+        f"{document_id}:{line}": rule_keys
+        for (document_id, line), rule_keys in coverage.items()
+        if (document_id, line) in declared_lines and len(rule_keys) != 1
+    }
+    undeclared = sorted(set(coverage) - declared_lines)
+    if coverage_missing or duplicate or undeclared:
+        raise ServiceError(
+            "clause_inventory_coverage_invalid",
+            "Every source-anchored normative line must match exactly one latest rule ledger entry.",
+            details={
+                "missing": [
+                    f"{document_id}:{line}"
+                    for document_id, line in coverage_missing
+                ],
+                "duplicates": duplicate,
+                "undeclared": [f"{document_id}:{line}" for document_id, line in undeclared],
+            },
+            status_code=409,
+        )
+
     baseline_document = _pinned_document(documents, config, "baseline_prompt", required=False)
     tool_document = _pinned_document(documents, config, "tool_schema", required=True)
     fact_document = _pinned_document(documents, config, "evaluation_data", required=True)
@@ -614,12 +806,15 @@ async def compile_project(session: AsyncSession, project_id: str) -> Build:
             details={"errors": error.errors(include_url=False)},
             status_code=409,
         ) from error
+    tool_literals_by_name = {
+        item["name"]: _schema_literals(item["input_schema"]) for item in tools["tools"]
+    }
 
     try:
         rule_records = {
-            rule.id: RuleIR.model_validate(
-                _rule_record(rule, anchors_by_rule[rule.id])
-            ).model_dump(mode="json", by_alias=True)
+            rule.id: RuleIR.model_validate(_rule_record(rule, anchors_by_rule[rule.id])).model_dump(
+                mode="json", by_alias=True
+            )
             for rule in active_rules
         }
     except ValidationError as error:
@@ -648,6 +843,7 @@ async def compile_project(session: AsyncSession, project_id: str) -> Build:
             "rule_status": rule.status,
             "severity": rule.severity,
             "category": rule.category,
+            "decidability": rule.decidability,
             "provenance_kind": rule.provenance_kind,
             "provenance_metadata": rule.provenance_metadata,
             "verified_source_anchors": len(anchors),
@@ -673,6 +869,25 @@ async def compile_project(session: AsyncSession, project_id: str) -> Build:
     scope_slug = config["bundle_slug"]
     skill_path = f"skills/{scope_slug}/SKILL.md"
     knowledge_path = f"knowledge/{scope_slug}.md"
+    scope_profiles = [item for item in profile.project["scopes"] if item["slug"] == scope_slug]
+    if len(scope_profiles) != 1:
+        raise ServiceError(
+            "compiler_profile_scope_mismatch",
+            "The project bundle scope is not uniquely declared by the compiler profile.",
+            details={"scope": scope_slug},
+            status_code=409,
+        )
+    scope_profile = scope_profiles[0]
+    if (
+        scope_profile["skill_path"] != skill_path
+        or scope_profile.get("knowledge_path") != knowledge_path
+        or profile.project["agent_name"] != config["agent_label"]
+    ):
+        raise ServiceError(
+            "compiler_profile_scope_mismatch",
+            "The compilation labels and output paths do not match the pinned agent scope profile.",
+            status_code=409,
+        )
     prompt, prompt_spans = _markdown_artifact(
         "prompt-kernel.md",
         config["agent_label"],
@@ -686,6 +901,8 @@ async def compile_project(session: AsyncSession, project_id: str) -> Build:
         rows_by_destination["skill"],
         skill=True,
         scope_slug=scope_slug,
+        skill_description=scope_profile["trigger"],
+        load_policy=scope_profile["load_policy"],
     )
     knowledge, knowledge_spans = _markdown_artifact(
         knowledge_path,
@@ -700,11 +917,7 @@ async def compile_project(session: AsyncSession, project_id: str) -> Build:
         "scope_statement": (
             "Decisions apply only to reviewed rules and tool calls routed through this adapter."
         ),
-        "rules": [
-            rule_records[rule.id]
-            for rule in active_rules
-            if rule.id in guarded_rule_ids
-        ],
+        "rules": [rule_records[rule.id] for rule in active_rules if rule.id in guarded_rule_ids],
     }
     raw_regression = {
         "schema_version": "0.2",
@@ -718,7 +931,9 @@ async def compile_project(session: AsyncSession, project_id: str) -> Build:
     }
     try:
         policy = PolicyArtifact.model_validate(raw_policy).model_dump(mode="json", by_alias=True)
-        regression = RegressionArtifact.model_validate(raw_regression).model_dump(mode="json", by_alias=True)
+        regression = RegressionArtifact.model_validate(raw_regression).model_dump(
+            mode="json", by_alias=True
+        )
     except ValidationError as error:
         raise ServiceError(
             "compiler_artifact_contract_invalid",
@@ -770,7 +985,11 @@ async def compile_project(session: AsyncSession, project_id: str) -> Build:
             marker_start = 0
     unsupported_search = 0
     for item in unsupported_entries:
-        rule = next(rule for rule in active_rules if item["rule_key"] == f"{rule.stable_key}@{rule.revision}")
+        rule = next(
+            rule
+            for rule in active_rules
+            if item["rule_key"] == f"{rule.stable_key}@{rule.revision}"
+        )
         placement = latest_placement[rule.id]
         fragment = json.dumps(item["normative_text"], ensure_ascii=False)[1:-1]
         span, unsupported_search = locate_fragment_span(
@@ -785,9 +1004,7 @@ async def compile_project(session: AsyncSession, project_id: str) -> Build:
         )
         generated_spans.append(span)
 
-    source_records = [
-        _source_record(document, documents_by_id) for document in documents
-    ]
+    source_records = [_source_record(document, documents_by_id) for document in documents]
     finding_keys = {rule.id: f"{rule.stable_key}@{rule.revision}" for rule in all_rules}
     finding_records = [_finding_record(item, finding_keys) for item in findings]
     placement_records = [
@@ -802,6 +1019,7 @@ async def compile_project(session: AsyncSession, project_id: str) -> Build:
             "routed": sum(item["disposition"] == "routed" for item in routing_entries),
             "blocked": sum(item["disposition"] == "blocked" for item in routing_entries),
             "unsupported": sum(item["disposition"] == "unsupported" for item in routing_entries),
+            "retired": sum(item["disposition"] == "retired" for item in routing_entries),
         },
     }
     artifacts: dict[str, str] = {
@@ -815,7 +1033,13 @@ async def compile_project(session: AsyncSession, project_id: str) -> Build:
         UNSUPPORTED_ARTIFACT: unsupported_text,
         ROUTING_ARTIFACT: canonical_json_text(routing_report),
         PROFILE_INPUT_ARTIFACT: canonical_json_text(
-            {"schema_version": "1.0", "profile": profile.value, "sha256": profile.digest}
+            {
+                "schema_version": "1.1",
+                "profile": profile.value,
+                "sha256": profile.digest,
+                "project_profile": profile.project,
+                "project_profile_sha256": profile.project_digest,
+            }
         ),
         PLACEMENT_INPUT_ARTIFACT: canonical_json_text(
             {"schema_version": "1.0", "placements": placement_records}
@@ -829,7 +1053,23 @@ async def compile_project(session: AsyncSession, project_id: str) -> Build:
         FINDING_INPUT_ARTIFACT: canonical_json_text(
             {"schema_version": "1.0", "findings": finding_records}
         ),
+        INVENTORY_INPUT_ARTIFACT: canonical_json_text(inventory),
     }
+    routing_search = 0
+    for rule in active_rules:
+        placement = latest_placement[rule.id]
+        fragment = json.dumps(placement.rendering or rule.normative_text, ensure_ascii=False)[1:-1]
+        span, routing_search = locate_fragment_span(
+            ROUTING_ARTIFACT,
+            artifacts[ROUTING_ARTIFACT],
+            fragment,
+            transform_kind=transforms_by_rule[rule.id],
+            rule=rule,
+            placement=placement,
+            source_refs=anchors_by_rule[rule.id],
+            start_at=routing_search,
+        )
+        generated_spans.append(span)
     literal_checks: list[dict[str, Any]] = []
     destination_paths = {
         "prompt_kernel": ["prompt-kernel.md"],
@@ -843,7 +1083,24 @@ async def compile_project(session: AsyncSession, project_id: str) -> Build:
     for rule in active_rules:
         placement = latest_placement[rule.id]
         rendering = placement.rendering or rule.normative_text
-        literals = protected_literals(rendering, sorted(rule.target_tools))
+        schema_literals = sorted(
+            {
+                value
+                for tool_name in rule.target_tools
+                for value in tool_literals_by_name.get(tool_name, set())
+            }
+        )
+        structured_literals = sorted(
+            _structured_literals(rule.condition)
+            | _structured_literals(rule.requires)
+            | _structured_literals(rule.exceptions)
+        )
+        literals = protected_literals(
+            rendering,
+            sorted(rule.target_tools),
+            enum_values=schema_literals,
+            structured_values=structured_literals,
+        )
         paths = sorted(
             {
                 path
@@ -851,15 +1108,19 @@ async def compile_project(session: AsyncSession, project_id: str) -> Build:
                 for path in destination_paths.get(destination, [])
             }
         )
+        if placement.disposition == "retired":
+            paths = [ROUTING_ARTIFACT, RULE_INPUT_ARTIFACT]
+        if rule.target_tools:
+            paths = sorted({*paths, TOOL_ARTIFACT})
         corpus = "\n".join(artifacts[path] for path in paths if path in artifacts)
-        missing = [item for item in literals if item["value"] not in corpus]
+        literal_missing = [item for item in literals if item["value"] not in corpus]
         literal_checks.append(
             {
                 "rule_key": f"{rule.stable_key}@{rule.revision}",
                 "artifact_paths": paths,
                 "literals": literals,
-                "missing": missing,
-                "preserved": not missing and rendering in corpus,
+                "missing": literal_missing,
+                "preserved": not literal_missing and rendering in corpus,
             }
         )
     preservation_report = {
@@ -921,6 +1182,41 @@ async def compile_project(session: AsyncSession, project_id: str) -> Build:
         "Deterministic conformance does not measure behavioral fidelity.\n"
     )
     artifacts["README.md"] = readme
+    # `total_bundle_without_manifest` includes the final metrics artifact itself.
+    # Its own decimal widths converge quickly; require an exact fixed point so the
+    # stored number describes every final member except the recursive manifest.
+    for _ in range(12):
+        final_metrics = compilation_metrics(
+            baseline=baseline,
+            artifacts=artifacts,
+            kernel_path="prompt-kernel.md",
+            skill_paths=[skill_path],
+            knowledge_paths=[knowledge_path],
+            machine_paths=[POLICY_ARTIFACT, TEST_ARTIFACT],
+            expected_context_paths=config["expected_context"],
+            routing_entries=routing_entries,
+            literal_checks=literal_checks,
+        )
+        final_metrics_text = canonical_json_text(final_metrics)
+        if artifacts.get(METRICS_ARTIFACT) == final_metrics_text:
+            metrics = final_metrics
+            break
+        artifacts[METRICS_ARTIFACT] = final_metrics_text
+    else:
+        raise ServiceError(
+            "compiler_metrics_not_converged",
+            "The non-recursive bundle-size metric did not reach a stable value.",
+            status_code=409,
+        )
+    try:
+        CompilationMetrics.model_validate(metrics)
+    except ValidationError as error:
+        raise ServiceError(
+            "compiler_gate1_artifact_invalid",
+            "The final compilation metrics violate their typed contract.",
+            details={"errors": error.errors(include_url=False)},
+            status_code=409,
+        ) from error
     artifact_hashes = {path: artifact_hash(value) for path, value in sorted(artifacts.items())}
     source_inputs = [
         {
@@ -946,9 +1242,7 @@ async def compile_project(session: AsyncSession, project_id: str) -> Build:
             "enforcement": record["enforcement"],
             "provenance_kind": record["provenance_kind"],
             "provenance_metadata": record["provenance_metadata"],
-            "source_documents": sorted(
-                {ref["document_name"] for ref in record["source_refs"]}
-            ),
+            "source_documents": sorted({ref["document_name"] for ref in record["source_refs"]}),
             "digest": artifact_hash(record),
         }
         for record in rule_records.values()
@@ -1005,10 +1299,9 @@ async def compile_project(session: AsyncSession, project_id: str) -> Build:
             "version": profile.version,
             "path": profile.path,
             "digest": profile.digest,
+            "project_digest": profile.project_digest,
         },
-        "placements": [
-            {**item, "digest": artifact_hash(item)} for item in placement_records
-        ],
+        "placements": [{**item, "digest": artifact_hash(item)} for item in placement_records],
         "compilation_config_digest": artifact_hash(config),
     }
     try:
@@ -1046,9 +1339,7 @@ async def compile_project(session: AsyncSession, project_id: str) -> Build:
         ],
     }
     try:
-        manifest = BuildManifest.model_validate(raw_manifest).model_dump(
-            mode="json", by_alias=True
-        )
+        manifest = BuildManifest.model_validate(raw_manifest).model_dump(mode="json", by_alias=True)
     except ValidationError as error:
         raise ServiceError(
             "compiler_manifest_contract_invalid",
@@ -1103,11 +1394,11 @@ async def compile_project(session: AsyncSession, project_id: str) -> Build:
     session.add(build)
     await session.flush()
     await session.execute(delete(GeneratedSpan).where(GeneratedSpan.build_id == build.id))
-    rules_by_stable_revision = {
-        f"{rule.stable_key}@{rule.revision}": rule for rule in active_rules
-    }
+    rules_by_stable_revision = {f"{rule.stable_key}@{rule.revision}": rule for rule in active_rules}
     placement_by_stable = {
-        f"{rule.stable_key}@{rule.revision}:placement:{latest_placement[rule.id].version}": latest_placement[rule.id]
+        f"{rule.stable_key}@{rule.revision}:placement:{latest_placement[rule.id].version}": latest_placement[
+            rule.id
+        ]
         for rule in active_rules
     }
     for item in source_map["spans"]:
@@ -1117,9 +1408,7 @@ async def compile_project(session: AsyncSession, project_id: str) -> Build:
             GeneratedSpan(
                 build_id=build.id,
                 rule_id=span_rule.id if span_rule else None,
-                placement_decision_id=(
-                    span_placement.id if span_placement else None
-                ),
+                placement_decision_id=(span_placement.id if span_placement else None),
                 artifact_path=item["artifact_path"],
                 artifact_sha256=item["artifact_sha256"],
                 line_start=item["line_start"],

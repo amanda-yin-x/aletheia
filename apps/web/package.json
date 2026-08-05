@@ -17,6 +17,7 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
+    "@aletheia/api-client": "workspace:*",
     "@opennextjs/cloudflare": "1.20.2",
     "@supabase/ssr": "0.12.4",
     "@supabase/supabase-js": "2.111.0",

@@ -1,5 +1,6 @@
 import type {
   Build,
+  BuildStats,
   CompilationMetrics,
   ContentSizeMetric,
   Document,
@@ -100,7 +101,9 @@ function isStringArray(value: unknown): value is string[] {
 }
 
 function isExpectedContextMetric(value: unknown): value is ContentSizeMetric & { artifact_paths: string[] } {
-  return isContentSizeMetric(value) && isRecord(value) && isStringArray(value.artifact_paths);
+  if (!isRecord(value)) return false;
+  const artifactPaths = value.artifact_paths;
+  return isContentSizeMetric(value) && isStringArray(artifactPaths);
 }
 
 function isProtectedLiteral(value: unknown): value is { kind: string; value: string } {
@@ -128,12 +131,10 @@ export function parseArtifactJson(build: Build, path: string): unknown {
   }
 }
 
-export function compilationMetrics(build: Build, inspectionStats?: Record<string, unknown>): CompilationMetrics | null {
-  const candidates: unknown[] = [
-    build.stats.compilation,
-    inspectionStats?.compilation,
-    parseArtifactJson(build, "compilation-metrics.json"),
-  ];
+export function compilationMetrics(build: Build, inspectionStats?: BuildStats | null): CompilationMetrics | null {
+  if (inspectionStats?.compilation) return inspectionStats.compilation;
+  if (build.stats?.compilation) return build.stats.compilation;
+  const candidates: unknown[] = [parseArtifactJson(build, "compilation-metrics.json")];
   for (const value of candidates) {
     if (!isRecord(value)
       || value.schema_version !== "1.0"
@@ -163,12 +164,19 @@ export function compilationMetrics(build: Build, inspectionStats?: Record<string
       || !value.protected_literals.every(isPreservationCheck)
       || value.behavioral_fidelity !== "not_measured"
       || typeof value.interpretation !== "string") continue;
-    return value as unknown as CompilationMetrics;
+    return {
+      ...value,
+      routing: {
+        ...value.routing,
+        retired_count: isNumber(value.routing.retired_count) ? value.routing.retired_count : 0,
+      },
+    } as unknown as CompilationMetrics;
   }
   return null;
 }
 
-export function routingReport(build: Build): RoutingReport | null {
+export function routingReport(build: Build, inspectionReport?: RoutingReport | null): RoutingReport | null {
+  if (inspectionReport) return inspectionReport;
   const value = parseArtifactJson(build, "routing-report.json");
   if (!isRecord(value)
     || value.schema_version !== "1.0"
@@ -197,11 +205,19 @@ export function routingReport(build: Build): RoutingReport | null {
     || !isNumber(value.counts.active)
     || !isNumber(value.counts.routed)
     || !isNumber(value.counts.blocked)
-    || !isNumber(value.counts.unsupported)) return null;
-  return value as unknown as RoutingReport;
+    || !isNumber(value.counts.unsupported)
+    || (value.counts.retired !== undefined && !isNumber(value.counts.retired))) return null;
+  return {
+    ...value,
+    counts: {
+      ...value.counts,
+      retired: isNumber(value.counts.retired) ? value.counts.retired : 0,
+    },
+  } as unknown as RoutingReport;
 }
 
-export function preservationReport(build: Build): PreservationReport | null {
+export function preservationReport(build: Build, inspectionReport?: PreservationReport | null): PreservationReport | null {
+  if (inspectionReport) return inspectionReport;
   const value = parseArtifactJson(build, "preservation-report.json");
   if (!isRecord(value)
     || value.schema_version !== "1.0"

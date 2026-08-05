@@ -156,6 +156,12 @@
           "title": "Blocked",
           "type": "integer"
         },
+        "retired": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Retired",
+          "type": "integer"
+        },
         "routed": {
           "minimum": 0,
           "title": "Routed",
@@ -191,6 +197,23 @@
           ],
           "title": "Category",
           "type": "string"
+        },
+        "decidability": {
+          "anyOf": [
+            {
+              "enum": [
+                "machine_decidable",
+                "model_judged",
+                "human"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Decidability"
         },
         "destinations": {
           "items": {

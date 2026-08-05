@@ -34,6 +34,8 @@ export default function SourcesPage() {
   const [search, setSearch] = useState("");
   const selected = documents.data?.find((doc) => doc.id === selectedId) || documents.data?.[1] || documents.data?.[0];
   const selectedMetadata = documentPresentation(selected);
+  const supersededDocument = documents.data?.find((doc) => doc.id === selected?.supersedes_document_id);
+  const supersedingDocument = documents.data?.find((doc) => doc.supersedes_document_id === selected?.id);
   const linkedRules = useMemo(() => (rules.data || []).filter((rule) => rule.source_refs.some((ref) => ref.document_id === selected?.id)), [rules.data, selected?.id]);
   const highlighted = new Set(linkedRules.flatMap((rule) => rule.source_refs.filter((ref) => ref.document_id === selected?.id).flatMap((ref) => Array.from({ length: ref.line_end - ref.line_start + 1 }, (_, i) => ref.line_start + i))));
   useEffect(() => {
@@ -71,7 +73,7 @@ export default function SourcesPage() {
       </div>
       <div className="source-viewer">
         <div className="source-viewer-head">
-          <div className="source-viewer-title"><strong>{selected?.name}</strong><span className="source-viewer-badges"><Badge>{selectedMetadata.versionLabel}</Badge><Badge tone={authorityTone(selectedMetadata.authorityStatus)}>{selectedMetadata.authorityStatus ? metadataLabel(selectedMetadata.authorityStatus) : "Authority unavailable"}</Badge>{selectedMetadata.originType && <Badge tone="blue">{metadataLabel(selectedMetadata.originType)}</Badge>}</span></div>
+          <div className="source-viewer-title"><strong>{selected?.name}</strong><span className="source-viewer-badges"><Badge tone="blue">{selected ? metadataLabel(selected.kind) : "Kind unavailable"}</Badge><Badge>{selectedMetadata.versionLabel}</Badge><Badge tone={authorityTone(selectedMetadata.authorityStatus)}>{selectedMetadata.authorityStatus ? metadataLabel(selectedMetadata.authorityStatus) : "Authority unavailable"}</Badge><Badge tone={selectedMetadata.effectiveAt ? "teal" : "neutral"}>Effective {formattedEffectiveDate(selectedMetadata.effectiveAt)}</Badge>{selectedMetadata.originType && <Badge tone="blue">{metadataLabel(selectedMetadata.originType)}</Badge>}</span></div>
           <div className="source-hashes" aria-label="Document hashes">
             <span>Original SHA-256 <code title={selected?.original_sha256}>{shortHash(selected?.original_sha256)}</code></span>
             <span>Normalized SHA-256 <code title={selected?.normalized_sha256 || undefined}>{selected?.normalized_sha256 ? shortHash(selected.normalized_sha256) : "Unavailable"}</code></span>
@@ -92,6 +94,8 @@ export default function SourcesPage() {
           <div><dt>Status</dt><dd>{selectedMetadata.authorityStatus ? metadataLabel(selectedMetadata.authorityStatus) : "Unavailable"}</dd></div>
           <div><dt>Effective</dt><dd>{formattedEffectiveDate(selectedMetadata.effectiveAt)}</dd></div>
           <div><dt>Version</dt><dd>{selectedMetadata.versionLabel}</dd></div>
+          <div><dt>Supersedes</dt><dd>{supersededDocument ? `${supersededDocument.name} · ${documentPresentation(supersededDocument).versionLabel}` : "No earlier source declared"}</dd></div>
+          <div><dt>Superseded by</dt><dd>{supersedingDocument ? `${supersedingDocument.name} · ${documentPresentation(supersedingDocument).versionLabel}` : "No later authority declared"}</dd></div>
           <div><dt>Jurisdiction</dt><dd>{metadataList(selectedMetadata.jurisdictions)}</dd></div>
           <div><dt>Scope</dt><dd>{metadataList(selectedMetadata.scopes)}</dd></div>
           <div><dt>Parser</dt><dd>{selectedMetadata.parser ? `${selectedMetadata.parser}${selectedMetadata.parserVersion ? ` · ${selectedMetadata.parserVersion}` : ""}` : "Unavailable"}</dd></div>

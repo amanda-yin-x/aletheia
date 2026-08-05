@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from datetime import UTC, datetime
 from typing import Any
 
@@ -39,6 +40,7 @@ from app.schemas import (
     BuildArtifactInspection,
     BuildInspectionOut,
     BuildOut,
+    BuildStats,
     DocumentOut,
     FindingOut,
     FindingPatch,
@@ -48,9 +50,12 @@ from app.schemas import (
     PlacementDecisionContract,
     PlacementDecisionOut,
     PlacementDecisionPatch,
+    PreservationReport,
     ProjectCreate,
     ProjectOut,
+    ProjectSummaryOut,
     ReportOut,
+    RoutingReport,
     RuleOut,
     RulePatch,
     RuleReview,
@@ -66,7 +71,6 @@ from app.schemas import (
     WorkspaceBootstrapOut,
     WorkspaceOut,
 )
-from app.services.appointment_seed import seed_appointment_demo
 from app.services.canonical import (
     artifact_bytes,
     artifact_hash,
@@ -75,11 +79,16 @@ from app.services.canonical import (
     content_hash,
     token_estimate,
 )
+from app.services.demo_registry import (
+    demo_fixture_slugs,
+    primary_fixture,
+    reset_fixture_project,
+    seed_workspace_fixtures,
+)
 from app.services.errors import ServiceError
 from app.services.ingestion import NORMALIZER_VERSION, PARSER_VERSION, parse_document
 from app.services.reporting import create_report
 from app.services.review import resolve_finding, revise_rule
-from app.services.seed import seed_demo
 from app.tenancy import (
     consume_guest_mutation,
     enforce_guest_session,
@@ -123,6 +132,29 @@ def _workspace_out(workspace: Workspace, role: str) -> WorkspaceOut:
         name=workspace.name,
         role=role,
         created_at=workspace.created_at,
+    )
+
+
+def _build_out(build: Build) -> BuildOut:
+    stats = (
+        BuildStats.model_validate(build.stats)
+        if build.input_manifest.get("schema_version") == "1.0"
+        else None
+    )
+    return BuildOut.model_validate(
+        {
+            "id": build.id,
+            "project_id": build.project_id,
+            "status": build.status,
+            "input_manifest": build.input_manifest,
+            "input_hash": build.input_hash,
+            "compiler_version": build.compiler_version,
+            "artifacts": build.artifacts,
+            "source_map": build.source_map,
+            "stats": stats,
+            "content_hash": build.content_hash,
+            "created_at": build.created_at,
+        }
     )
 
 
@@ -219,8 +251,7 @@ async def join_waitlist(
     await ensure_account(session, identity)
     existing = await session.scalar(
         select(WaitlistSignup).where(
-            (WaitlistSignup.user_id == identity.subject)
-            | (WaitlistSignup.email == payload.email)
+            (WaitlistSignup.user_id == identity.subject) | (WaitlistSignup.email == payload.email)
         )
     )
     if existing is not None:
@@ -305,8 +336,9 @@ async def bootstrap_workspace(
             ).one_or_none()
             if recovered:
                 workspace, membership = recovered
-                project = await seed_demo(session, workspace_id=workspace.id)
-                await seed_appointment_demo(session, workspace_id=workspace.id)
+                project = primary_fixture(
+                    await seed_workspace_fixtures(session, workspace_id=workspace.id)
+                )
                 return WorkspaceBootstrapOut(
                     workspace=_workspace_out(workspace, membership.role),
                     project=ProjectOut.model_validate(project),
@@ -325,8 +357,7 @@ async def bootstrap_workspace(
         session.add(membership)
         await session.commit()
         await session.refresh(workspace)
-    project = await seed_demo(session, workspace_id=workspace.id)
-    await seed_appointment_demo(session, workspace_id=workspace.id)
+    project = primary_fixture(await seed_workspace_fixtures(session, workspace_id=workspace.id))
     return WorkspaceBootstrapOut(
         workspace=_workspace_out(workspace, membership.role),
         project=ProjectOut.model_validate(project),
@@ -347,19 +378,25 @@ async def reset_personal_workspace(
             "Guest workspaces cannot be reset. Start a new guest session for a fresh fixture.",
             status_code=403,
         )
-    northstar = await session.scalar(
-        select(Project).where(
-            Project.workspace_id == workspace.id,
-            Project.slug == "northstar-retail",
-        )
+    fixtures = list(
+        (
+            await session.scalars(
+                select(Project)
+                .where(
+                    Project.workspace_id == workspace.id,
+                    Project.slug.in_(demo_fixture_slugs()),
+                )
+                .order_by(Project.slug)
+            )
+        ).all()
     )
-    if northstar is not None:
-        # Use the same tenant-aware row lock as project reset and all other
-        # project mutations, so reset cannot delete an in-flight operation.
-        await scoped_project(session, identity, northstar.id, write=True)
-    reset = await seed_demo(session, workspace_id=workspace_id, reset=True)
-    await seed_appointment_demo(session, workspace_id=workspace_id)
-    return reset
+    # Lock fixture rows in stable slug order so reset cannot race compilation
+    # or deadlock with another workspace reset.
+    for fixture in fixtures:
+        await scoped_project(session, identity, fixture.id, write=True)
+    return primary_fixture(
+        await seed_workspace_fixtures(session, workspace_id=workspace_id, reset=True)
+    )
 
 
 @router.post("/projects/{project_id}/reset", response_model=ProjectOut)
@@ -376,9 +413,7 @@ async def reset_project(
             "Guest workspaces cannot be reset. Start a new guest session for a fresh fixture.",
             status_code=403,
         )
-    if project.slug != "northstar-retail":
-        raise ServiceError("project_not_found", "Project not found.", status_code=404)
-    reset = await seed_demo(session, workspace_id=project.workspace_id, reset=True)
+    reset = await reset_fixture_project(session, project)
     if reset.id != project_id:
         raise ServiceError("project_not_found", "Project not found.", status_code=404)
     return reset
@@ -412,10 +447,11 @@ async def reset_demo_workspace(
         select(WorkspaceMembership).where(WorkspaceMembership.user_id == identity.subject)
     )
     if membership is None:
-        project = await seed_demo(session)
-        return await seed_demo(session, workspace_id=project.workspace_id, reset=True)
+        return primary_fixture(await seed_workspace_fixtures(session, reset=True))
     await require_workspace(session, identity, membership.workspace_id, admin=True)
-    return await seed_demo(session, workspace_id=membership.workspace_id, reset=True)
+    return primary_fixture(
+        await seed_workspace_fixtures(session, workspace_id=membership.workspace_id, reset=True)
+    )
 
 
 @router.get("/projects", response_model=list[ProjectOut])
@@ -447,7 +483,7 @@ async def create_project(
     if get_settings().hosted_mode:
         raise ServiceError(
             "project_creation_disabled",
-            "Hosted workspaces use the personal Northstar project.",
+            "Hosted workspaces use the primary personal fixture project.",
             status_code=403,
         )
     await require_workspace(session, identity, payload.workspace_id, write=True)
@@ -475,12 +511,12 @@ async def get_project(
     return await scoped_project(session, identity, project_id)
 
 
-@router.get("/projects/{project_id}/summary")
+@router.get("/projects/{project_id}/summary", response_model=ProjectSummaryOut)
 async def project_summary(
     project_id: str,
     identity: AuthIdentity = Depends(require_identity),
     session: AsyncSession = Depends(get_session),
-) -> dict[str, Any]:
+) -> ProjectSummaryOut:
     await scoped_project(session, identity, project_id)
 
     async def count(model: Any, *conditions: Any) -> int:
@@ -499,20 +535,18 @@ async def project_summary(
     last_run = await session.scalar(
         select(Run).where(Run.project_id == project_id).order_by(Run.started_at.desc())
     )
-    return {
-        "sources": await count(Document),
-        "approved_rules": await count(Rule, Rule.status == "approved"),
-        "critical_findings": await count(
+    return ProjectSummaryOut(
+        sources=await count(Document),
+        approved_rules=await count(Rule, Rule.status == "approved"),
+        critical_findings=await count(
             Finding,
             Finding.severity == "critical",
             Finding.resolution_state == "open",
         ),
-        "tests": await count(TestCase, TestCase.review_status == "approved"),
-        "current_build": BuildOut.model_validate(current_build).model_dump(mode="json")
-        if current_build
-        else None,
-        "last_run": RunOut.model_validate(last_run).model_dump(mode="json") if last_run else None,
-    }
+        tests=await count(TestCase, TestCase.review_status == "approved"),
+        current_build=_build_out(current_build) if current_build else None,
+        last_run=RunOut.model_validate(last_run) if last_run else None,
+    )
 
 
 @router.get("/projects/{project_id}/documents", response_model=list[DocumentOut])
@@ -690,20 +724,14 @@ async def patch_placement_decision(
     identity: AuthIdentity = Depends(require_identity),
     session: AsyncSession = Depends(get_session),
 ) -> PlacementDecision:
-    decision = await scoped_placement_decision(
-        session, identity, placement_decision_id, write=True
-    )
+    decision = await scoped_placement_decision(session, identity, placement_decision_id, write=True)
     latest = await session.scalar(
         select(PlacementDecision)
         .where(PlacementDecision.rule_id == decision.rule_id)
         .order_by(PlacementDecision.version.desc(), PlacementDecision.id.desc())
         .limit(1)
     )
-    if (
-        decision.version != payload.expected_version
-        or latest is None
-        or latest.id != decision.id
-    ):
+    if decision.version != payload.expected_version or latest is None or latest.id != decision.id:
         raise ServiceError(
             "placement_version_conflict",
             "This placement changed after you opened it. Refresh before reviewing it again.",
@@ -906,8 +934,8 @@ async def get_build(
     build_id: str,
     identity: AuthIdentity = Depends(require_identity),
     session: AsyncSession = Depends(get_session),
-) -> Build:
-    return await scoped_build(session, identity, build_id)
+) -> BuildOut:
+    return _build_out(await scoped_build(session, identity, build_id))
 
 
 @router.get("/builds/{build_id}/inspection", response_model=BuildInspectionOut)
@@ -932,9 +960,7 @@ async def inspect_build(
     )
     span_rule_ids = {span.rule_id for span in spans if span.rule_id is not None}
     span_placement_ids = {
-        span.placement_decision_id
-        for span in spans
-        if span.placement_decision_id is not None
+        span.placement_decision_id for span in spans if span.placement_decision_id is not None
     }
     span_rules = {
         rule.id: rule
@@ -962,9 +988,7 @@ async def inspect_build(
     for span in spans:
         rule = span_rules.get(span.rule_id) if span.rule_id else None
         placement = (
-            span_placements.get(span.placement_decision_id)
-            if span.placement_decision_id
-            else None
+            span_placements.get(span.placement_decision_id) if span.placement_decision_id else None
         )
         generated_spans.append(
             GeneratedSpanOut.model_validate(
@@ -990,8 +1014,8 @@ async def inspect_build(
             )
         )
     if build.source_map.get("schema_version") == "1.0":
-        source_map: SourceMapArtifact | dict[str, list[str]] = (
-            SourceMapArtifact.model_validate(build.source_map)
+        source_map: SourceMapArtifact | dict[str, list[str]] = SourceMapArtifact.model_validate(
+            build.source_map
         )
     elif all(
         isinstance(path, str)
@@ -1009,6 +1033,25 @@ async def inspect_build(
             "The stored build source map violates both supported contracts.",
             status_code=409,
         )
+    gate1 = build.input_manifest.get("schema_version") == "1.0"
+    stats: BuildStats | None = None
+    routing_report: RoutingReport | None = None
+    preservation_report: PreservationReport | None = None
+    if gate1:
+        try:
+            stats = BuildStats.model_validate(build.stats)
+            routing_report = RoutingReport.model_validate(
+                json.loads(build.artifacts["routing-report.json"])
+            )
+            preservation_report = PreservationReport.model_validate(
+                json.loads(build.artifacts["preservation-report.json"])
+            )
+        except (KeyError, TypeError, json.JSONDecodeError, ValueError) as error:
+            raise ServiceError(
+                "build_evidence_invalid",
+                "The stored Gate 1 build evidence violates its typed inspection contract.",
+                status_code=409,
+            ) from error
     return BuildInspectionOut(
         build_id=build.id,
         project_id=build.project_id,
@@ -1021,7 +1064,9 @@ async def inspect_build(
             for path, value in sorted(build.artifacts.items())
         ],
         source_map=source_map,
-        stats=build.stats,
+        stats=stats,
+        routing_report=routing_report,
+        preservation_report=preservation_report,
         generated_spans=generated_spans,
     )
 

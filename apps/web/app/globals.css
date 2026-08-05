@@ -584,6 +584,7 @@ h1, h2, h3 { font-family: var(--font-display); font-style: normal; }
 .placement-list { display: grid; gap: 12px; }
 .placement-card { min-width: 0; display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(300px, .8fr); border: 1px solid var(--border); border-left: 4px solid var(--teal); border-radius: var(--radius); background: white; box-shadow: var(--shadow); overflow: hidden; }
 .placement-card.needs-attention { border-left-color: var(--amber); }
+.placement-card.is-retired:not(.needs-attention) { border-left-color: #94a3b8; }
 .placement-card-main, .placement-card-decision { min-width: 0; padding: 17px 18px; }
 .placement-card-decision { border-left: 1px solid var(--border); background: #fbfcfe; }
 .placement-card-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }

@@ -58,6 +58,7 @@ async def lifespan(_: FastAPI):  # type: ignore[no-untyped-def]
             with suppress(asyncio.CancelledError):
                 await cleanup_task
 
+
 app = FastAPI(
     title="Aletheia Policy CI API",
     version="0.1.0",

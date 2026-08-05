@@ -6,9 +6,9 @@ import { conditionRows, traceEventClass, traceEventSummary, updateConditionValue
 
 describe("policy workbench presentation", () => {
   it("renders key controls with accessible button names", () => {
-    render(<><PageTitle title="Rules and findings" detail="Review source-linked rules." actions={<Button>Build candidate</Button>} /><Badge tone="red">Critical</Badge></>);
+    render(<><PageTitle title="Rules and findings" detail="Review source-linked rules." actions={<Button>Refactor &amp; compile</Button>} /><Badge tone="red">Critical</Badge></>);
     expect(screen.getByRole("heading", { name: "Rules and findings" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Build candidate" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Refactor & compile" })).toBeEnabled();
     expect(screen.getByText("Critical")).toBeInTheDocument();
   });
 

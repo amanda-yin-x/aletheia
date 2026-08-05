@@ -45,33 +45,6 @@ async function projectList(request: APIRequestContext): Promise<ProjectRecord[]>
   return response.json() as Promise<ProjectRecord[]>;
 }
 
-async function resolveProjectConflicts(request: APIRequestContext, projectId: string) {
-  const rulesResponse = await request.get(`${API}/api/v1/projects/${projectId}/rules`);
-  const findingsResponse = await request.get(`${API}/api/v1/projects/${projectId}/findings`);
-  expect(rulesResponse.ok()).toBeTruthy();
-  expect(findingsResponse.ok()).toBeTruthy();
-  const rules = await rulesResponse.json() as Array<{ id: string; stable_key: string }>;
-  const findings = await findingsResponse.json() as Array<{ id: string; severity: string; resolution_state: string; related_rule_ids: string[] }>;
-  for (const finding of findings.filter((item) => item.severity === "critical" && item.resolution_state === "open")) {
-    const related = rules.filter((rule) => finding.related_rule_ids.includes(rule.id));
-    const winner = related.find((rule) => !rule.stable_key.includes("legacy"));
-    const loser = related.find((rule) => rule.stable_key.includes("legacy"));
-    expect(winner, "a current authority rule is required").toBeTruthy();
-    expect(loser, "a legacy authority rule is required").toBeTruthy();
-    const response = await request.patch(`${API}/api/v1/findings/${finding.id}`, {
-      data: {
-        resolution_state: "resolved",
-        expected_resolution_state: "open",
-        winner_rule_id: winner!.id,
-        loser_rule_id: loser!.id,
-        authority: "Current project policy is authoritative.",
-        resolution_note: "Current authority selected in the two-domain browser review.",
-      },
-    });
-    expect(response.ok()).toBeTruthy();
-  }
-}
-
 test("landing opens the workspace and shows the composite refund failure", async ({ page, request }) => {
   await reset(request);
   await page.setViewportSize({ width: 1440, height: 900 });
@@ -168,8 +141,8 @@ test("review resolves conflicts, approves the threshold, and builds a measured c
   await expect(page.getByRole("dialog").getByText("Approved", { exact: true })).toBeVisible();
   await page.getByRole("button", { name: "Close rule details" }).click();
   await page.getByRole("link", { name: "Build" }).click();
-  await page.getByRole("button", { name: "Build candidate" }).click();
-  await expect(page.getByRole("navigation", { name: "Compiled bundle tree" })).toBeVisible({ timeout: 15_000 });
+  await page.getByRole("button", { name: "Refactor & compile" }).click();
+  await expect(page.getByRole("navigation", { name: "Compiled instruction bundle tree" })).toBeVisible({ timeout: 15_000 });
   await expect(page.getByRole("heading", { name: "Compilation metrics" })).toBeVisible();
   await expect(page.getByText("char_div_4 · 1.0.0")).toBeVisible();
   await expect(page.getByText("Behavioral fidelity: Not measured")).toBeVisible();
@@ -206,7 +179,6 @@ test("two domains keep project routing and compiled evidence isolated", async ({
   const acme = projects.find((project) => project.slug === "acme-appointments");
   expect(acme, "the Acme appointment project must be seeded").toBeTruthy();
   expect(projects.some((project) => project.id === northstar.id)).toBeTruthy();
-  await resolveProjectConflicts(request, acme!.id);
 
   await page.goto(`/projects/${northstar.id}/overview`);
   const selector = page.getByRole("combobox", { name: "Project / domain" });
@@ -217,7 +189,34 @@ test("two domains keep project routing and compiled evidence isolated", async ({
   await expect(page).toHaveURL(`/projects/${acme!.id}/overview`);
   await expect(page.getByRole("heading", { name: "Acme Appointment Scheduling Agent" })).toBeVisible();
 
-  await page.getByRole("link", { name: "Placements" }).click();
+  await page.getByRole("link", { name: "Sources" }).click();
+  await expect(page.getByRole("heading", { name: "Sources" })).toBeVisible();
+  const currentPolicySource = page.getByRole("button", { name: /booking-policy-v2\.md/i });
+  await currentPolicySource.click();
+  await expect(currentPolicySource).toContainText("Current");
+  await expect(page.getByText("Acme Clinical Operations", { exact: true })).toBeVisible();
+  const stalePolicySource = page.getByRole("button", { name: /booking-sop-legacy\.md/i });
+  await stalePolicySource.click();
+  await expect(stalePolicySource).toContainText("Superseded");
+  await expect(page.getByText("Legacy Contact Centre", { exact: true })).toBeVisible();
+
+  await page.getByRole("link", { name: "Rules" }).click();
+  await expect(page.getByRole("heading", { name: "Rules and findings" })).toBeVisible();
+  for (const rationale of [
+    "Booking Policy v2 sets the current customer-timezone operating window; the retained SOP is superseded.",
+    "Booking Policy v2 requires the recorded IANA timezone; stale inference guidance is superseded.",
+  ]) {
+    await page.getByRole("button", { name: "Review conflict" }).first().click();
+    const decision = page.getByRole("form", { name: /Resolve conflict:/ });
+    await decision.getByRole("radio", { name: /booking-policy-v2\.md/i }).click();
+    await decision.getByLabel("Decision authority").fill("Booking Policy v2, approved by Acme Clinical Operations");
+    await decision.getByLabel("Resolution rationale").fill(rationale);
+    await decision.getByRole("button", { name: "Save resolution" }).click();
+    await expect(decision).toBeHidden();
+  }
+  await expect(page.getByRole("button", { name: "Review conflict" })).toHaveCount(0);
+
+  await page.getByRole("link", { name: "Placements", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Placements" })).toBeVisible();
   const identityPlacement = page.locator("article.placement-card").filter({ hasText: "Verify identity before appointment change" });
   await expect(identityPlacement).toContainText("Pre-tool guard");
@@ -227,12 +226,19 @@ test("two domains keep project routing and compiled evidence isolated", async ({
   await expect(pendingPlacement).toContainText("Human review");
   const unsupportedPlacement = page.locator("article.placement-card").filter({ hasText: "Undefined daylight-hours preference" });
   await expect(unsupportedPlacement).toContainText("Unsupported");
+  await identityPlacement.getByRole("button", { name: "Review placement" }).click();
+  const placementDialog = page.getByRole("dialog", { name: "Verify identity before appointment change" });
+  await placementDialog.getByLabel("Reviewer").fill("Gate 1 browser reviewer");
+  await placementDialog.getByLabel("Rationale").fill("Keep identity verification in the scoped skill, deterministic pre-tool guard, and regression suite.");
+  await placementDialog.getByRole("button", { name: /Save as version/ }).click();
+  await expect(placementDialog).toBeHidden();
+  await expect(page.getByText(/placement version 2 was stored/i)).toBeVisible();
   await page.getByRole("heading", { name: "Placements" }).scrollIntoViewIfNeeded();
   await captureDocumentationScreenshot(page, "acme-routing-desktop");
 
   await page.getByRole("link", { name: "Build" }).click();
-  await page.getByRole("button", { name: /Build (candidate|new snapshot)/ }).click();
-  await expect(page.getByRole("navigation", { name: "Compiled bundle tree" })).toBeVisible({ timeout: 20_000 });
+  await page.getByRole("button", { name: /^(Refactor & compile|Compile new snapshot)$/ }).click();
+  await expect(page.getByRole("navigation", { name: "Compiled instruction bundle tree" })).toBeVisible({ timeout: 20_000 });
   await expect(page).toHaveURL(new RegExp(`/projects/${acme!.id}/builds/[^/]+$`));
   await expect(page.getByRole("button", { name: "prompt-kernel.md" })).toHaveAttribute("aria-current", "true");
   await expect(page.getByRole("heading", { name: "Compilation metrics" })).toBeVisible();
@@ -244,10 +250,18 @@ test("two domains keep project routing and compiled evidence isolated", async ({
   await expect(page.getByText("Behavioral fidelity: Not measured")).toBeVisible();
   const mappedRule = page.getByRole("button", { name: /rule\.appointment\.style@1/ }).first();
   await mappedRule.click();
-  await expect(page.getByText("Exact source anchors")).toBeVisible();
+  await expect(page.getByText("Exact source anchors", { exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: /Open exact source/ }).first()).toHaveAttribute("href", new RegExp(`/projects/${acme!.id}/sources\\?document=.+#line-`));
   await page.locator(".artifact-provenance").scrollIntoViewIfNeeded();
   await captureDocumentationScreenshot(page, "acme-build-desktop");
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.getByRole("heading", { name: "Compiled instruction bundle" })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth), "Acme build horizontal overflow").toBeLessThanOrEqual(0);
+  await page.getByRole("link", { name: "Placements", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Placements" })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth), "Acme routing horizontal overflow").toBeLessThanOrEqual(0);
+  await page.setViewportSize({ width: 1280, height: 800 });
 
   const buildSelector = page.getByRole("combobox", { name: "Project / domain" });
   await expect(buildSelector).toHaveValue(acme!.id, { timeout: 15_000 });
@@ -255,7 +269,7 @@ test("two domains keep project routing and compiled evidence isolated", async ({
   await expect(page).toHaveURL(`/projects/${northstar.id}/overview`);
   await expect(page.getByRole("combobox", { name: "Project / domain" })).toHaveValue(northstar.id, { timeout: 15_000 });
   await expect(page.getByRole("heading", { name: "Northstar Retail Refund Agent" })).toBeVisible();
-  await page.getByRole("link", { name: "Placements" }).click();
+  await page.getByRole("link", { name: "Placements", exact: true }).click();
   await expect(page).toHaveURL(`/projects/${northstar.id}/routing`);
   await expect(page.getByRole("heading", { name: "Placements" })).toBeVisible();
   await expect(page.getByText("Approval above $200", { exact: true })).toBeVisible();

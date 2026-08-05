@@ -8,7 +8,7 @@ import { api, label, RequestError } from "@/lib/api";
 import { startOperationAndLoadResource } from "@/lib/operations";
 import { caseArmSummary, configuredBuildArms } from "@/lib/run-presentation";
 import type { Operation, Run, Summary, TestCase } from "@/lib/types";
-import { Badge, Button, ErrorState, PageLoading, PageTitle, StatCard } from "@/components/ui";
+import { Badge, Button, EmptyState, ErrorState, PageLoading, PageTitle, StatCard } from "@/components/ui";
 
 export default function TestsPage() {
   const { projectId } = useParams<{ projectId: string }>();
@@ -61,14 +61,14 @@ export default function TestsPage() {
         <Button disabled={!summary.data!.current_build || run.isPending} onClick={() => run.mutate()}><Play size={15} /> {run.isPending ? (waking ? "Waking your workspace…" : `Running… ${operation?.progress ?? 0}%`) : "Run comparison"}</Button>
       </div>
       <p style={{ margin: "0 18px 18px", color: "var(--muted)" }}>Planned matrix: {suiteSummary}.</p>
-      {!summary.data!.current_build && <div className="build-blocked" style={{ margin: "0 18px 18px" }}><div><strong>Candidate build required</strong><p>Complete rule review and compile the artifacts before testing.</p></div><a className="button button-secondary" href={`/projects/${projectId}/build`}>Open Build</a></div>}
+      {!summary.data!.current_build && <div className="build-blocked" style={{ margin: "0 18px 18px" }}><div><strong>Compiled instruction bundle required</strong><p>Complete rule and placement review, then compile the artifacts before testing.</p></div><a className="button button-secondary" href={`/projects/${projectId}/build`}>Open Build</a></div>}
       {run.error && <div className="build-blocked" style={{ margin: "0 18px 18px" }}><div><strong>Run could not complete</strong><p>{run.error instanceof RequestError || run.error instanceof Error ? run.error.message : "Try again after checking the current build."}</p></div></div>}
     </section>
     <div className="toolbar" aria-label="Test filters">{filterTags.map((tag) => <button className={`filter-button ${filter === tag ? "active" : ""}`} key={tag} onClick={() => setFilter(tag)}>{label(tag)} {tag !== "all" && `(${allTags.filter((value) => value === tag).length})`}</button>)}</div>
-    <section className="panel" style={{ overflow: "hidden" }}>
+    {!filtered.length ? <EmptyState title={tests.data!.length ? "No cases match this filter" : "No regression cases"} detail={tests.data!.length ? "Choose another coverage tag." : "This project does not have approved, build-pinned regression scenarios yet."} /> : <section className="panel" style={{ overflow: "hidden" }}>
       <table className="data-table"><thead><tr><th>Case</th><th>Coverage</th><th>Expected guarded decision</th><th>Provenance</th><th>Review</th></tr></thead><tbody>
         {filtered.map((test) => <tr key={test.id}><td className="rule-title"><strong>{test.title}</strong><small>{test.stable_key}</small></td><td><div className="tags">{test.spec.tags.map((tag) => <span className="tag" key={tag}>{tag}</span>)}</div></td><td><Badge tone={test.spec.expected.guarded_decision === "allow" ? "teal" : test.spec.expected.guarded_decision === "deny" ? "red" : "amber"}><ShieldCheck size={11} /> {label(String(test.spec.expected.guarded_decision))}</Badge></td><td><Badge tone="blue">Aletheia-authored</Badge></td><td><Badge tone="teal">{label(test.review_status)}</Badge></td></tr>)}
       </tbody></table>
-    </section>
+    </section>}
   </div>;
 }

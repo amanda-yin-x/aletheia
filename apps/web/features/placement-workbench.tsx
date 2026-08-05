@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { AlertTriangle, CheckCircle2, Pencil, RefreshCw, Route, ShieldAlert, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Badge, Button, EmptyState, ErrorState, PageLoading, PageTitle, StatCard } from "@/components/ui";
 import {
@@ -53,6 +53,7 @@ function PlacementEditor({
   const [reviewer, setReviewer] = useState(decision.reviewer);
   const [rationale, setRationale] = useState(decision.rationale);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const dialogRef = useRef<HTMLElement>(null);
   const mutation = useMutation({
     mutationFn: () => api<PlacementDecision>(`/api/v1/placement-decisions/${encodeURIComponent(decision.id)}`, {
       method: "PATCH",
@@ -76,6 +77,36 @@ function PlacementEditor({
     || destinations.join("|") !== decision.destinations.join("|");
   const versionConflict = mutation.error instanceof RequestError
     && (mutation.error.status === 409 || mutation.error.payload.code === "placement_version_conflict");
+
+  useEffect(() => {
+    const previous = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const frame = window.requestAnimationFrame(() => dialogRef.current?.querySelector<HTMLElement>("button, a, input, select, textarea")?.focus());
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+      if (event.key !== "Tab" || !dialogRef.current) return;
+      const controls = [...dialogRef.current.querySelectorAll<HTMLElement>("button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex='-1'])")];
+      if (!controls.length) return;
+      const first = controls[0];
+      const last = controls[controls.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      document.removeEventListener("keydown", onKeyDown);
+      previous?.focus();
+    };
+  }, [onClose]);
 
   function toggleDestination(destination: PlacementDestination, checked: boolean) {
     setValidationError(null);
@@ -117,7 +148,7 @@ function PlacementEditor({
   }
 
   return <div className="drawer-backdrop placement-drawer-backdrop" role="presentation">
-    <aside className="drawer placement-drawer" role="dialog" aria-modal="true" aria-labelledby="placement-editor-title">
+    <aside ref={dialogRef} className="drawer placement-drawer" role="dialog" aria-modal="true" aria-labelledby="placement-editor-title">
       <form onSubmit={submit}>
         <div className="drawer-head">
           <div><span className="eyebrow">Reviewed placement · version {decision.version}</span><h2 id="placement-editor-title">{rule.title}</h2></div>
@@ -175,6 +206,15 @@ function sourceAuthority(rule: Rule, documents: Document[], projectId: string) {
   })}</div>;
 }
 
+function placementNeedsAttention(rule: Rule, decision?: PlacementDecision): boolean {
+  if (!decision) return true;
+  const ruleIsUnreviewed = rule.status !== "approved" && rule.status !== "rejected";
+  return ruleIsUnreviewed
+    || decision.review_status !== "approved"
+    || decision.disposition === "blocked"
+    || decision.disposition === "unsupported";
+}
+
 export function PlacementWorkbench({ projectId }: { projectId: string }) {
   const client = useQueryClient();
   const rules = useQuery({ queryKey: ["rules", projectId], queryFn: () => api<Rule[]>(`/api/v1/projects/${projectId}/rules`) });
@@ -186,13 +226,14 @@ export function PlacementWorkbench({ projectId }: { projectId: string }) {
   const selectedRule = rules.data?.find((rule) => rule.id === selectedRuleId);
   const selectedDecision = selectedRule ? latest.get(selectedRule.id) : undefined;
 
-  if (rules.isLoading || placements.isLoading || documents.isLoading) return <PageLoading label="Loading routing decisions" detail="Reading active rules, placement versions, and source authority…" />;
+  if (rules.isLoading || placements.isLoading || documents.isLoading) return <PageLoading label="Loading routing decisions" detail="Reading ledger clauses, placement versions, and source authority…" />;
   if (rules.error || placements.error || documents.error) return <ErrorState error={rules.error || placements.error || documents.error} onRetry={() => { void rules.refetch(); void placements.refetch(); void documents.refetch(); }} />;
 
-  const activeRules = rules.data || [];
-  const decisions = activeRules.map((rule) => latest.get(rule.id));
+  const ledgerRules = rules.data || [];
+  const decisions = ledgerRules.map((rule) => latest.get(rule.id));
   const routed = decisions.filter((decision) => decision?.disposition === "routed").length;
-  const pending = decisions.filter((decision) => !decision || decision.review_status === "needs_review" || decision.disposition === "blocked").length;
+  const retired = decisions.filter((decision) => decision?.disposition === "retired").length;
+  const pending = ledgerRules.filter((rule) => placementNeedsAttention(rule, latest.get(rule.id))).length;
   const unsupported = decisions.filter((decision) => decision?.disposition === "unsupported").length;
   const humanReview = decisions.filter((decision) => decision?.destinations.includes("human_review")).length;
 
@@ -212,19 +253,19 @@ export function PlacementWorkbench({ projectId }: { projectId: string }) {
   }
 
   return <div className="content-wrap">
-    <PageTitle eyebrow="Explicit compiler routing" title="Placements" detail="Every active rule needs a reviewed disposition. Placement revisions are stored independently from compiled snapshots." />
+    <PageTitle eyebrow="Explicit compiler routing" title="Placements" detail="Every rule-ledger row keeps an explicit reviewed disposition, including retired historical clauses. Placement revisions are stored independently from compiled snapshots." />
     {saved && <div className="placement-saved" role="status"><CheckCircle2 size={16} /><span><strong>{saved.rule_id}</strong> placement version {saved.version} was stored. Build a new snapshot to compile it.</span></div>}
     <div className="stat-grid placement-stat-grid">
-      <StatCard label="Active rules" value={activeRules.length} note="All non-superseded revisions" />
-      <StatCard label="Routed" value={routed} note="Explicit routed disposition" tone="teal" />
-      <StatCard label="Needs attention" value={pending} note="Unrouted, blocked, or unreviewed" tone={pending ? "amber" : undefined} />
+      <StatCard label="Ledger clauses" value={ledgerRules.length} note="Non-superseded revisions, including retired history" />
+      <StatCard label="Routed / retired" value={`${routed} / ${retired}`} note="Current routing and explicit historical dispositions" tone="teal" />
+      <StatCard label="Needs attention" value={pending} note="Missing, unreviewed, blocked, or unsupported" tone={pending ? "amber" : undefined} />
       <StatCard label="Unsupported / human" value={`${unsupported} / ${humanReview}`} note="Kept visible outside automatic enforcement" tone={unsupported ? "red" : undefined} />
     </div>
-    {!activeRules.length ? <EmptyState title="No active rules" detail="This project has no non-superseded rule revisions to place." /> : <section className="placement-list" aria-label="Active rule placements">
-      {activeRules.map((rule) => {
+    {!ledgerRules.length ? <EmptyState title="No ledger clauses" detail="This project has no non-superseded rule revisions to place." /> : <section className="placement-list" aria-label="Rule placement ledger">
+      {ledgerRules.map((rule) => {
         const decision = latest.get(rule.id);
-        const needsAttention = !decision || decision.review_status === "needs_review" || decision.disposition !== "routed";
-        return <article className={`placement-card ${needsAttention ? "needs-attention" : ""}`} key={rule.id}>
+        const needsAttention = placementNeedsAttention(rule, decision);
+        return <article className={`placement-card ${needsAttention ? "needs-attention" : ""} ${decision?.disposition === "retired" ? "is-retired" : ""}`} key={rule.id}>
           <div className="placement-card-main">
             <div className="placement-card-heading">
               <div><span className="placement-rule-key">{rule.stable_key}@{rule.revision}</span><h2>{rule.title}</h2></div>
@@ -234,7 +275,7 @@ export function PlacementWorkbench({ projectId }: { projectId: string }) {
             <div className="placement-source-authority"><strong>Source authority</strong>{sourceAuthority(rule, documents.data || [], projectId)}</div>
           </div>
           <div className="placement-card-decision">
-            {!decision ? <div className="placement-unrouted"><ShieldAlert size={18} /><strong>Placement missing</strong><p>This active rule is unrouted, so compilation must stop.</p></div> : <>
+            {!decision ? <div className="placement-unrouted"><ShieldAlert size={18} /><strong>Placement missing</strong><p>This ledger clause is unrouted, so compilation must stop.</p></div> : <>
               <div className="placement-decision-head"><Badge tone={dispositionTone(decision.disposition)}>{dispositionLabel(decision.disposition)}</Badge><span>v{decision.version} · {decision.review_status === "approved" ? "Reviewed" : "Needs review"}</span></div>
               <dl className="placement-decision-details">
                 <div><dt>Transform</dt><dd>{transformLabel(decision.transform_kind)}</dd></div>
@@ -251,7 +292,7 @@ export function PlacementWorkbench({ projectId }: { projectId: string }) {
         </article>;
       })}
     </section>}
-    <section className="placement-boundary" aria-label="Routing evidence boundary"><AlertTriangle size={17} /><div><strong>Placement is a reviewed compiler input.</strong><p>It records where a clause is routed or why it is blocked. Behavioral fidelity remains not measured.</p></div><Link href={`/projects/${encodeURIComponent(projectId)}/build`}><Route size={14} /> Inspect compiled snapshot</Link></section>
+    <section className="placement-boundary" aria-label="Routing evidence boundary"><AlertTriangle size={17} /><div><strong>Placement is a reviewed compiler input.</strong><p>It records where each ledger clause is routed, retired, blocked, or unsupported. Behavioral fidelity remains not measured.</p></div><Link href={`/projects/${encodeURIComponent(projectId)}/build`}><Route size={14} /> Inspect compiled snapshot</Link></section>
     {selectedRule && selectedDecision && <PlacementEditor
       key={selectedDecision.id}
       decision={selectedDecision}

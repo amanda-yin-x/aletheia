@@ -1,13 +1,63 @@
 {
   "$defs": {
+    "ClauseInventoryPin": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Path",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "title": "ClauseInventoryPin",
+      "type": "object"
+    },
     "CompilationInputs": {
       "additionalProperties": false,
       "properties": {
+        "agents": {
+          "items": {
+            "$ref": "#/$defs/PinnedDocumentInput"
+          },
+          "title": "Agents",
+          "type": "array"
+        },
         "baseline_prompt": {
           "$ref": "#/$defs/PinnedDocumentInput"
         },
         "evaluation_data": {
           "$ref": "#/$defs/PinnedDocumentInput"
+        },
+        "policies": {
+          "items": {
+            "$ref": "#/$defs/PinnedDocumentInput"
+          },
+          "title": "Policies",
+          "type": "array"
+        },
+        "references": {
+          "items": {
+            "$ref": "#/$defs/PinnedDocumentInput"
+          },
+          "title": "References",
+          "type": "array"
+        },
+        "skills": {
+          "items": {
+            "$ref": "#/$defs/PinnedDocumentInput"
+          },
+          "title": "Skills",
+          "type": "array"
         },
         "tool_schema": {
           "$ref": "#/$defs/PinnedDocumentInput"
@@ -60,6 +110,17 @@
       "title": "Bundle Slug",
       "type": "string"
     },
+    "clause_inventory": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ClauseInventoryPin"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
     "expected_context": {
       "items": {
         "type": "string"
@@ -78,8 +139,11 @@
       "type": "string"
     },
     "schema_version": {
-      "const": "1.0",
       "default": "1.0",
+      "enum": [
+        "1.0",
+        "1.1"
+      ],
       "title": "Schema Version",
       "type": "string"
     },

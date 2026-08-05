@@ -197,9 +197,7 @@ def _validation_error(
     errors = sorted(
         contracts[name].validator.iter_errors(arguments),
         key=lambda error: (
-            {"required": 0, "type": 1, "additionalProperties": 2}.get(
-                str(error.validator), 3
-            ),
+            {"required": 0, "type": 1, "additionalProperties": 2}.get(str(error.validator), 3),
             tuple(str(part) for part in error.absolute_path),
             error.message,
         ),
@@ -223,8 +221,7 @@ def _validation_error(
         missing = sorted(
             item
             for item in required
-            if isinstance(item, str)
-            and (not isinstance(container, dict) or item not in container)
+            if isinstance(item, str) and (not isinstance(container, dict) or item not in container)
         )
         return {
             "code": "missing_required_arguments",
@@ -291,15 +288,11 @@ def _compiler_assertion(
         for finding in findings:
             if not isinstance(finding, dict):
                 continue
-            related = {
-                _base_rule_key(str(value))
-                for value in finding.get("related_rules", [])
-            }
+            related = {_base_rule_key(str(value)) for value in finding.get("related_rules", [])}
             if (
                 finding.get("type") == assertion.get("type")
                 and expected_rules <= related
-                and finding.get("resolution_state")
-                == assertion.get("resolution_state")
+                and finding.get("resolution_state") == assertion.get("resolution_state")
             ):
                 matched = finding
                 break
@@ -378,9 +371,7 @@ def run_scenario(
                     "input_schema": {
                         "$schema": DRAFT_2020_12_URI,
                         "type": "object",
-                        "properties": {
-                            key: {} for key in sorted(inferred_properties[name])
-                        },
+                        "properties": {key: {} for key in sorted(inferred_properties[name])},
                         "additionalProperties": False,
                     },
                 }
@@ -433,9 +424,7 @@ def run_scenario(
         enforced = arm == "compiled_enforced"
         if enforced and decision.decision not in {"allow", "not_applicable"}:
             event_type = (
-                "approval_required"
-                if decision.decision == "require_approval"
-                else "tool_blocked"
+                "approval_required" if decision.decision == "require_approval" else "tool_blocked"
             )
             _event(
                 events,
@@ -493,9 +482,7 @@ def run_scenario(
             )
         else:
             tool_passed = (
-                not validation_errors
-                and not executed_violation
-                and len(executed) == len(proposed)
+                not validation_errors and not executed_violation and len(executed) == len(proposed)
             )
         assertion_results.append(
             {
@@ -604,8 +591,7 @@ def _aggregate(
             ),
             "attempted_violation_rate": (
                 round(
-                    sum(bool(row.metrics.get("attempted_violation")) for row in rows)
-                    / total,
+                    sum(bool(row.metrics.get("attempted_violation")) for row in rows) / total,
                     4,
                 )
                 if total
@@ -613,8 +599,7 @@ def _aggregate(
             ),
             "executed_violation_rate": (
                 round(
-                    sum(bool(row.metrics.get("executed_violation")) for row in rows)
-                    / total,
+                    sum(bool(row.metrics.get("executed_violation")) for row in rows) / total,
                     4,
                 )
                 if total
@@ -627,8 +612,7 @@ def _aggregate(
             ),
             "tool_validation_error_rate": (
                 round(
-                    sum(int(row.metrics.get("tool_validation_errors", 0)) for row in rows)
-                    / total,
+                    sum(int(row.metrics.get("tool_validation_errors", 0)) for row in rows) / total,
                     4,
                 )
                 if total
@@ -669,18 +653,30 @@ def _aggregate(
         for rule in input_manifest.get("rules", [])
         if isinstance(rule, dict) and isinstance(rule.get("stable_key"), str)
     ]
+    test_required_rules = {
+        str(placement["rule_stable_key"])
+        for placement in input_manifest.get("placements", [])
+        if isinstance(placement, dict)
+        and isinstance(placement.get("rule_stable_key"), str)
+        and "test" in placement.get("destinations", [])
+    }
+    retired_rules = {
+        str(placement["rule_stable_key"])
+        for placement in input_manifest.get("placements", [])
+        if isinstance(placement, dict)
+        and isinstance(placement.get("rule_stable_key"), str)
+        and placement.get("disposition") == "retired"
+    }
     accepted_rules = {
         str(rule["stable_key"])
         for rule in rule_inputs
-        if rule.get("status") == "approved"
+        if rule.get("status") == "approved" and rule.get("stable_key") in test_required_rules
     }
     test_tags_by_rule: dict[str, set[str]] = {}
     for test in input_manifest.get("tests", []):
         if not isinstance(test, dict):
             continue
-        tags = {
-            str(tag) for tag in test.get("tags", []) if isinstance(tag, str)
-        }
+        tags = {str(tag) for tag in test.get("tags", []) if isinstance(tag, str)}
         for rule_id in test.get("rule_ids", []):
             if isinstance(rule_id, str):
                 test_tags_by_rule.setdefault(rule_id, set()).update(tags)
@@ -688,7 +684,7 @@ def _aggregate(
     normative_sources = {
         str(source)
         for rule in rule_inputs
-        if rule.get("status") == "approved"
+        if rule.get("status") == "approved" and rule.get("stable_key") in test_required_rules
         for source in rule.get("source_documents", [])
         if isinstance(source, str)
     }
@@ -696,6 +692,7 @@ def _aggregate(
         str(source)
         for rule in rule_inputs
         if rule.get("status") == "approved"
+        and rule.get("stable_key") in test_required_rules
         and rule.get("stable_key") in tested_rules
         for source in rule.get("source_documents", [])
         if isinstance(source, str)
@@ -715,10 +712,8 @@ def _aggregate(
         str(rule["stable_key"])
         for rule in rule_inputs
         if rule.get("severity") == "critical"
-        and (
-            rule.get("status") != "approved"
-            or rule.get("stable_key") not in tested_rules
-        )
+        and rule.get("stable_key") not in retired_rules
+        and (rule.get("status") != "approved" or rule.get("stable_key") not in tested_rules)
     )
     output["coverage"] = {
         "test_count": total_specs,
@@ -737,12 +732,8 @@ def _aggregate(
             else 1.0
         ),
         "declared_rule_linkage": _coverage_dimension(accepted_rules, tested_rules),
-        "declared_source_linkage": _coverage_dimension(
-            normative_sources, covered_sources
-        ),
-        "declared_boundary_linkage": _coverage_dimension(
-            boundary_rules, boundary_covered
-        ),
+        "declared_source_linkage": _coverage_dimension(normative_sources, covered_sources),
+        "declared_boundary_linkage": _coverage_dimension(boundary_rules, boundary_covered),
         "critical_unclassified_rules": critical_unclassified,
     }
     return output
@@ -786,7 +777,7 @@ def _load_build_bundle(
         )
     try:
         manifest = BuildManifest.model_validate(manifest).model_dump(
-            mode="json", by_alias=True
+            mode="json", by_alias=True, exclude_unset=True
         )
     except ValidationError as error:
         raise ServiceError(
@@ -867,14 +858,8 @@ def _load_build_bundle(
             details={"errors": error.errors(include_url=False)},
             status_code=409,
         ) from error
-    tests = [
-        record.model_dump(mode="json", by_alias=True)
-        for record in validated_regression.tests
-    ]
-    rules = [
-        rule.model_dump(mode="json", by_alias=True)
-        for rule in validated_policy.rules
-    ]
+    tests = [record.model_dump(mode="json", by_alias=True) for record in validated_regression.tests]
+    rules = [rule.model_dump(mode="json", by_alias=True) for rule in validated_policy.rules]
     _registry_contracts(registry)
     return manifest, tests, rules, registry, facts
 
@@ -898,9 +883,7 @@ async def run_comparison(
         await session.get(Build, build_id)
         if build_id
         else await session.scalar(
-            select(Build)
-            .where(Build.project_id == project_id)
-            .order_by(Build.created_at.desc())
+            select(Build).where(Build.project_id == project_id).order_by(Build.created_at.desc())
         )
     )
     if not build:
@@ -916,9 +899,7 @@ async def run_comparison(
     current_tests = {
         test.stable_key: test
         for test in (
-            await session.scalars(
-                select(TestCase).where(TestCase.project_id == project_id)
-            )
+            await session.scalars(select(TestCase).where(TestCase.project_id == project_id))
         ).all()
     }
     pinned_keys = [str(record.get("stable_key", "")) for record in test_records]
@@ -951,8 +932,8 @@ async def run_comparison(
     }
     dataset_manifest = DatasetManifest.model_validate(
         {
-        **dataset_payload,
-        "hash": bytes_hash(canonical_json_bytes(dataset_payload)),
+            **dataset_payload,
+            "hash": bytes_hash(canonical_json_bytes(dataset_payload)),
         }
     ).model_dump(mode="json", by_alias=True)
     run = Run(

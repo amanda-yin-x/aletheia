@@ -49,9 +49,7 @@ class Project(Base):
     domain: Mapped[str] = mapped_column(String(80))
     description: Mapped[str] = mapped_column(Text)
     mode: Mapped[str] = mapped_column(String(40), default="demo")
-    compiler_profile: Mapped[dict[str, Any]] = mapped_column(
-        JSON, default=default_compiler_profile
-    )
+    compiler_profile: Mapped[dict[str, Any]] = mapped_column(JSON, default=default_compiler_profile)
     compilation_config: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
@@ -123,7 +121,9 @@ class Document(Base):
         ),
     )
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
-    project_id: Mapped[str] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"), index=True)
+    project_id: Mapped[str] = mapped_column(
+        ForeignKey("projects.id", ondelete="CASCADE"), index=True
+    )
     kind: Mapped[str] = mapped_column(String(50))
     name: Mapped[str] = mapped_column(String(255))
     version: Mapped[int] = mapped_column(Integer, default=1)
@@ -136,9 +136,7 @@ class Document(Base):
     origin: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     authority_owner: Mapped[str] = mapped_column(String(200), default="unspecified")
     authority_status: Mapped[str] = mapped_column(String(20), default="reference")
-    effective_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    effective_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     supersedes_document_id: Mapped[str | None] = mapped_column(
         ForeignKey("documents.id", ondelete="SET NULL"), nullable=True, index=True
     )
@@ -158,7 +156,9 @@ class Rule(Base):
         ),
     )
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
-    project_id: Mapped[str] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"), index=True)
+    project_id: Mapped[str] = mapped_column(
+        ForeignKey("projects.id", ondelete="CASCADE"), index=True
+    )
     stable_key: Mapped[str] = mapped_column(String(140), index=True)
     revision: Mapped[int] = mapped_column(Integer, default=1)
     title: Mapped[str] = mapped_column(String(240))
@@ -177,9 +177,7 @@ class Rule(Base):
     target_tools: Mapped[list[str]] = mapped_column(JSON, default=list)
     exceptions: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
     reviewer_note: Mapped[str] = mapped_column(Text, default="")
-    provenance_kind: Mapped[str] = mapped_column(
-        String(40), default="source_anchored"
-    )
+    provenance_kind: Mapped[str] = mapped_column(String(40), default="source_anchored")
     provenance_metadata: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
@@ -188,7 +186,9 @@ class Rule(Base):
 class Finding(Base):
     __tablename__ = "findings"
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
-    project_id: Mapped[str] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"), index=True)
+    project_id: Mapped[str] = mapped_column(
+        ForeignKey("projects.id", ondelete="CASCADE"), index=True
+    )
     type: Mapped[str] = mapped_column(String(40))
     severity: Mapped[str] = mapped_column(String(20))
     related_rule_ids: Mapped[list[str]] = mapped_column(JSON, default=list)
@@ -206,7 +206,9 @@ class Build(Base):
         UniqueConstraint("project_id", "content_hash", name="uq_builds_project_content_hash"),
     )
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
-    project_id: Mapped[str] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"), index=True)
+    project_id: Mapped[str] = mapped_column(
+        ForeignKey("projects.id", ondelete="CASCADE"), index=True
+    )
     status: Mapped[str] = mapped_column(String(30))
     input_manifest: Mapped[dict[str, Any]] = mapped_column(JSON)
     input_hash: Mapped[str] = mapped_column(String(64))
@@ -241,9 +243,7 @@ class PlacementDecision(Base):
     project_id: Mapped[str] = mapped_column(
         ForeignKey("projects.id", ondelete="CASCADE"), index=True
     )
-    rule_id: Mapped[str] = mapped_column(
-        ForeignKey("rules.id", ondelete="CASCADE"), index=True
-    )
+    rule_id: Mapped[str] = mapped_column(ForeignKey("rules.id", ondelete="CASCADE"), index=True)
     version: Mapped[int] = mapped_column(Integer, default=1)
     profile_name: Mapped[str] = mapped_column(String(120))
     profile_version: Mapped[str] = mapped_column(String(40))
@@ -285,9 +285,7 @@ class GeneratedSpan(Base):
         ),
     )
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
-    build_id: Mapped[str] = mapped_column(
-        ForeignKey("builds.id", ondelete="CASCADE"), index=True
-    )
+    build_id: Mapped[str] = mapped_column(ForeignKey("builds.id", ondelete="CASCADE"), index=True)
     rule_id: Mapped[str | None] = mapped_column(
         ForeignKey("rules.id", ondelete="SET NULL"), nullable=True, index=True
     )
@@ -312,7 +310,9 @@ class TestCase(Base):
     __tablename__ = "test_cases"
     __table_args__ = (UniqueConstraint("project_id", "stable_key"),)
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
-    project_id: Mapped[str] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"), index=True)
+    project_id: Mapped[str] = mapped_column(
+        ForeignKey("projects.id", ondelete="CASCADE"), index=True
+    )
     stable_key: Mapped[str] = mapped_column(String(160))
     title: Mapped[str] = mapped_column(String(240))
     provenance: Mapped[str] = mapped_column(String(80))
@@ -324,7 +324,9 @@ class TestCase(Base):
 class Run(Base):
     __tablename__ = "runs"
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
-    project_id: Mapped[str] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"), index=True)
+    project_id: Mapped[str] = mapped_column(
+        ForeignKey("projects.id", ondelete="CASCADE"), index=True
+    )
     build_id: Mapped[str] = mapped_column(ForeignKey("builds.id"))
     requested_arms: Mapped[list[str]] = mapped_column(JSON)
     adapter: Mapped[str] = mapped_column(String(60))
@@ -353,7 +355,9 @@ class ScenarioResult(Base):
 class TraceEventModel(Base):
     __tablename__ = "trace_events"
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
-    result_id: Mapped[str] = mapped_column(ForeignKey("scenario_results.id", ondelete="CASCADE"), index=True)
+    result_id: Mapped[str] = mapped_column(
+        ForeignKey("scenario_results.id", ondelete="CASCADE"), index=True
+    )
     trace_id: Mapped[str] = mapped_column(String(36), index=True)
     sequence: Mapped[int] = mapped_column(Integer)
     type: Mapped[str] = mapped_column(String(40))

@@ -1,0 +1,46 @@
+{
+  "schema_version": "1.0",
+  "reviewer": "Aletheia fixture author",
+  "interpretation": "This is a fixture-authored normative-line inventory, not extractor or analyzer output.",
+  "sources": [
+    {
+      "document": "AGENTS.md",
+      "version": 1,
+      "lines": [3, 5, 7],
+      "default": {"category": "style", "enforcement": "prompt", "status": "approved", "destinations": ["prompt_kernel"], "disposition": "routed", "review_status": "approved", "rationale": "Reviewed agent contract remains always loaded."}
+    },
+    {
+      "document": "SKILL.md",
+      "version": 1,
+      "lines": [8, 10, 12],
+      "default": {"category": "workflow", "enforcement": "prompt", "status": "approved", "destinations": ["skill"], "disposition": "routed", "review_status": "approved", "rationale": "Reviewed refund workflow language is routed to the scoped skill."}
+    },
+    {
+      "document": "baseline-system-prompt.md",
+      "version": 1,
+      "lines": [4, 5, 6, 7, 8, 11, 12, 13, 14, 15, 16, 17, 20, 21, 22, 23, 24, 25, 26, 27, 28, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 43, 44, 45, 46, 47, 48, 49, 50, 53, 54, 55, 56, 57, 58, 61, 62, 63, 64, 65, 66, 67, 70, 71, 72, 73, 74, 75, 78, 79, 80, 81, 82, 85, 86, 87, 88, 89, 90, 91, 92, 93, 96, 97, 98, 99, 100, 101, 102, 103, 104, 105, 108, 109, 110, 111, 112, 113, 114, 115, 118, 119, 120, 121, 122, 123, 124, 127, 128, 129, 130, 131, 134, 135, 136, 137, 138, 139, 140, 143, 144, 145, 146, 147, 148, 151, 152, 153, 154, 155, 156, 157, 158, 161, 162, 163, 164],
+      "default": {"category": "workflow", "enforcement": "prompt", "status": "approved", "destinations": ["skill"], "disposition": "routed", "review_status": "approved", "rationale": "Reviewed baseline workflow language moves to the on-demand refund skill."},
+      "overrides": [
+        {"lines": [128], "category": "workflow", "enforcement": "human_review", "status": "needs_review", "destinations": ["unsupported"], "disposition": "unsupported", "review_status": "needs_review", "rationale": "Daylight hours has no reviewed numeric semantics and remains unsupported."}
+      ]
+    },
+    {
+      "document": "refund-policy-v3.md",
+      "version": 3,
+      "lines": [7, 8, 9, 13, 14, 15, 16, 20, 21, 25, 26, 27, 31, 32, 36, 37, 41, 42, 43, 44, 48, 49],
+      "default": {"category": "workflow", "enforcement": "prompt", "status": "approved", "destinations": ["skill"], "disposition": "routed", "review_status": "approved", "rationale": "Reviewed current-policy guidance is routed to the scoped skill unless represented by a stronger core rule."}
+    },
+    {
+      "document": "refund-sop-legacy.md",
+      "version": 1,
+      "lines": [5, 6, 7, 8, 9, 10, 11, 12, 14],
+      "default": {"category": "workflow", "enforcement": "human_review", "status": "rejected", "destinations": ["human_review"], "disposition": "retired", "review_status": "approved", "rationale": "Superseded SOP language is retained only as losing authority evidence."}
+    },
+    {
+      "document": "support-style.md",
+      "version": 1,
+      "lines": [3, 4, 5, 6, 7, 8, 9, 10],
+      "default": {"category": "style", "enforcement": "prompt", "status": "approved", "destinations": ["prompt_kernel"], "disposition": "routed", "review_status": "approved", "rationale": "Reviewed customer-facing style remains always loaded."}
+    }
+  ]
+}

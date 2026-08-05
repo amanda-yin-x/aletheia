@@ -50,11 +50,7 @@ class SpanWriter:
                 "utf8_byte_end": byte_end,
                 "transform_kind": transform_kind,
                 "text_sha256": bytes_hash(value.encode("utf-8")),
-                "rule_id": (
-                    f"{rule.stable_key}@{rule.revision}"
-                    if rule is not None
-                    else None
-                ),
+                "rule_id": (f"{rule.stable_key}@{rule.revision}" if rule is not None else None),
                 "rule_stable_key": str(getattr(rule, "stable_key", "")) or None,
                 "rule_revision": getattr(rule, "revision", None),
                 "placement_decision_id": (
@@ -131,11 +127,7 @@ def locate_fragment_span(
             "utf8_byte_end": byte_end,
             "transform_kind": transform_kind,
             "text_sha256": bytes_hash(fragment.encode("utf-8")),
-            "rule_id": (
-                f"{rule.stable_key}@{rule.revision}"
-                if rule is not None
-                else None
-            ),
+            "rule_id": (f"{rule.stable_key}@{rule.revision}" if rule is not None else None),
             "rule_stable_key": str(getattr(rule, "stable_key", "")) or None,
             "rule_revision": getattr(rule, "revision", None),
             "placement_decision_id": (

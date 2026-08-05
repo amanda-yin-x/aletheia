@@ -34,9 +34,7 @@ REPORT_DIGEST_DEFINITION = (
 )
 
 
-def release_gate_ready(
-    metrics: dict[str, Any], dataset_manifest: dict[str, Any]
-) -> bool:
+def release_gate_ready(metrics: dict[str, Any], dataset_manifest: dict[str, Any]) -> bool:
     guarded = metrics.get("compiled_enforced", {})
     coverage = metrics.get("coverage", {})
     expected_cases = dataset_manifest.get("test_count")
@@ -82,7 +80,7 @@ def _manifest(build: Build) -> dict[str, Any]:
         )
     try:
         return BuildManifest.model_validate(manifest).model_dump(
-            mode="json", by_alias=True
+            mode="json", by_alias=True, exclude_unset=True
         )
     except ValidationError as error:
         raise ServiceError(
@@ -93,9 +91,7 @@ def _manifest(build: Build) -> dict[str, Any]:
         ) from error
 
 
-def _stable_run_payload(
-    run: Run, build: Build, results: list[ScenarioResult]
-) -> dict[str, Any]:
+def _stable_run_payload(run: Run, build: Build, results: list[ScenarioResult]) -> dict[str, Any]:
     result_payload = [
         {
             "test": result.test_snapshot,
@@ -144,15 +140,10 @@ async def create_report(session: AsyncSession, run_id: str) -> Report:
         )
     manifest = _manifest(build)
     results = list(
-        (
-            await session.scalars(
-                select(ScenarioResult).where(ScenarioResult.run_id == run_id)
-            )
-        ).all()
+        (await session.scalars(select(ScenarioResult).where(ScenarioResult.run_id == run_id))).all()
     )
     if any(
-        not result.test_snapshot.get("stable_key")
-        or not result.test_snapshot.get("title")
+        not result.test_snapshot.get("stable_key") or not result.test_snapshot.get("title")
         for result in results
     ):
         raise ServiceError(
@@ -196,12 +187,8 @@ async def create_report(session: AsyncSession, run_id: str) -> Report:
             "version": run.dataset_manifest.get("version"),
             "data_scope": "Evaluation fixture — no customer records",
             "fixture_source": run.dataset_manifest.get("facts_source"),
-            "contains_customer_records": run.dataset_manifest.get(
-                "contains_customer_records"
-            ),
-            "evaluation_timestamp": run.dataset_manifest.get(
-                "evaluation_timestamp"
-            ),
+            "contains_customer_records": run.dataset_manifest.get("contains_customer_records"),
+            "evaluation_timestamp": run.dataset_manifest.get("evaluation_timestamp"),
             "test_count": run.dataset_manifest.get("test_count"),
             "dataset_manifest_sha256": run.dataset_manifest.get("hash"),
             "adapter": "Deterministic replay",
@@ -211,9 +198,7 @@ async def create_report(session: AsyncSession, run_id: str) -> Report:
         },
         "hashes": {
             "build_root_sha256": build.content_hash,
-            "manifest_bytes_sha256": bytes_hash(
-                artifact_bytes(build.artifacts[ROOT_ARTIFACT])
-            ),
+            "manifest_bytes_sha256": bytes_hash(artifact_bytes(build.artifacts[ROOT_ARTIFACT])),
             "run_sha256": run_digest,
             "test_suite_sha256": run.dataset_manifest.get("tests_sha256"),
             "tool_registry_sha256": run.dataset_manifest.get("tools_sha256"),
@@ -316,10 +301,7 @@ def _markdown(evidence: dict[str, Any]) -> str:
             f"Fixture: {evidence['provenance']['dataset']} "
             f"({evidence['test_count']} cases; no customer records)."
         ),
-        (
-            "Adapter: deterministic replay; "
-            f"model: {evidence['provenance']['model']}."
-        ),
+        (f"Adapter: deterministic replay; model: {evidence['provenance']['model']}."),
         "",
         "## Arm comparison",
         "",

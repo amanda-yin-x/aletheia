@@ -51,6 +51,8 @@
             "threshold_or_duration",
             "quoted_literal",
             "tool_name",
+            "enum_value",
+            "structured_literal",
             "boundary_or_exception"
           ],
           "title": "Kind",

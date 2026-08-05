@@ -1,2 +1,1 @@
 """Framework-independent application services."""
-

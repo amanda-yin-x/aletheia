@@ -25,13 +25,13 @@ const metrics: CompilationMetrics = {
   machine_enforced: { "policies/tool-policy.json": { lines: 1, characters: 200, utf8_bytes: 200, estimated_tokens: 50 }, "tests/regression.yaml": { lines: 15, characters: 400, utf8_bytes: 400, estimated_tokens: 100 } },
   total_bundle_without_manifest: { lines: 100, characters: 3000, utf8_bytes: 3000, estimated_tokens: 750 },
   expected_per_task_context: { lines: 22, characters: 552, utf8_bytes: 552, estimated_tokens: 138, artifact_paths: ["prompt-kernel.md", "skills/change-review/SKILL.md"] },
-  routing: { active_normative_clauses: 2, explicit_dispositions: 2, routing_coverage: 1, verified_source_anchor_coverage: 1, approved_preservation: 1, severity_weighted_approved_preservation: 1, high_critical_guard_and_test_placement: 1, blocked_count: 0, unsupported_count: 0, unrouted_count: 0, unresolved_count: 0 },
+  routing: { active_normative_clauses: 2, explicit_dispositions: 2, routing_coverage: 1, verified_source_anchor_coverage: 1, approved_preservation: 1, severity_weighted_approved_preservation: 1, high_critical_guard_and_test_placement: 1, blocked_count: 0, unsupported_count: 0, retired_count: 1, unrouted_count: 0, unresolved_count: 0 },
   protected_literals: [{ rule_key: "rule.change.verify@1", artifact_paths: ["prompt-kernel.md"], literals: [{ kind: "tool_name", value: "update_record" }], missing: [], preserved: true }],
   behavioral_fidelity: "not_measured", interpretation: "Deterministic routing, source-anchor verification, and literal checks are conformance evidence; they do not measure behavioral fidelity.",
 };
 
 const routing: RoutingReport = {
-  schema_version: "1.0", profile: { name: "default", version: "1.0.0", sha256: "e".repeat(64) }, counts: { active: 2, routed: 2, blocked: 0, unsupported: 0 },
+  schema_version: "1.0", profile: { name: "default", version: "1.0.0", sha256: "e".repeat(64) }, counts: { active: 3, routed: 2, blocked: 0, unsupported: 0, retired: 1 },
   entries: [{
     rule_key: "rule.change.verify@1", rule_stable_key: "rule.change.verify", rule_revision: 1, title: "Verify requested changes", rule_status: "approved", severity: "critical", category: "hard_constraint",
     provenance_kind: "source_anchored", provenance_metadata: {}, verified_source_anchors: 1, source_anchors: [anchor], destinations: ["prompt_kernel", "pre_tool_policy", "test"], disposition: "routed", rationale: "Keep the invariant visible and machine enforced.",
@@ -40,6 +40,10 @@ const routing: RoutingReport = {
     rule_key: "rule.guidance@1", rule_stable_key: "rule.guidance", rule_revision: 1, title: "Escalation context", rule_status: "approved", severity: "medium", category: "handoff",
     provenance_kind: "reviewer_authored_guidance", provenance_metadata: { reviewer: "Policy Lead", rationale: "Clarifies the reviewed handoff boundary.", reviewed_at: "2026-08-02T10:00:00Z" }, verified_source_anchors: 0, source_anchors: [], destinations: ["knowledge", "human_review"], disposition: "routed", rationale: "Route reviewed handoff context to the scoped reference.",
     placement: { placement_key: "rule.guidance@1:placement:1", rule_key: "rule.guidance@1", rule_stable_key: "rule.guidance", rule_revision: 1, version: 1, profile_name: "default", profile_version: "1.0.0", destinations: ["knowledge", "human_review"], scope_slug: "change-review", rendering: "Escalate ambiguous cases to a policy owner.", transform_kind: "reviewer_authored_guidance", disposition: "routed", rationale: "Route reviewed handoff context to the scoped reference.", review_status: "approved", reviewer: "Policy Lead" },
+  }, {
+    rule_key: "rule.retired@1", rule_stable_key: "rule.retired", rule_revision: 1, title: "Withdrawn workflow language", rule_status: "rejected", severity: "low", category: "workflow",
+    provenance_kind: "source_anchored", provenance_metadata: {}, verified_source_anchors: 1, source_anchors: [anchor], destinations: ["human_review"], disposition: "retired", rationale: "Retain the reviewed losing authority as historical evidence.",
+    placement: { placement_key: "rule.retired@1:placement:1", rule_key: "rule.retired@1", rule_stable_key: "rule.retired", rule_revision: 1, version: 1, profile_name: "default", profile_version: "1.0.0", destinations: ["human_review"], scope_slug: null, rendering: null, transform_kind: "verbatim", disposition: "retired", rationale: "Retain the reviewed losing authority as historical evidence.", review_status: "approved", reviewer: "Policy Lead" },
   }],
 };
 
@@ -59,13 +63,13 @@ const artifacts: Record<string, unknown> = {
 
 const build: Build = {
   id: "build-1", project_id: "project-1", status: "succeeded", input_manifest: {}, input_hash: "1".repeat(64), compiler_version: "1.0.0", artifacts, source_map: {},
-  stats: { original: { lines: 80, characters: 960, tokens: 240 }, candidate: { lines: 2, characters: 72, tokens: 18 }, reduction: { lines: 78, characters: 888, estimated_tokens: 222, label: "char_div_4_v1" }, routing: { guarded: 1, tested: 1 }, compilation: metrics },
+  stats: { original: { lines: 80, characters: 960, tokens: 240 }, candidate: { lines: 2, characters: 72, tokens: 18 }, reduction: { lines: 78, characters: 888, estimated_tokens: 222, label: "char_div_4_v1" }, routing: { kept_in_prompt: 1, moved_to_workflow: 1, guarded: 1, tested: 1 }, compilation: metrics },
   content_hash: "2".repeat(64), created_at: "2026-08-02T12:00:00Z",
 };
 
 const inspection: BuildInspection = {
   build_id: build.id, project_id: build.project_id, status: "succeeded", input_hash: build.input_hash, compiler_version: build.compiler_version, content_hash: build.content_hash,
-  artifacts: Object.keys(artifacts).map((path) => ({ path, sha256: path === "prompt-kernel.md" ? "3".repeat(64) : "4".repeat(64) })), source_map: {}, stats: { compilation: metrics },
+  artifacts: Object.keys(artifacts).map((path) => ({ path, sha256: path === "prompt-kernel.md" ? "3".repeat(64) : "4".repeat(64) })), source_map: {}, stats: build.stats, routing_report: routing, preservation_report: preservation,
   generated_spans: [
     { id: "span-scaffold", build_id: build.id, created_at: build.created_at, artifact_path: "prompt-kernel.md", artifact_sha256: "3".repeat(64), rule_id: null, rule_stable_key: null, rule_revision: null, placement_decision_id: null, placement_version: null, line_start: 1, line_end: 1, utf8_byte_start: 0, utf8_byte_end: 17, transform_kind: "compiler_scaffold", text_sha256: "5".repeat(64), source_refs: [] },
     { id: "span-rule", build_id: build.id, created_at: build.created_at, artifact_path: "prompt-kernel.md", artifact_sha256: "3".repeat(64), rule_id: "rule-1", rule_stable_key: "rule.change.verify", rule_revision: 1, placement_decision_id: "placement-2", placement_version: 2, line_start: 2, line_end: 2, utf8_byte_start: 18, utf8_byte_end: 72, transform_kind: "reviewed_normalization", text_sha256: "6".repeat(64), source_refs: [anchor] },
@@ -73,21 +77,64 @@ const inspection: BuildInspection = {
   ],
 };
 
+const buildWithStaleEmbeddedContracts: Build = {
+  ...build,
+  stats: null,
+  artifacts: {
+    ...build.artifacts,
+    "compilation-metrics.json": "{\"schema_version\":\"stale\"}",
+    "routing-report.json": "{\"schema_version\":\"stale\"}",
+    "preservation-report.json": "{\"schema_version\":\"stale\"}",
+  },
+};
+
+const legacyBuild: Build = {
+  ...build,
+  stats: null,
+  artifacts: {
+    ...build.artifacts,
+    "compilation-metrics.json": JSON.stringify({
+      ...metrics,
+      routing: Object.fromEntries(Object.entries(metrics.routing).filter(([key]) => key !== "retired_count")),
+    }),
+    "routing-report.json": JSON.stringify({
+      ...routing,
+      entries: routing.entries.filter((entry) => entry.disposition !== "retired"),
+      counts: Object.fromEntries(Object.entries({ ...routing.counts, active: 2 }).filter(([key]) => key !== "retired")),
+    }),
+  },
+};
+
+const legacyInspection: BuildInspection = {
+  ...inspection,
+  stats: null,
+  routing_report: null,
+  preservation_report: null,
+};
+
 afterEach(cleanup);
 
 describe("build inspection", () => {
-  it("renders the bundle tree, exact metrics, routing and preservation contracts, and the honest evidence boundary", () => {
-    const view = render(<BuildInspectionView projectId="project-1" build={build} inspection={inspection} documents={[documentRecord]} />);
+  it("prefers first-class inspection contracts over stale embedded artifacts", () => {
+    const view = render(<BuildInspectionView projectId="project-1" build={buildWithStaleEmbeddedContracts} inspection={inspection} documents={[documentRecord]} />);
 
-    expect(screen.getByRole("navigation", { name: "Compiled bundle tree" })).toBeInTheDocument();
+    expect(screen.getByRole("navigation", { name: "Compiled instruction bundle tree" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "prompt-kernel.md" })).toHaveAttribute("aria-current", "true");
     const baselineRow = screen.getByText("Baseline always-loaded").closest("tr")!;
     expect(within(baselineRow).getByText("80")).toBeInTheDocument();
     expect(within(baselineRow).getAllByText("960")).toHaveLength(2);
     expect(within(baselineRow).getByText("240")).toBeInTheDocument();
     expect(screen.getByText("char_div_4 · 1.0.0")).toBeInTheDocument();
+    expect(screen.getByText("Always-loaded reduction").closest("div")).toHaveTextContent("93%");
+    expect(screen.getByText("On-demand content").closest("div")).toHaveTextContent("120");
+    expect(screen.getByText("Machine-enforced content").closest("div")).toHaveTextContent("150");
+    expect(screen.getByText("Bundle content").closest("div")).toHaveTextContent("750");
     expect(screen.getByText("Behavioral fidelity: Not measured")).toBeInTheDocument();
+    expect(screen.getByText("3 ledger entries")).toBeInTheDocument();
+    expect(screen.getByText("1 retired")).toBeInTheDocument();
     expect(screen.getByText("Verify requested changes")).toBeInTheDocument();
+    expect(screen.getByText("Withdrawn workflow language")).toBeInTheDocument();
+    expect(screen.queryByText(/active clauses/i)).not.toBeInTheDocument();
     expect(screen.queryByText("Routing report unavailable")).not.toBeInTheDocument();
     expect(screen.getByText("Reviewer attribution")).toBeInTheDocument();
     expect(screen.getByText("Policy Lead")).toBeInTheDocument();
@@ -95,6 +142,16 @@ describe("build inspection", () => {
     expect(screen.getByText("1 / 1 preserved")).toBeInTheDocument();
     expect(view.container).toHaveTextContent("conformance evidence");
     expect(screen.getByText("Compiler scaffold has no source-anchor claim.")).toBeInTheDocument();
+  });
+
+  it("reads legacy embedded contracts and defaults missing retired counts to zero", () => {
+    render(<BuildInspectionView projectId="project-1" build={legacyBuild} inspection={legacyInspection} documents={[documentRecord]} />);
+
+    expect(screen.queryByText("Compilation metrics unavailable")).not.toBeInTheDocument();
+    expect(screen.queryByText("Routing report unavailable")).not.toBeInTheDocument();
+    expect(screen.queryByText("Preservation report unavailable")).not.toBeInTheDocument();
+    expect(screen.getByText("0 retired")).toBeInTheDocument();
+    expect(screen.getByText("1 / 1 preserved")).toBeInTheDocument();
   });
 
   it("clicks from an exact generated range through its pinned source anchor", () => {

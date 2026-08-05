@@ -82,9 +82,7 @@ async def cleanup_expired_guests(
                 {"guest_ids": candidate_ids},
             )
         ).all()
-        auth_states = {
-            str(auth_id): bool(is_anonymous) for auth_id, is_anonymous in auth_rows
-        }
+        auth_states = {str(auth_id): bool(is_anonymous) for auth_id, is_anonymous in auth_rows}
         candidate_ids = [
             guest_id
             for guest_id in candidate_ids
@@ -118,9 +116,7 @@ async def cleanup_expired_guests(
         workspace_ids = list(
             (
                 await session.scalars(
-                    select(Workspace.id).where(
-                        Workspace.created_by_user_id.in_(candidate_ids)
-                    )
+                    select(Workspace.id).where(Workspace.created_by_user_id.in_(candidate_ids))
                 )
             ).all()
         )
@@ -176,9 +172,7 @@ async def cleanup_expired_guests(
             delete(TraceEventModel).where(TraceEventModel.result_id.in_(result_ids))
         )
         await session.execute(delete(Report).where(Report.run_id.in_(run_ids)))
-        await session.execute(
-            delete(ScenarioResult).where(ScenarioResult.run_id.in_(run_ids))
-        )
+        await session.execute(delete(ScenarioResult).where(ScenarioResult.run_id.in_(run_ids)))
         await session.execute(delete(Run).where(Run.project_id.in_(project_ids)))
         await session.execute(delete(Build).where(Build.project_id.in_(project_ids)))
         await session.execute(delete(TestCase).where(TestCase.project_id.in_(project_ids)))
@@ -192,18 +186,14 @@ async def cleanup_expired_guests(
             delete(Workspace).where(Workspace.created_by_user_id.in_(candidate_ids))
         )
         await session.execute(
-            delete(WorkspaceMembership).where(
-                WorkspaceMembership.user_id.in_(candidate_ids)
-            )
+            delete(WorkspaceMembership).where(WorkspaceMembership.user_id.in_(candidate_ids))
         )
         await session.execute(
             update(WaitlistSignup)
             .where(WaitlistSignup.user_id.in_(candidate_ids))
             .values(user_id=None)
         )
-        await session.execute(
-            delete(UserAccount).where(UserAccount.id.in_(candidate_ids))
-        )
+        await session.execute(delete(UserAccount).where(UserAccount.id.in_(candidate_ids)))
     auth_delete_ids = list(dict.fromkeys([*candidate_ids, *auth_only_ids]))
     if postgres and auth_delete_ids:
         await session.execute(

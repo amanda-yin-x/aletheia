@@ -24,7 +24,7 @@ export default function ReportPage() {
   const matrixSummary = caseArmSummary(data.evidence.test_count, arms);
   const rawProvenance = data.evidence.provenance;
   const provenance = [
-    ["Dataset", evidenceValue(rawProvenance.dataset || rawProvenance.name || "Aletheia-authored refund boundary suite")],
+    ["Dataset", evidenceValue(rawProvenance.dataset || rawProvenance.name || "Dataset not recorded")],
     ["Version", evidenceValue(rawProvenance.version || "1")],
     ["Data scope", evidenceValue(rawProvenance.data_scope || "Evaluation dataset · no customer records")],
     ["Adapter", rawProvenance.adapter === "fixture" ? "Deterministic replay" : evidenceValue(rawProvenance.adapter)],

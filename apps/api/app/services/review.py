@@ -29,9 +29,19 @@ async def latest_rule(session: AsyncSession, rule_id: str) -> Rule:
     rule = await session.get(Rule, rule_id)
     if not rule:
         raise ServiceError("rule_not_found", "Rule not found.", status_code=404)
-    latest_revision = await session.scalar(select(func.max(Rule.revision)).where(Rule.project_id == rule.project_id, Rule.stable_key == rule.stable_key))
+    latest_revision = await session.scalar(
+        select(func.max(Rule.revision)).where(
+            Rule.project_id == rule.project_id, Rule.stable_key == rule.stable_key
+        )
+    )
     if latest_revision != rule.revision:
-        newest = await session.scalar(select(Rule).where(Rule.project_id == rule.project_id, Rule.stable_key == rule.stable_key, Rule.revision == latest_revision))
+        newest = await session.scalar(
+            select(Rule).where(
+                Rule.project_id == rule.project_id,
+                Rule.stable_key == rule.stable_key,
+                Rule.revision == latest_revision,
+            )
+        )
         if newest:
             return newest
     return rule
@@ -48,15 +58,17 @@ async def revise_rule(
     seed = await session.get(Rule, rule_id)
     if seed is None:
         raise ServiceError("rule_not_found", "Rule not found.", status_code=404)
-    await session.scalar(
-        select(Project).where(Project.id == seed.project_id).with_for_update()
-    )
+    await session.scalar(select(Project).where(Project.id == seed.project_id).with_for_update())
     current = await latest_rule(session, rule_id)
     if current.revision != expected_revision:
         raise ServiceError(
             "revision_conflict",
             "This rule changed after you opened it. Refresh and review the latest revision.",
-            details={"expected_revision": expected_revision, "current_revision": current.revision, "current_rule_id": current.id},
+            details={
+                "expected_revision": expected_revision,
+                "current_revision": current.revision,
+                "current_rule_id": current.id,
+            },
             status_code=409,
         )
     semantic_change = any(
@@ -168,9 +180,7 @@ async def resolve_finding(
     if seed_finding is None:
         raise ServiceError("finding_not_found", "Finding not found.", status_code=404)
     await session.scalar(
-        select(Project)
-        .where(Project.id == seed_finding.project_id)
-        .with_for_update()
+        select(Project).where(Project.id == seed_finding.project_id).with_for_update()
     )
     finding = await session.scalar(
         select(Finding).where(Finding.id == finding_id).with_for_update()
@@ -227,6 +237,29 @@ async def resolve_finding(
                 "invalid_resolution_winner",
                 "The selected winner is not an active rule revision.",
                 status_code=409,
+            )
+        loser_placement = await session.scalar(
+            select(PlacementDecision)
+            .where(PlacementDecision.rule_id == loser.id)
+            .order_by(PlacementDecision.version.desc())
+        )
+        if loser_placement is not None:
+            session.add(
+                PlacementDecision(
+                    project_id=loser.project_id,
+                    rule_id=loser.id,
+                    version=loser_placement.version + 1,
+                    profile_name=loser_placement.profile_name,
+                    profile_version=loser_placement.profile_version,
+                    destinations=["human_review"],
+                    scope_slug=loser_placement.scope_slug,
+                    rendering=loser.normative_text,
+                    transform_kind=loser_placement.transform_kind,
+                    disposition="retired",
+                    rationale=(f"Retired by reviewed authority resolution: {note.strip()}"),
+                    review_status="approved",
+                    reviewer=actor,
+                )
             )
         loser.status = "superseded"
         loser.updated_at = datetime.now(UTC)

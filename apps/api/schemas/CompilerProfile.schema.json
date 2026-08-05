@@ -49,6 +49,20 @@
           "minLength": 1,
           "title": "Title",
           "type": "string"
+        },
+        "trigger": {
+          "anyOf": [
+            {
+              "maxLength": 1000,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Trigger"
         }
       },
       "required": [
@@ -114,8 +128,11 @@
       "title": "Response Contract"
     },
     "schema_version": {
-      "const": "1.0",
       "default": "1.0",
+      "enum": [
+        "1.0",
+        "1.1"
+      ],
       "title": "Schema Version",
       "type": "string"
     },
@@ -125,6 +142,19 @@
       },
       "title": "Scopes",
       "type": "array"
+    },
+    "sha256": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Sha256"
     },
     "source_document_ids": {
       "items": {

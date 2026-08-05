@@ -33,6 +33,7 @@
           },
           "verification_method": {
             "type": "string",
+            "enum": ["email_otp", "sms_otp", "support_pin"],
             "pattern": "^(email_otp|sms_otp|support_pin)$",
             "maxLength": 11
           },
@@ -77,6 +78,7 @@
           },
           "service_code": {
             "type": "string",
+            "enum": ["consultation", "follow_up"],
             "pattern": "^(consultation|follow_up)$",
             "maxLength": 12
           },
@@ -117,6 +119,7 @@
           },
           "action": {
             "type": "string",
+            "enum": ["reschedule", "cancel"],
             "pattern": "^(reschedule|cancel)$",
             "maxLength": 10
           },

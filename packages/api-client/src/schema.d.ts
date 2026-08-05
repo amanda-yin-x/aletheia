@@ -782,16 +782,15 @@ export interface components {
             generated_spans: components["schemas"]["GeneratedSpanOut"][];
             /** Input Hash */
             input_hash: string;
+            preservation_report: components["schemas"]["PreservationReport"] | null;
             /** Project Id */
             project_id: string;
+            routing_report: components["schemas"]["RoutingReport"] | null;
             /** Source Map */
             source_map: components["schemas"]["SourceMapArtifact"] | {
                 [key: string]: string[];
             };
-            /** Stats */
-            stats: {
-                [key: string]: unknown;
-            };
+            stats: components["schemas"]["BuildStats"] | null;
             /** Status */
             status: string;
         };
@@ -821,12 +820,85 @@ export interface components {
             source_map: {
                 [key: string]: unknown;
             };
-            /** Stats */
-            stats: {
-                [key: string]: unknown;
-            };
+            stats: components["schemas"]["BuildStats"] | null;
             /** Status */
             status: string;
+        };
+        /** BuildReductionStats */
+        BuildReductionStats: {
+            /** Characters */
+            characters: number;
+            /** Estimated Tokens */
+            estimated_tokens: number;
+            /** Label */
+            label: string;
+            /** Lines */
+            lines: number;
+        };
+        /** BuildRoutingStats */
+        BuildRoutingStats: {
+            /** Guarded */
+            guarded: number;
+            /** Kept In Prompt */
+            kept_in_prompt: number;
+            /** Moved To Workflow */
+            moved_to_workflow: number;
+            /** Tested */
+            tested: number;
+        };
+        /** BuildSizeStats */
+        BuildSizeStats: {
+            /** Characters */
+            characters: number;
+            /** Lines */
+            lines: number;
+            /** Tokens */
+            tokens: number;
+        };
+        /** BuildStats */
+        BuildStats: {
+            candidate: components["schemas"]["BuildSizeStats"];
+            compilation: components["schemas"]["CompilationMetrics"];
+            original: components["schemas"]["BuildSizeStats"];
+            reduction: components["schemas"]["BuildReductionStats"];
+            routing: components["schemas"]["BuildRoutingStats"];
+        };
+        /** CompilationMetrics */
+        CompilationMetrics: {
+            baseline_always_loaded: components["schemas"]["ContentSizeMetric"];
+            /**
+             * Behavioral Fidelity
+             * @default not_measured
+             * @constant
+             */
+            behavioral_fidelity: "not_measured";
+            compiled_kernel: components["schemas"]["ContentSizeMetric"];
+            estimator: components["schemas"]["MetricsEstimator"];
+            expected_per_task_context: components["schemas"]["ExpectedContextMetric"];
+            /** Interpretation */
+            interpretation: string;
+            /** Knowledge */
+            knowledge: {
+                [key: string]: components["schemas"]["ContentSizeMetric"];
+            };
+            /** Machine Enforced */
+            machine_enforced: {
+                [key: string]: components["schemas"]["ContentSizeMetric"];
+            };
+            /** Protected Literals */
+            protected_literals: components["schemas"]["PreservationCheck"][];
+            routing: components["schemas"]["RoutingMetrics"];
+            /**
+             * Schema Version
+             * @default 1.0
+             * @constant
+             */
+            schema_version: "1.0";
+            /** Skills */
+            skills: {
+                [key: string]: components["schemas"]["ContentSizeMetric"];
+            };
+            total_bundle_without_manifest: components["schemas"]["ContentSizeMetric"];
         };
         /**
          * CompilerProfile
@@ -846,11 +918,13 @@ export interface components {
             /**
              * Schema Version
              * @default 1.0
-             * @constant
+             * @enum {string}
              */
-            schema_version: "1.0";
+            schema_version: "1.0" | "1.1";
             /** Scopes */
             scopes?: components["schemas"]["CompilerScopeProfile"][];
+            /** Sha256 */
+            sha256?: string | null;
             /** Source Document Ids */
             source_document_ids?: string[];
             /** Version */
@@ -872,6 +946,19 @@ export interface components {
             slug: string;
             /** Title */
             title: string;
+            /** Trigger */
+            trigger?: string | null;
+        };
+        /** ContentSizeMetric */
+        ContentSizeMetric: {
+            /** Characters */
+            characters: number;
+            /** Estimated Tokens */
+            estimated_tokens: number;
+            /** Lines */
+            lines: number;
+            /** Utf8 Bytes */
+            utf8_bytes: number;
         };
         /** CoverageDimension */
         CoverageDimension: {
@@ -1140,6 +1227,19 @@ export interface components {
             /** Stable Key */
             stable_key: string;
         };
+        /** ExpectedContextMetric */
+        ExpectedContextMetric: {
+            /** Artifact Paths */
+            artifact_paths: string[];
+            /** Characters */
+            characters: number;
+            /** Estimated Tokens */
+            estimated_tokens: number;
+            /** Lines */
+            lines: number;
+            /** Utf8 Bytes */
+            utf8_bytes: number;
+        };
         /** ExpectedOutcome */
         ExpectedOutcome: {
             /** Assertions */
@@ -1380,6 +1480,8 @@ export interface components {
             name: string;
             /** Path */
             path: string;
+            /** Project Digest */
+            project_digest?: string | null;
             /** Version */
             version: string;
         };
@@ -1573,6 +1675,13 @@ export interface components {
             /** Workspaces */
             workspaces: components["schemas"]["WorkspaceOut"][];
         };
+        /** MetricsEstimator */
+        MetricsEstimator: {
+            /** Name */
+            name: string;
+            /** Version */
+            version: string;
+        };
         /** NotCondition */
         "NotCondition-Input": {
             /** Condition */
@@ -1716,6 +1825,51 @@ export interface components {
             /** Transform Kind */
             transform_kind?: ("verbatim" | "reviewed_normalization" | "reviewer_authored_guidance" | "compiler_scaffold") | null;
         };
+        /**
+         * PlacementRecord
+         * @description Immutable placement snapshot embedded in a compiled build.
+         */
+        PlacementRecord: {
+            /** Destinations */
+            destinations: ("prompt_kernel" | "skill" | "knowledge" | "pre_tool_policy" | "test" | "human_review" | "unsupported")[];
+            /**
+             * Disposition
+             * @enum {string}
+             */
+            disposition: "routed" | "blocked" | "unsupported" | "retired";
+            /** Placement Key */
+            placement_key: string;
+            /** Profile Name */
+            profile_name: string;
+            /** Profile Version */
+            profile_version: string;
+            /** Rationale */
+            rationale: string;
+            /** Rendering */
+            rendering?: string | null;
+            /**
+             * Review Status
+             * @enum {string}
+             */
+            review_status: "approved" | "needs_review";
+            /** Reviewer */
+            reviewer: string;
+            /** Rule Key */
+            rule_key: string;
+            /** Rule Revision */
+            rule_revision: number;
+            /** Rule Stable Key */
+            rule_stable_key: string;
+            /** Scope Slug */
+            scope_slug?: string | null;
+            /**
+             * Transform Kind
+             * @enum {string}
+             */
+            transform_kind: "verbatim" | "reviewed_normalization" | "reviewer_authored_guidance" | "compiler_scaffold";
+            /** Version */
+            version: number;
+        };
         /** PolicyEvent */
         PolicyEvent: {
             /** Payload */
@@ -1741,6 +1895,38 @@ export interface components {
             op: "eq" | "ne" | "lt" | "lte" | "gt" | "gte" | "in" | "not_in" | "exists" | "contains" | "regex";
             /** Value */
             value?: unknown;
+        };
+        /** PreservationCheck */
+        PreservationCheck: {
+            /** Artifact Paths */
+            artifact_paths?: string[];
+            /** Literals */
+            literals: components["schemas"]["ProtectedLiteral"][];
+            /** Missing */
+            missing: components["schemas"]["ProtectedLiteral"][];
+            /** Preserved */
+            preserved: boolean;
+            /** Rule Key */
+            rule_key: string;
+        };
+        /** PreservationReport */
+        PreservationReport: {
+            /**
+             * Behavioral Fidelity
+             * @default not_measured
+             * @constant
+             */
+            behavioral_fidelity: "not_measured";
+            /** Checks */
+            checks: components["schemas"]["PreservationCheck"][];
+            /** Interpretation */
+            interpretation: string;
+            /**
+             * Schema Version
+             * @default 1.0
+             * @constant
+             */
+            schema_version: "1.0";
         };
         /** ProjectCreate */
         ProjectCreate: {
@@ -1788,6 +1974,29 @@ export interface components {
             /** Workspace Id */
             workspace_id: string;
         };
+        /** ProjectSummaryOut */
+        ProjectSummaryOut: {
+            /** Approved Rules */
+            approved_rules: number;
+            /** Critical Findings */
+            critical_findings: number;
+            current_build: components["schemas"]["BuildOut"] | null;
+            last_run: components["schemas"]["RunOut"] | null;
+            /** Sources */
+            sources: number;
+            /** Tests */
+            tests: number;
+        };
+        /** ProtectedLiteral */
+        ProtectedLiteral: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "negation" | "threshold_or_duration" | "quoted_literal" | "tool_name" | "enum_value" | "structured_literal" | "boundary_or_exception";
+            /** Value */
+            value: string;
+        };
         /** ReportOut */
         ReportOut: {
             /** Content Hash */
@@ -1806,6 +2015,122 @@ export interface components {
             run_id: string;
             /** Verdict */
             verdict: string;
+        };
+        /** RoutingMetrics */
+        RoutingMetrics: {
+            /** Active Normative Clauses */
+            active_normative_clauses: number;
+            /** Approved Preservation */
+            approved_preservation: number;
+            /** Blocked Count */
+            blocked_count: number;
+            /** Explicit Dispositions */
+            explicit_dispositions: number;
+            /** High Critical Guard And Test Placement */
+            high_critical_guard_and_test_placement: number;
+            /**
+             * Retired Count
+             * @default 0
+             */
+            retired_count: number;
+            /** Routing Coverage */
+            routing_coverage: number;
+            /** Severity Weighted Approved Preservation */
+            severity_weighted_approved_preservation: number;
+            /** Unresolved Count */
+            unresolved_count: number;
+            /** Unrouted Count */
+            unrouted_count: number;
+            /** Unsupported Count */
+            unsupported_count: number;
+            /** Verified Source Anchor Coverage */
+            verified_source_anchor_coverage: number;
+        };
+        /** RoutingReport */
+        RoutingReport: {
+            counts: components["schemas"]["RoutingReportCounts"];
+            /** Entries */
+            entries: components["schemas"]["RoutingReportEntry"][];
+            profile: components["schemas"]["RoutingReportProfile"];
+            /**
+             * Schema Version
+             * @default 1.0
+             * @constant
+             */
+            schema_version: "1.0";
+        };
+        /** RoutingReportCounts */
+        RoutingReportCounts: {
+            /** Active */
+            active: number;
+            /** Blocked */
+            blocked: number;
+            /**
+             * Retired
+             * @default 0
+             */
+            retired: number;
+            /** Routed */
+            routed: number;
+            /** Unsupported */
+            unsupported: number;
+        };
+        /** RoutingReportEntry */
+        RoutingReportEntry: {
+            /**
+             * Category
+             * @enum {string}
+             */
+            category: "style" | "workflow" | "knowledge" | "runtime_fact" | "hard_constraint" | "handoff" | "quality";
+            /** Decidability */
+            decidability?: ("machine_decidable" | "model_judged" | "human") | null;
+            /** Destinations */
+            destinations: ("prompt_kernel" | "skill" | "knowledge" | "pre_tool_policy" | "test" | "human_review" | "unsupported")[];
+            /**
+             * Disposition
+             * @enum {string}
+             */
+            disposition: "routed" | "blocked" | "unsupported" | "retired";
+            placement: components["schemas"]["PlacementRecord"];
+            /**
+             * Provenance Kind
+             * @enum {string}
+             */
+            provenance_kind: "source_anchored" | "reviewer_authored_guidance";
+            provenance_metadata?: components["schemas"]["RuleProvenanceMetadata"];
+            /** Rationale */
+            rationale: string;
+            /** Rule Key */
+            rule_key: string;
+            /** Rule Revision */
+            rule_revision: number;
+            /** Rule Stable Key */
+            rule_stable_key: string;
+            /**
+             * Rule Status
+             * @enum {string}
+             */
+            rule_status: "candidate" | "needs_review" | "approved" | "rejected" | "superseded";
+            /**
+             * Severity
+             * @enum {string}
+             */
+            severity: "low" | "medium" | "high" | "critical";
+            /** Source Anchors */
+            source_anchors: components["schemas"]["SourceAnchor"][];
+            /** Title */
+            title: string;
+            /** Verified Source Anchors */
+            verified_source_anchors: number;
+        };
+        /** RoutingReportProfile */
+        RoutingReportProfile: {
+            /** Name */
+            name: string;
+            /** Sha256 */
+            sha256: string;
+            /** Version */
+            version: string;
         };
         /** RuleException */
         "RuleException-Input": {
@@ -3057,9 +3382,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": {
-                        [key: string]: unknown;
-                    };
+                    "application/json": components["schemas"]["ProjectSummaryOut"];
                 };
             };
             /** @description Validation Error */

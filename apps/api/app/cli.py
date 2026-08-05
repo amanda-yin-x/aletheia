@@ -8,16 +8,17 @@ import typer
 from sqlalchemy import select
 
 from app.db import SessionLocal
-from app.models import Project, Report, Run
-from app.services.appointment_seed import seed_appointment_demo
+from app.models import Build, Project, Report, Run
 from app.services.compiler import compile_project
+from app.services.demo_registry import seed_workspace_fixtures
 from app.services.errors import ServiceError
 from app.services.reporting import create_report
 from app.services.runner import run_comparison
-from app.services.seed import seed_demo
 from app.tenancy import LOCAL_WORKSPACE_ID
 
-cli = typer.Typer(help="Aletheia Policy CI — compile policies and test releases.", no_args_is_help=True)
+cli = typer.Typer(
+    help="Aletheia Policy CI — compile policies and test releases.", no_args_is_help=True
+)
 db_cli = typer.Typer(help="Migrate the application database with Alembic.")
 demo_cli = typer.Typer(help="Manage the deterministic two-domain evaluation workspace.")
 benchmark_cli = typer.Typer(help="Manage the optional pinned Retail-17 import adapter.")
@@ -29,9 +30,7 @@ cli.add_typer(benchmark_cli, name="benchmark")
 async def _project(slug: str) -> Project:
     async with SessionLocal() as session:
         project = await session.scalar(
-            select(Project).where(
-                Project.workspace_id == LOCAL_WORKSPACE_ID, Project.slug == slug
-            )
+            select(Project).where(Project.workspace_id == LOCAL_WORKSPACE_ID, Project.slug == slug)
         )
         if not project:
             raise ServiceError("project_not_found", f"Project {slug!r} was not found.")
@@ -83,16 +82,16 @@ def db_cleanup_guests(
 
 
 @demo_cli.command("seed")
-def demo_seed(reset: bool = typer.Option(False, "--reset", help="Replace the existing evaluation workspace."), json_output: bool = typer.Option(False, "--json")) -> None:
+def demo_seed(
+    reset: bool = typer.Option(False, "--reset", help="Replace the existing evaluation workspace."),
+    json_output: bool = typer.Option(False, "--json"),
+) -> None:
     """Seed the two deterministic evaluation projects."""
-    async def run() -> tuple[Project, Project]:
+
+    async def run() -> list[Project]:
         async with SessionLocal() as session:
-            northstar = await seed_demo(session, reset=reset)
-            appointments = await seed_appointment_demo(
-                session,
-                workspace_id=northstar.workspace_id,
-            )
-            return northstar, appointments
+            return await seed_workspace_fixtures(session, reset=reset)
+
     projects = asyncio.run(run())
     output = {
         "projects": [
@@ -107,47 +106,75 @@ def demo_seed(reset: bool = typer.Option(False, "--reset", help="Replace the exi
     if json_output:
         typer.echo(json.dumps(output, sort_keys=True))
         return
-    typer.echo(
-        "Seeded "
-        + ", ".join(f"{project.name} ({project.id})" for project in projects)
-    )
+    typer.echo("Seeded " + ", ".join(f"{project.name} ({project.id})" for project in projects))
 
 
 @cli.command("analyze")
-def analyze(project: str = typer.Option("northstar-retail"), extractor: str = typer.Option("fixture"), json_output: bool = typer.Option(False, "--json")) -> None:
+def analyze(
+    project: str = typer.Option("northstar-retail"),
+    extractor: str = typer.Option("fixture"),
+    json_output: bool = typer.Option(False, "--json"),
+) -> None:
     """Load bundled source-linked candidates and deterministic findings."""
     if extractor != "fixture":
-        raise typer.BadParameter("The optional structured LLM extractor is not configured. Use the deterministic replay adapter (`fixture`).")
+        raise typer.BadParameter(
+            "The optional structured LLM extractor is not configured. Use the deterministic replay adapter (`fixture`)."
+        )
     target = asyncio.run(_project(project))
-    output = {"project_id": target.id, "extractor": "fixture", "status": "fixture_available", "publication": "human_review_required"}
-    typer.echo(json.dumps(output, sort_keys=True) if json_output else "Bundled evaluation candidates loaded; no analyzer or model ran.")
+    output = {
+        "project_id": target.id,
+        "extractor": "fixture",
+        "status": "fixture_available",
+        "publication": "human_review_required",
+    }
+    typer.echo(
+        json.dumps(output, sort_keys=True)
+        if json_output
+        else "Bundled evaluation candidates loaded; no analyzer or model ran."
+    )
 
 
 @cli.command("compile")
-def compile_command(project: str = typer.Option("northstar-retail"), json_output: bool = typer.Option(False, "--json")) -> None:
+def compile_command(
+    project: str = typer.Option("northstar-retail"),
+    json_output: bool = typer.Option(False, "--json"),
+) -> None:
     """Compile approved revisions into a byte-addressed stored artifact bundle."""
-    async def run() -> object:
+
+    async def run() -> Build:
         target = await _project(project)
         async with SessionLocal() as session:
             return await compile_project(session, target.id)
+
     try:
         build = asyncio.run(run())
     except ServiceError as error:
         typer.echo(f"{error.code}: {error.message}", err=True)
         raise typer.Exit(1) from error
-    output = {"build_id": build.id, "hash": build.content_hash, "stats": build.stats}  # type: ignore[attr-defined]
-    typer.echo(json.dumps(output, sort_keys=True) if json_output else f"Build {build.id} {build.content_hash}")  # type: ignore[attr-defined]
+    output = {"build_id": build.id, "hash": build.content_hash, "stats": build.stats}
+    typer.echo(
+        json.dumps(output, sort_keys=True)
+        if json_output
+        else f"Build {build.id} {build.content_hash}"
+    )
 
 
 @cli.command("test")
-def test_command(project: str = typer.Option("northstar-retail"), adapter: str = typer.Option("fixture"), arms: str = typer.Option("all"), json_output: bool = typer.Option(False, "--json")) -> None:
+def test_command(
+    project: str = typer.Option("northstar-retail"),
+    adapter: str = typer.Option("fixture"),
+    arms: str = typer.Option("all"),
+    json_output: bool = typer.Option(False, "--json"),
+) -> None:
     """Run the deterministic comparison from identical initial state."""
     if adapter != "fixture" or arms != "all":
         raise typer.BadParameter("The no-key workspace supports adapter=fixture and arms=all.")
+
     async def run() -> Run:
         target = await _project(project)
         async with SessionLocal() as session:
             return await run_comparison(session, target.id)
+
     try:
         result = asyncio.run(run())
     except ServiceError as error:
@@ -164,8 +191,13 @@ def test_command(project: str = typer.Option("northstar-retail"), adapter: str =
 
 
 @cli.command("report")
-def report_command(latest: bool = typer.Option(True, "--latest/--no-latest"), format: str = typer.Option("markdown"), json_output: bool = typer.Option(False, "--json")) -> None:
+def report_command(
+    latest: bool = typer.Option(True, "--latest/--no-latest"),
+    format: str = typer.Option("markdown"),
+    json_output: bool = typer.Option(False, "--json"),
+) -> None:
     """Render release evidence for the latest completed run."""
+
     async def run() -> Report:
         async with SessionLocal() as session:
             current = await session.scalar(
@@ -180,6 +212,7 @@ def report_command(latest: bool = typer.Option(True, "--latest/--no-latest"), fo
             if not current:
                 raise ServiceError("run_not_found", "No completed run is available.")
             return await create_report(session, current.id)
+
     try:
         report = asyncio.run(run())
     except ServiceError as error:
@@ -192,9 +225,12 @@ def report_command(latest: bool = typer.Option(True, "--latest/--no-latest"), fo
 
 
 @cli.command("worker")
-def worker_command(once: bool = typer.Option(False, help="Claim at most one queued job and exit.")) -> None:
+def worker_command(
+    once: bool = typer.Option(False, help="Claim at most one queued job and exit."),
+) -> None:
     """Run the persisted SQL job worker."""
     from app.worker import run_worker
+
     asyncio.run(run_worker(once=once))
 
 
@@ -239,6 +275,7 @@ def serve_command() -> None:
 def sync_tau_retail() -> None:
     """Sync the pinned tau2-derived Retail-17 smoke-subset manifest."""
     from app.adapters.tau_sync import sync
+
     try:
         manifest = sync()
     except Exception as error:
@@ -254,7 +291,9 @@ def run_tau_retail(adapter: str = typer.Option("fixture")) -> None:
     if not provenance.exists():
         typer.echo("benchmark_not_synced: run benchmark sync-tau-retail first", err=True)
         raise typer.Exit(1)
-    typer.echo(f"Pinned dataset is available. Live tau execution remains optional; requested adapter={adapter}.")
+    typer.echo(
+        f"Pinned dataset is available. Live tau execution remains optional; requested adapter={adapter}."
+    )
 
 
 if __name__ == "__main__":

@@ -34,6 +34,7 @@ const documentRecord: Document = {
   owner: "Care Operations",
   authority_status: "current",
   effective_at: "2026-07-24T00:00:00Z",
+  supersedes_document_id: "document-legacy",
   jurisdictions: ["US", "Canada"],
   scopes: ["booking changes"],
   parser: "checked_in_utf8",
@@ -42,6 +43,16 @@ const documentRecord: Document = {
   normalizer_version: "1.1.0",
   origin: { type: "fixture_authored" },
   created_at: "2026-07-24T00:00:00Z",
+};
+
+const legacyDocument: Document = {
+  ...documentRecord,
+  id: "document-legacy",
+  name: "Booking SOP v2",
+  version: 2,
+  version_label: "SOP v2",
+  authority_status: "superseded",
+  supersedes_document_id: null,
 };
 
 const rule: Rule = {
@@ -76,7 +87,7 @@ beforeEach(() => {
   window.history.replaceState(null, "", "/projects/project-1/sources?document=document-policy#line-2");
   Object.defineProperty(HTMLElement.prototype, "scrollIntoView", { configurable: true, value: vi.fn() });
   apiMock.mockReset().mockImplementation(async (path: string) => {
-    if (path.endsWith("/documents")) return [documentRecord];
+    if (path.endsWith("/documents")) return [documentRecord, legacyDocument];
     if (path.endsWith("/rules")) return [rule];
     if (path.endsWith("/findings")) return [];
     throw new Error(`Unexpected API call: ${path}`);
@@ -91,7 +102,10 @@ describe("source authority and provenance", () => {
     render(<QueryClientProvider client={client}><SourcesPage /></QueryClientProvider>);
 
     expect(await screen.findByText("Care Operations")).toBeInTheDocument();
+    expect(screen.getByText("Effective Jul 24, 2026")).toBeInTheDocument();
     expect(screen.getByText("Jul 24, 2026")).toBeInTheDocument();
+    expect(screen.getByText("Booking SOP v2 · SOP v2")).toBeInTheDocument();
+    expect(screen.getByText("No later authority declared")).toBeInTheDocument();
     expect(screen.getByText("US · Canada")).toBeInTheDocument();
     expect(screen.getByText("checked_in_utf8 · 1.2.0")).toBeInTheDocument();
     expect(screen.getByText("aletheia_text · 1.1.0")).toBeInTheDocument();

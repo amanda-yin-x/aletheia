@@ -20,6 +20,282 @@
       "title": "BuildArtifactInspection",
       "type": "object"
     },
+    "BuildReductionStats": {
+      "additionalProperties": false,
+      "properties": {
+        "characters": {
+          "title": "Characters",
+          "type": "integer"
+        },
+        "estimated_tokens": {
+          "title": "Estimated Tokens",
+          "type": "integer"
+        },
+        "label": {
+          "minLength": 1,
+          "title": "Label",
+          "type": "string"
+        },
+        "lines": {
+          "title": "Lines",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "lines",
+        "characters",
+        "estimated_tokens",
+        "label"
+      ],
+      "title": "BuildReductionStats",
+      "type": "object"
+    },
+    "BuildRoutingStats": {
+      "additionalProperties": false,
+      "properties": {
+        "guarded": {
+          "minimum": 0,
+          "title": "Guarded",
+          "type": "integer"
+        },
+        "kept_in_prompt": {
+          "minimum": 0,
+          "title": "Kept In Prompt",
+          "type": "integer"
+        },
+        "moved_to_workflow": {
+          "minimum": 0,
+          "title": "Moved To Workflow",
+          "type": "integer"
+        },
+        "tested": {
+          "minimum": 0,
+          "title": "Tested",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "kept_in_prompt",
+        "moved_to_workflow",
+        "guarded",
+        "tested"
+      ],
+      "title": "BuildRoutingStats",
+      "type": "object"
+    },
+    "BuildSizeStats": {
+      "additionalProperties": false,
+      "properties": {
+        "characters": {
+          "minimum": 0,
+          "title": "Characters",
+          "type": "integer"
+        },
+        "lines": {
+          "minimum": 0,
+          "title": "Lines",
+          "type": "integer"
+        },
+        "tokens": {
+          "minimum": 0,
+          "title": "Tokens",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "lines",
+        "characters",
+        "tokens"
+      ],
+      "title": "BuildSizeStats",
+      "type": "object"
+    },
+    "BuildStats": {
+      "additionalProperties": false,
+      "properties": {
+        "candidate": {
+          "$ref": "#/$defs/BuildSizeStats"
+        },
+        "compilation": {
+          "$ref": "#/$defs/CompilationMetrics"
+        },
+        "original": {
+          "$ref": "#/$defs/BuildSizeStats"
+        },
+        "reduction": {
+          "$ref": "#/$defs/BuildReductionStats"
+        },
+        "routing": {
+          "$ref": "#/$defs/BuildRoutingStats"
+        }
+      },
+      "required": [
+        "original",
+        "candidate",
+        "reduction",
+        "routing",
+        "compilation"
+      ],
+      "title": "BuildStats",
+      "type": "object"
+    },
+    "CompilationMetrics": {
+      "additionalProperties": false,
+      "properties": {
+        "baseline_always_loaded": {
+          "$ref": "#/$defs/ContentSizeMetric"
+        },
+        "behavioral_fidelity": {
+          "const": "not_measured",
+          "default": "not_measured",
+          "title": "Behavioral Fidelity",
+          "type": "string"
+        },
+        "compiled_kernel": {
+          "$ref": "#/$defs/ContentSizeMetric"
+        },
+        "estimator": {
+          "$ref": "#/$defs/MetricsEstimator"
+        },
+        "expected_per_task_context": {
+          "$ref": "#/$defs/ExpectedContextMetric"
+        },
+        "interpretation": {
+          "minLength": 1,
+          "title": "Interpretation",
+          "type": "string"
+        },
+        "knowledge": {
+          "additionalProperties": {
+            "$ref": "#/$defs/ContentSizeMetric"
+          },
+          "title": "Knowledge",
+          "type": "object"
+        },
+        "machine_enforced": {
+          "additionalProperties": {
+            "$ref": "#/$defs/ContentSizeMetric"
+          },
+          "title": "Machine Enforced",
+          "type": "object"
+        },
+        "protected_literals": {
+          "items": {
+            "$ref": "#/$defs/PreservationCheck"
+          },
+          "title": "Protected Literals",
+          "type": "array"
+        },
+        "routing": {
+          "$ref": "#/$defs/RoutingMetrics"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        },
+        "skills": {
+          "additionalProperties": {
+            "$ref": "#/$defs/ContentSizeMetric"
+          },
+          "title": "Skills",
+          "type": "object"
+        },
+        "total_bundle_without_manifest": {
+          "$ref": "#/$defs/ContentSizeMetric"
+        }
+      },
+      "required": [
+        "estimator",
+        "baseline_always_loaded",
+        "compiled_kernel",
+        "skills",
+        "knowledge",
+        "machine_enforced",
+        "total_bundle_without_manifest",
+        "expected_per_task_context",
+        "routing",
+        "protected_literals",
+        "interpretation"
+      ],
+      "title": "CompilationMetrics",
+      "type": "object"
+    },
+    "ContentSizeMetric": {
+      "additionalProperties": false,
+      "properties": {
+        "characters": {
+          "minimum": 0,
+          "title": "Characters",
+          "type": "integer"
+        },
+        "estimated_tokens": {
+          "minimum": 0,
+          "title": "Estimated Tokens",
+          "type": "integer"
+        },
+        "lines": {
+          "minimum": 0,
+          "title": "Lines",
+          "type": "integer"
+        },
+        "utf8_bytes": {
+          "minimum": 0,
+          "title": "Utf8 Bytes",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "lines",
+        "characters",
+        "utf8_bytes",
+        "estimated_tokens"
+      ],
+      "title": "ContentSizeMetric",
+      "type": "object"
+    },
+    "ExpectedContextMetric": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact_paths": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Artifact Paths",
+          "type": "array"
+        },
+        "characters": {
+          "minimum": 0,
+          "title": "Characters",
+          "type": "integer"
+        },
+        "estimated_tokens": {
+          "minimum": 0,
+          "title": "Estimated Tokens",
+          "type": "integer"
+        },
+        "lines": {
+          "minimum": 0,
+          "title": "Lines",
+          "type": "integer"
+        },
+        "utf8_bytes": {
+          "minimum": 0,
+          "title": "Utf8 Bytes",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "lines",
+        "characters",
+        "utf8_bytes",
+        "estimated_tokens",
+        "artifact_paths"
+      ],
+      "title": "ExpectedContextMetric",
+      "type": "object"
+    },
     "GeneratedSpan": {
       "additionalProperties": false,
       "properties": {
@@ -300,6 +576,649 @@
       "title": "GeneratedSpanOut",
       "type": "object"
     },
+    "MetricsEstimator": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "version": {
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version"
+      ],
+      "title": "MetricsEstimator",
+      "type": "object"
+    },
+    "PlacementRecord": {
+      "additionalProperties": false,
+      "description": "Immutable placement snapshot embedded in a compiled build.",
+      "properties": {
+        "destinations": {
+          "items": {
+            "enum": [
+              "prompt_kernel",
+              "skill",
+              "knowledge",
+              "pre_tool_policy",
+              "test",
+              "human_review",
+              "unsupported"
+            ],
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Destinations",
+          "type": "array"
+        },
+        "disposition": {
+          "enum": [
+            "routed",
+            "blocked",
+            "unsupported",
+            "retired"
+          ],
+          "title": "Disposition",
+          "type": "string"
+        },
+        "placement_key": {
+          "minLength": 1,
+          "title": "Placement Key",
+          "type": "string"
+        },
+        "profile_name": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Profile Name",
+          "type": "string"
+        },
+        "profile_version": {
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$",
+          "title": "Profile Version",
+          "type": "string"
+        },
+        "rationale": {
+          "maxLength": 5000,
+          "minLength": 1,
+          "title": "Rationale",
+          "type": "string"
+        },
+        "rendering": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rendering"
+        },
+        "review_status": {
+          "enum": [
+            "approved",
+            "needs_review"
+          ],
+          "title": "Review Status",
+          "type": "string"
+        },
+        "reviewer": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Reviewer",
+          "type": "string"
+        },
+        "rule_key": {
+          "minLength": 1,
+          "title": "Rule Key",
+          "type": "string"
+        },
+        "rule_revision": {
+          "minimum": 1,
+          "title": "Rule Revision",
+          "type": "integer"
+        },
+        "rule_stable_key": {
+          "minLength": 1,
+          "title": "Rule Stable Key",
+          "type": "string"
+        },
+        "scope_slug": {
+          "anyOf": [
+            {
+              "maxLength": 120,
+              "minLength": 1,
+              "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Scope Slug"
+        },
+        "transform_kind": {
+          "enum": [
+            "verbatim",
+            "reviewed_normalization",
+            "reviewer_authored_guidance",
+            "compiler_scaffold"
+          ],
+          "title": "Transform Kind",
+          "type": "string"
+        },
+        "version": {
+          "minimum": 1,
+          "title": "Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "placement_key",
+        "rule_key",
+        "rule_stable_key",
+        "rule_revision",
+        "version",
+        "profile_name",
+        "profile_version",
+        "destinations",
+        "transform_kind",
+        "disposition",
+        "rationale",
+        "review_status",
+        "reviewer"
+      ],
+      "title": "PlacementRecord",
+      "type": "object"
+    },
+    "PreservationCheck": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact_paths": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Artifact Paths",
+          "type": "array"
+        },
+        "literals": {
+          "items": {
+            "$ref": "#/$defs/ProtectedLiteral"
+          },
+          "title": "Literals",
+          "type": "array"
+        },
+        "missing": {
+          "items": {
+            "$ref": "#/$defs/ProtectedLiteral"
+          },
+          "title": "Missing",
+          "type": "array"
+        },
+        "preserved": {
+          "title": "Preserved",
+          "type": "boolean"
+        },
+        "rule_key": {
+          "title": "Rule Key",
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule_key",
+        "literals",
+        "missing",
+        "preserved"
+      ],
+      "title": "PreservationCheck",
+      "type": "object"
+    },
+    "PreservationReport": {
+      "additionalProperties": false,
+      "properties": {
+        "behavioral_fidelity": {
+          "const": "not_measured",
+          "default": "not_measured",
+          "title": "Behavioral Fidelity",
+          "type": "string"
+        },
+        "checks": {
+          "items": {
+            "$ref": "#/$defs/PreservationCheck"
+          },
+          "title": "Checks",
+          "type": "array"
+        },
+        "interpretation": {
+          "minLength": 1,
+          "title": "Interpretation",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "checks",
+        "interpretation"
+      ],
+      "title": "PreservationReport",
+      "type": "object"
+    },
+    "ProtectedLiteral": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "negation",
+            "threshold_or_duration",
+            "quoted_literal",
+            "tool_name",
+            "enum_value",
+            "structured_literal",
+            "boundary_or_exception"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "value": {
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "value"
+      ],
+      "title": "ProtectedLiteral",
+      "type": "object"
+    },
+    "RoutingMetrics": {
+      "additionalProperties": false,
+      "properties": {
+        "active_normative_clauses": {
+          "minimum": 0,
+          "title": "Active Normative Clauses",
+          "type": "integer"
+        },
+        "approved_preservation": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Approved Preservation",
+          "type": "number"
+        },
+        "blocked_count": {
+          "minimum": 0,
+          "title": "Blocked Count",
+          "type": "integer"
+        },
+        "explicit_dispositions": {
+          "minimum": 0,
+          "title": "Explicit Dispositions",
+          "type": "integer"
+        },
+        "high_critical_guard_and_test_placement": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "High Critical Guard And Test Placement",
+          "type": "number"
+        },
+        "retired_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Retired Count",
+          "type": "integer"
+        },
+        "routing_coverage": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Routing Coverage",
+          "type": "number"
+        },
+        "severity_weighted_approved_preservation": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Severity Weighted Approved Preservation",
+          "type": "number"
+        },
+        "unresolved_count": {
+          "minimum": 0,
+          "title": "Unresolved Count",
+          "type": "integer"
+        },
+        "unrouted_count": {
+          "minimum": 0,
+          "title": "Unrouted Count",
+          "type": "integer"
+        },
+        "unsupported_count": {
+          "minimum": 0,
+          "title": "Unsupported Count",
+          "type": "integer"
+        },
+        "verified_source_anchor_coverage": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Verified Source Anchor Coverage",
+          "type": "number"
+        }
+      },
+      "required": [
+        "active_normative_clauses",
+        "explicit_dispositions",
+        "routing_coverage",
+        "verified_source_anchor_coverage",
+        "approved_preservation",
+        "severity_weighted_approved_preservation",
+        "high_critical_guard_and_test_placement",
+        "blocked_count",
+        "unsupported_count",
+        "unrouted_count",
+        "unresolved_count"
+      ],
+      "title": "RoutingMetrics",
+      "type": "object"
+    },
+    "RoutingReport": {
+      "additionalProperties": false,
+      "properties": {
+        "counts": {
+          "$ref": "#/$defs/RoutingReportCounts"
+        },
+        "entries": {
+          "items": {
+            "$ref": "#/$defs/RoutingReportEntry"
+          },
+          "title": "Entries",
+          "type": "array"
+        },
+        "profile": {
+          "$ref": "#/$defs/RoutingReportProfile"
+        },
+        "schema_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "title": "Schema Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "profile",
+        "entries",
+        "counts"
+      ],
+      "title": "RoutingReport",
+      "type": "object"
+    },
+    "RoutingReportCounts": {
+      "additionalProperties": false,
+      "properties": {
+        "active": {
+          "minimum": 0,
+          "title": "Active",
+          "type": "integer"
+        },
+        "blocked": {
+          "minimum": 0,
+          "title": "Blocked",
+          "type": "integer"
+        },
+        "retired": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Retired",
+          "type": "integer"
+        },
+        "routed": {
+          "minimum": 0,
+          "title": "Routed",
+          "type": "integer"
+        },
+        "unsupported": {
+          "minimum": 0,
+          "title": "Unsupported",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "active",
+        "routed",
+        "blocked",
+        "unsupported"
+      ],
+      "title": "RoutingReportCounts",
+      "type": "object"
+    },
+    "RoutingReportEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "enum": [
+            "style",
+            "workflow",
+            "knowledge",
+            "runtime_fact",
+            "hard_constraint",
+            "handoff",
+            "quality"
+          ],
+          "title": "Category",
+          "type": "string"
+        },
+        "decidability": {
+          "anyOf": [
+            {
+              "enum": [
+                "machine_decidable",
+                "model_judged",
+                "human"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Decidability"
+        },
+        "destinations": {
+          "items": {
+            "enum": [
+              "prompt_kernel",
+              "skill",
+              "knowledge",
+              "pre_tool_policy",
+              "test",
+              "human_review",
+              "unsupported"
+            ],
+            "type": "string"
+          },
+          "title": "Destinations",
+          "type": "array"
+        },
+        "disposition": {
+          "enum": [
+            "routed",
+            "blocked",
+            "unsupported",
+            "retired"
+          ],
+          "title": "Disposition",
+          "type": "string"
+        },
+        "placement": {
+          "$ref": "#/$defs/PlacementRecord"
+        },
+        "provenance_kind": {
+          "enum": [
+            "source_anchored",
+            "reviewer_authored_guidance"
+          ],
+          "title": "Provenance Kind",
+          "type": "string"
+        },
+        "provenance_metadata": {
+          "$ref": "#/$defs/RuleProvenanceMetadata"
+        },
+        "rationale": {
+          "title": "Rationale",
+          "type": "string"
+        },
+        "rule_key": {
+          "title": "Rule Key",
+          "type": "string"
+        },
+        "rule_revision": {
+          "minimum": 1,
+          "title": "Rule Revision",
+          "type": "integer"
+        },
+        "rule_stable_key": {
+          "title": "Rule Stable Key",
+          "type": "string"
+        },
+        "rule_status": {
+          "enum": [
+            "candidate",
+            "needs_review",
+            "approved",
+            "rejected",
+            "superseded"
+          ],
+          "title": "Rule Status",
+          "type": "string"
+        },
+        "severity": {
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "critical"
+          ],
+          "title": "Severity",
+          "type": "string"
+        },
+        "source_anchors": {
+          "items": {
+            "$ref": "#/$defs/SourceAnchor"
+          },
+          "title": "Source Anchors",
+          "type": "array"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "verified_source_anchors": {
+          "minimum": 0,
+          "title": "Verified Source Anchors",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "rule_key",
+        "rule_stable_key",
+        "rule_revision",
+        "title",
+        "rule_status",
+        "severity",
+        "category",
+        "provenance_kind",
+        "verified_source_anchors",
+        "source_anchors",
+        "placement",
+        "destinations",
+        "disposition",
+        "rationale"
+      ],
+      "title": "RoutingReportEntry",
+      "type": "object"
+    },
+    "RoutingReportProfile": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "version": {
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$",
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version",
+        "sha256"
+      ],
+      "title": "RoutingReportProfile",
+      "type": "object"
+    },
+    "RuleProvenanceMetadata": {
+      "additionalProperties": false,
+      "properties": {
+        "rationale": {
+          "anyOf": [
+            {
+              "maxLength": 5000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rationale"
+        },
+        "reviewed_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reviewed At"
+        },
+        "reviewer": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reviewer"
+        }
+      },
+      "title": "RuleProvenanceMetadata",
+      "type": "object"
+    },
     "SourceAnchor": {
       "additionalProperties": false,
       "description": "Immutable normalized-text anchor used by Gate 1 generated spans.",
@@ -493,9 +1412,29 @@
       "title": "Input Hash",
       "type": "string"
     },
+    "preservation_report": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/PreservationReport"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
     "project_id": {
       "title": "Project Id",
       "type": "string"
+    },
+    "routing_report": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/RoutingReport"
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "source_map": {
       "anyOf": [
@@ -515,9 +1454,14 @@
       "title": "Source Map"
     },
     "stats": {
-      "additionalProperties": true,
-      "title": "Stats",
-      "type": "object"
+      "anyOf": [
+        {
+          "$ref": "#/$defs/BuildStats"
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "status": {
       "title": "Status",
@@ -534,6 +1478,8 @@
     "artifacts",
     "source_map",
     "stats",
+    "routing_report",
+    "preservation_report",
     "generated_spans"
   ],
   "title": "BuildInspectionOut",

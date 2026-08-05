@@ -57,7 +57,7 @@ export function BuildWorkbench({ projectId, requestedBuildId }: { projectId: str
 
   const requestedBuildMissing = Boolean(requestedBuildId && !build);
   const blockers = summary.data?.critical_findings || 0;
-  const action = <Button disabled={Boolean(blockers) || create.isPending} onClick={() => create.mutate()}><Hammer size={15} /> {create.isPending ? (waking ? "Waking your workspace…" : `Building… ${operation?.progress ?? 0}%`) : build ? "Build new snapshot" : "Build candidate"}</Button>;
+  const action = <Button disabled={Boolean(blockers) || create.isPending} onClick={() => create.mutate()}><Hammer size={15} /> {create.isPending ? (waking ? "Waking your workspace…" : `Compiling… ${operation?.progress ?? 0}%`) : build ? "Compile new snapshot" : "Refactor & compile"}</Button>;
 
   if (requestedBuildMissing) return <div className="content-wrap">
     <PageTitle eyebrow="Deterministic compiler" title="Build snapshot not found" detail="The requested build is not available in this project-scoped workspace." />
@@ -65,13 +65,13 @@ export function BuildWorkbench({ projectId, requestedBuildId }: { projectId: str
   </div>;
 
   if (build && inspection.isLoading) return <PageLoading label="Loading build inspection" detail="Reading exact artifact hashes, generated spans, and stored compilation reports…" />;
-  if (build && inspection.error) return <div className="content-wrap"><PageTitle eyebrow="Deterministic compiler" title="Candidate build" detail="Inspect a stored compiler snapshot and its evidence boundary." actions={action} /><ErrorState error={inspection.error} onRetry={() => void inspection.refetch()} /></div>;
+  if (build && inspection.error) return <div className="content-wrap"><PageTitle eyebrow="Source-aware compiler" title="Refactor & compile" detail="Inspect a stored compiled instruction bundle and its evidence boundary." actions={action} /><ErrorState error={inspection.error} onRetry={() => void inspection.refetch()} /></div>;
   if (build && inspection.data && (inspection.data.project_id !== projectId || inspection.data.build_id !== build.id)) return <div className="content-wrap"><ErrorState error={new Error("The inspection response does not match the requested project and build.")} onRetry={() => void inspection.refetch()} /></div>;
 
   return <div className="content-wrap">
-    <PageTitle eyebrow="Deterministic compiler" title="Candidate build" detail="Reviewed rules and placements compile into a versioned artifact bundle with inspectable conformance evidence." actions={action} />
-    {blockers > 0 && <div className="build-blocked"><div><strong><AlertTriangle size={16} /> Candidate build blocked</strong><p>{blockers} critical conflicts still need a human resolution. Compilation never uses document order as policy priority.</p></div><Link className="button button-secondary" href={`/projects/${projectId}/rules`}>Resolve in Rules</Link></div>}
+    <PageTitle eyebrow="Source-aware compiler" title="Refactor & compile" detail="Reviewed rules and placements compile into a versioned instruction bundle with inspectable conformance evidence." actions={action} />
+    {blockers > 0 && <div className="build-blocked"><div><strong><AlertTriangle size={16} /> Compilation blocked</strong><p>{blockers} critical conflicts still need a human resolution. Compilation never uses document order as policy priority.</p></div><Link className="button button-secondary" href={`/projects/${projectId}/rules`}>Resolve in Rules</Link></div>}
     {create.error && <div className="build-blocked"><div><strong>Build could not complete</strong><p>{create.error instanceof RequestError || create.error instanceof Error ? create.error.message : "Review the current rule and placement decisions, then try again."}</p></div><Link className="button button-secondary" href={`/projects/${encodeURIComponent(projectId)}/routing`}>Review placements</Link></div>}
-    {!build ? <EmptyState title={blockers ? "Review is not complete" : "No candidate build yet"} detail={blockers ? "Resolve each critical authority or boundary conflict before compiling." : "Create a stored artifact snapshot from the reviewed rule revisions and explicit placements."} /> : inspection.data && <BuildInspectionView key={build.id} projectId={projectId} build={build} inspection={inspection.data} documents={documents.data || []} />}
+    {!build ? <EmptyState title={blockers ? "Review is not complete" : "No compiled instruction bundle yet"} detail={blockers ? "Resolve each critical authority or boundary conflict before compiling." : "Create a stored bundle snapshot from the reviewed rule revisions and explicit placements."} /> : inspection.data && <BuildInspectionView key={build.id} projectId={projectId} build={build} inspection={inspection.data} documents={documents.data || []} />}
   </div>;
 }

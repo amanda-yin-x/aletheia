@@ -333,6 +333,23 @@
           "title": "Category",
           "type": "string"
         },
+        "decidability": {
+          "anyOf": [
+            {
+              "enum": [
+                "machine_decidable",
+                "model_judged",
+                "human"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Decidability"
+        },
         "destinations": {
           "items": {
             "enum": [

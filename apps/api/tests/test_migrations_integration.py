@@ -15,7 +15,7 @@ from sqlalchemy import inspect, select, text
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.schema import MetaData
 
-from app.auth import LOCAL_USER_EMAIL, LOCAL_USER_ID, AuthIdentity, require_identity
+from app.auth import AuthIdentity, require_identity
 from app.config import get_settings
 from app.db import get_session
 from app.main import app
@@ -29,9 +29,9 @@ from app.models import (
     WorkspaceMembership,
 )
 from app.operations import lock_operation_project
+from app.services.compilation.bundle import compile_project
 from app.services.guest_cleanup import cleanup_expired_guests
 from app.services.review import resolve_finding, revise_rule
-from app.tenancy import scoped_rule
 
 API_ROOT = Path(__file__).resolve().parents[1]
 
@@ -652,39 +652,62 @@ async def test_postgres_empty_migration_and_operation_lifecycle(
             assert polled.json()["status"] == "succeeded"
             assert polled.json()["resource_id"] == run_job["id"]
 
-            # A snapshot-consuming operation and every child-row mutation use
-            # the same Project -> child lock order. Prove with two real
-            # PostgreSQL sessions that the mutation cannot cross that fence.
+            # A snapshot-consuming operation and every semantic mutation use
+            # the same Project -> child lock order. Exercise a real compile and
+            # edit race with two PostgreSQL sessions: the edit must wait, the
+            # first build must remain wholly old, and the next build wholly new.
             async with maker() as operation_session, maker() as mutation_session:
                 operation_job = await operation_session.get(Job, run_job["id"])
                 assert operation_job is not None
                 await lock_operation_project(operation_session, operation_job)
                 mutable_rule = await operation_session.scalar(
-                    select(Rule).where(Rule.project_id == project_id).limit(1)
+                    select(Rule).where(
+                        Rule.project_id == project_id,
+                        Rule.stable_key == "rule.style.concise",
+                        Rule.status == "approved",
+                    )
                 )
                 assert mutable_rule is not None
-                mutation_acquired = asyncio.Event()
+                old_key = f"{mutable_rule.stable_key}@{mutable_rule.revision}"
+                new_text = "Use concise, calm, empathetic, and action-oriented language."
 
-                async def lock_mutation() -> Rule:
-                    resource = await scoped_rule(
+                mutation_task = asyncio.create_task(
+                    revise_rule(
                         mutation_session,
-                        AuthIdentity(LOCAL_USER_ID, LOCAL_USER_EMAIL, {}),
                         mutable_rule.id,
-                        write=True,
+                        expected_revision=mutable_rule.revision,
+                        changes={"normative_text": new_text},
                     )
-                    mutation_acquired.set()
-                    return resource
-
-                mutation_task = asyncio.create_task(lock_mutation())
+                )
                 with pytest.raises(TimeoutError):
-                    await asyncio.wait_for(
-                        asyncio.shield(mutation_acquired.wait()), timeout=0.25
-                    )
+                    await asyncio.wait_for(asyncio.shield(mutation_task), timeout=0.25)
                 assert not mutation_task.done()
+
+                old_build = await compile_project(operation_session, project_id)
+                old_artifacts = json.dumps(old_build.artifacts, sort_keys=True)
+                old_source_map = json.dumps(old_build.source_map, sort_keys=True)
+                assert old_key in old_artifacts
+                assert old_key in old_source_map
+                assert new_text not in old_artifacts
                 await operation_session.commit()
-                locked_rule = await asyncio.wait_for(mutation_task, timeout=2)
-                assert locked_rule.id == mutable_rule.id
-                await mutation_session.rollback()
+                revised = await asyncio.wait_for(mutation_task, timeout=5)
+
+            new_key = f"{revised.stable_key}@{revised.revision}"
+            async with maker() as verification_session:
+                new_build = await compile_project(verification_session, project_id)
+                new_artifacts = json.dumps(new_build.artifacts, sort_keys=True)
+                new_source_map = json.dumps(new_build.source_map, sort_keys=True)
+                assert new_build.content_hash != old_build.content_hash
+                assert new_key in new_artifacts
+                assert new_key in new_source_map
+                assert old_key not in new_artifacts
+                assert old_key not in new_source_map
+                assert new_text in new_artifacts
+
+                persisted_old = await verification_session.get(type(old_build), old_build.id)
+                assert persisted_old is not None
+                assert json.dumps(persisted_old.artifacts, sort_keys=True) == old_artifacts
+                assert json.dumps(persisted_old.source_map, sort_keys=True) == old_source_map
 
             async with maker() as session:
                 assert await session.get(Project, project_id)

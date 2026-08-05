@@ -30,6 +30,7 @@ SessionLocal = async_sessionmaker(engine, expire_on_commit=False)
 
 
 if settings.database_url.startswith("sqlite"):
+
     @event.listens_for(engine.sync_engine, "connect")
     def _sqlite_pragmas(dbapi_connection: object, _record: object) -> None:
         cursor = dbapi_connection.cursor()  # type: ignore[attr-defined]

@@ -38,6 +38,7 @@ const rules = [
   rule("rule-a", "Verify the requested change", documents[0]),
   rule("rule-b", "Escalate an unsupported exception", documents[1]),
   rule("rule-c", "Record downstream notification", null),
+  { ...rule("rule-d", "Retain withdrawn language as historical evidence", documents[1]), status: "rejected" } satisfies Rule,
 ];
 
 function placement(overrides: Partial<PlacementDecision> = {}): PlacementDecision {
@@ -55,6 +56,10 @@ const placements = [
   placement({
     id: "placement-b-v1", rule_id: "rule-b", version: 1, destinations: ["unsupported", "human_review"], scope_slug: null,
     transform_kind: "verbatim", disposition: "unsupported", rationale: "The runtime cannot evaluate this exception deterministically.", review_status: "needs_review", reviewer: "Policy Owner",
+  }),
+  placement({
+    id: "placement-d-v1", rule_id: "rule-d", version: 1, destinations: ["human_review"], scope_slug: null,
+    transform_kind: "verbatim", disposition: "retired", rationale: "The superseded clause remains visible as losing authority evidence.", review_status: "approved", reviewer: "Policy Owner",
   }),
 ];
 
@@ -75,7 +80,7 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe("placement workbench", () => {
-  it("shows every active rule with only its latest placement, source authority, and explicit pending states", async () => {
+  it("shows every ledger clause without treating reviewed retired history as attention", async () => {
     renderWorkbench();
 
     expect(await screen.findByText("Verify the requested change")).toBeInTheDocument();
@@ -90,6 +95,21 @@ describe("placement workbench", () => {
     expect(screen.getByText("Placement missing")).toBeInTheDocument();
     expect(screen.getByText("No source anchor is declared for this rule revision.")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: /Scheduling Policy · lines 4–5/i })).toHaveAttribute("href", "/projects/project-1/sources?document=document-current#line-4");
+    expect(screen.getByRole("region", { name: "Rule placement ledger" })).toBeInTheDocument();
+
+    const ledgerStat = screen.getByText("Ledger clauses").closest(".stat-card")!;
+    const routedStat = screen.getByText("Routed / retired").closest(".stat-card")!;
+    const attentionStat = screen.getByText("Needs attention").closest(".stat-card")!;
+    expect(ledgerStat).toHaveTextContent("4");
+    expect(routedStat).toHaveTextContent("1 / 1");
+    expect(attentionStat).toHaveTextContent("2");
+
+    const retiredCard = screen.getByText("Retain withdrawn language as historical evidence").closest("article")!;
+    expect(within(retiredCard).getByText("Rejected")).toBeInTheDocument();
+    expect(within(retiredCard).getByText("Retired")).toBeInTheDocument();
+    expect(retiredCard).toHaveClass("is-retired");
+    expect(retiredCard).not.toHaveClass("needs-attention");
+    expect(screen.queryByText(/active rules?/i)).not.toBeInTheDocument();
   });
 
   it("stores an edited placement against the visible version and appends the returned revision", async () => {
@@ -141,5 +161,21 @@ describe("placement workbench", () => {
     expect(screen.getByText(/Refresh before reviewing it again/)).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Refresh current version" }));
     await waitFor(() => expect(apiMock.mock.calls.filter(([path, init]) => path.endsWith("/placement-decisions") && !init?.method).length).toBeGreaterThan(1));
+  });
+
+  it("keeps keyboard focus inside the placement dialog and restores it on Escape", async () => {
+    renderWorkbench();
+
+    const article = (await screen.findByText("Verify the requested change")).closest("article")!;
+    const trigger = within(article).getByRole("button", { name: "Review placement" });
+    trigger.focus();
+    fireEvent.click(trigger);
+
+    const dialog = screen.getByRole("dialog", { name: "Verify the requested change" });
+    await waitFor(() => expect(within(dialog).getByRole("button", { name: "Close placement editor" })).toHaveFocus());
+    fireEvent.keyDown(document, { key: "Escape" });
+
+    expect(screen.queryByRole("dialog", { name: "Verify the requested change" })).not.toBeInTheDocument();
+    expect(trigger).toHaveFocus();
   });
 });

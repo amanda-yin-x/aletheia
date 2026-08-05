@@ -48,9 +48,7 @@ async def operation_input_fingerprint(
         documents = list(
             (
                 await session.scalars(
-                    select(Document)
-                    .where(Document.project_id == project_id)
-                    .order_by(Document.id)
+                    select(Document).where(Document.project_id == project_id).order_by(Document.id)
                 )
             ).all()
         )
@@ -66,9 +64,7 @@ async def operation_input_fingerprint(
         findings = list(
             (
                 await session.scalars(
-                    select(Finding)
-                    .where(Finding.project_id == project_id)
-                    .order_by(Finding.id)
+                    select(Finding).where(Finding.project_id == project_id).order_by(Finding.id)
                 )
             ).all()
         )
@@ -320,7 +316,12 @@ async def create_operation(
             "Idempotency-Key must contain between 1 and 255 characters.",
         )
     fingerprint = content_hash(
-        {"workspace_id": project.workspace_id, "project_id": project.id, "kind": kind, "payload": payload}
+        {
+            "workspace_id": project.workspace_id,
+            "project_id": project.id,
+            "kind": kind,
+            "payload": payload,
+        }
     )
     existing = await session.scalar(
         select(Job).where(
@@ -349,12 +350,12 @@ async def create_operation(
         # concurrent requests from the same guest across tabs.
         await session.flush()
         locked_account = await session.scalar(
-            select(UserAccount)
-            .where(UserAccount.id == account.id)
-            .with_for_update()
+            select(UserAccount).where(UserAccount.id == account.id).with_for_update()
         )
         if locked_account is None:
-            raise ServiceError("authentication_required", "A valid user session is required.", status_code=401)
+            raise ServiceError(
+                "authentication_required", "A valid user session is required.", status_code=401
+            )
         if locked_account.guest_operation_count >= get_settings().guest_max_operations:
             raise ServiceError(
                 "guest_operation_limit_reached",

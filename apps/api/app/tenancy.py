@@ -34,7 +34,9 @@ ADMIN_ROLES = frozenset({"owner", "admin"})
 
 
 def _not_found(resource: str) -> ServiceError:
-    return ServiceError(f"{resource}_not_found", f"{resource.replace('_', ' ').title()} not found.", status_code=404)
+    return ServiceError(
+        f"{resource}_not_found", f"{resource.replace('_', ' ').title()} not found.", status_code=404
+    )
 
 
 async def ensure_account(session: AsyncSession, identity: AuthIdentity) -> UserAccount:
@@ -269,23 +271,39 @@ async def _scoped_project_resource[Resource](
 
 
 async def scoped_document(session: AsyncSession, identity: AuthIdentity, value: str) -> Document:
-    return await _scoped_project_resource(session, identity, Document, value, write=False, resource_name="document")
+    return await _scoped_project_resource(
+        session, identity, Document, value, write=False, resource_name="document"
+    )
 
 
-async def scoped_rule(session: AsyncSession, identity: AuthIdentity, value: str, *, write: bool = False) -> Rule:
-    return await _scoped_project_resource(session, identity, Rule, value, write=write, resource_name="rule")
+async def scoped_rule(
+    session: AsyncSession, identity: AuthIdentity, value: str, *, write: bool = False
+) -> Rule:
+    return await _scoped_project_resource(
+        session, identity, Rule, value, write=write, resource_name="rule"
+    )
 
 
-async def scoped_finding(session: AsyncSession, identity: AuthIdentity, value: str, *, write: bool = False) -> Finding:
-    return await _scoped_project_resource(session, identity, Finding, value, write=write, resource_name="finding")
+async def scoped_finding(
+    session: AsyncSession, identity: AuthIdentity, value: str, *, write: bool = False
+) -> Finding:
+    return await _scoped_project_resource(
+        session, identity, Finding, value, write=write, resource_name="finding"
+    )
 
 
 async def scoped_build(session: AsyncSession, identity: AuthIdentity, value: str) -> Build:
-    return await _scoped_project_resource(session, identity, Build, value, write=False, resource_name="build")
+    return await _scoped_project_resource(
+        session, identity, Build, value, write=False, resource_name="build"
+    )
 
 
-async def scoped_test(session: AsyncSession, identity: AuthIdentity, value: str, *, write: bool = False) -> TestCase:
-    return await _scoped_project_resource(session, identity, TestCase, value, write=write, resource_name="test")
+async def scoped_test(
+    session: AsyncSession, identity: AuthIdentity, value: str, *, write: bool = False
+) -> TestCase:
+    return await _scoped_project_resource(
+        session, identity, TestCase, value, write=write, resource_name="test"
+    )
 
 
 async def scoped_placement_decision(
@@ -305,11 +323,17 @@ async def scoped_placement_decision(
     )
 
 
-async def scoped_run(session: AsyncSession, identity: AuthIdentity, value: str, *, write: bool = False) -> Run:
-    return await _scoped_project_resource(session, identity, Run, value, write=write, resource_name="run")
+async def scoped_run(
+    session: AsyncSession, identity: AuthIdentity, value: str, *, write: bool = False
+) -> Run:
+    return await _scoped_project_resource(
+        session, identity, Run, value, write=write, resource_name="run"
+    )
 
 
-async def scoped_result(session: AsyncSession, identity: AuthIdentity, value: str) -> ScenarioResult:
+async def scoped_result(
+    session: AsyncSession, identity: AuthIdentity, value: str
+) -> ScenarioResult:
     result = await session.scalar(
         select(ScenarioResult)
         .join(Run, ScenarioResult.run_id == Run.id)

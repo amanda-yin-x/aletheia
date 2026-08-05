@@ -39,6 +39,7 @@ class SourceRef(APIModel):
 class CompilerScopeProfile(APIModel):
     slug: str = Field(pattern=SLUG_PATTERN, min_length=1, max_length=120)
     title: str = Field(min_length=1, max_length=240)
+    trigger: str | None = Field(default=None, min_length=1, max_length=1000)
     load_policy: Literal["always", "on_demand", "never"] = "on_demand"
     skill_path: str | None = None
     knowledge_path: str | None = None
@@ -47,15 +48,35 @@ class CompilerScopeProfile(APIModel):
 class CompilerProfile(APIModel):
     """Versioned, domain-neutral rendering profile pinned by a project."""
 
-    schema_version: Literal["1.0"] = "1.0"
+    schema_version: Literal["1.0", "1.1"] = "1.0"
     name: str = Field(min_length=1, max_length=120)
     version: str = Field(pattern=SEMVER_PATTERN)
     path: str = Field(min_length=1, max_length=500)
+    sha256: str | None = Field(default=None, pattern=SHA256_PATTERN)
     agent_name: str | None = Field(default=None, max_length=240)
     agent_role: str | None = Field(default=None, max_length=2000)
     response_contract: str | None = Field(default=None, max_length=5000)
     scopes: list[CompilerScopeProfile] = Field(default_factory=list)
     source_document_ids: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def require_versioned_project_contract(self) -> "CompilerProfile":
+        if self.schema_version == "1.1":
+            if not all(
+                value and value.strip()
+                for value in (self.agent_name, self.agent_role, self.response_contract)
+            ):
+                raise ValueError(
+                    "compiler profile 1.1 requires agent_name, agent_role, and response_contract"
+                )
+            if self.sha256 is None or not self.scopes:
+                raise ValueError(
+                    "compiler profile 1.1 requires an exact sha256 pin and at least one scope"
+                )
+            for scope in self.scopes:
+                if not scope.trigger or not scope.skill_path:
+                    raise ValueError("compiler profile 1.1 scopes require a trigger and skill_path")
+        return self
 
 
 class PinnedDocumentInput(APIModel):
@@ -63,16 +84,43 @@ class PinnedDocumentInput(APIModel):
     version: int = Field(ge=1)
 
 
+class ClauseInventoryPin(APIModel):
+    path: str = Field(min_length=1, max_length=500)
+    sha256: str = Field(pattern=SHA256_PATTERN)
+
+    @field_validator("path")
+    @classmethod
+    def relative_inventory_path(cls, value: str) -> str:
+        if value.startswith("/") or ".." in value.split("/"):
+            raise ValueError("clause inventory path must stay inside the data directory")
+        return value
+
+
 class CompilationInputs(APIModel):
     baseline_prompt: PinnedDocumentInput
+    agents: list[PinnedDocumentInput] = Field(default_factory=list)
+    skills: list[PinnedDocumentInput] = Field(default_factory=list)
+    policies: list[PinnedDocumentInput] = Field(default_factory=list)
+    references: list[PinnedDocumentInput] = Field(default_factory=list)
     tool_schema: PinnedDocumentInput
     evaluation_data: PinnedDocumentInput
+
+    def all_pins(self) -> list[PinnedDocumentInput]:
+        return [
+            self.baseline_prompt,
+            *self.agents,
+            *self.skills,
+            *self.policies,
+            *self.references,
+            self.tool_schema,
+            self.evaluation_data,
+        ]
 
 
 class CompilationConfig(APIModel):
     """Reviewed project-specific labels and exact input selections."""
 
-    schema_version: Literal["1.0"] = "1.0"
+    schema_version: Literal["1.0", "1.1"] = "1.0"
     bundle_slug: str = Field(pattern=SLUG_PATTERN, min_length=1, max_length=120)
     agent_label: str = Field(min_length=1, max_length=240)
     skill_title: str = Field(min_length=1, max_length=240)
@@ -80,16 +128,32 @@ class CompilationConfig(APIModel):
     suite_name: str = Field(min_length=1, max_length=240)
     suite_version: int = Field(ge=1)
     inputs: CompilationInputs
+    clause_inventory: ClauseInventoryPin | None = None
     expected_context: list[str] = Field(min_length=1)
 
     @field_validator("expected_context")
     @classmethod
     def unique_expected_context(cls, value: list[str]) -> list[str]:
-        if any(not path.strip() for path in value):
-            raise ValueError("expected context paths must be non-empty")
+        if any(
+            not path.strip() or path.startswith("/") or ".." in path.split("/") for path in value
+        ):
+            raise ValueError("expected context paths must be non-empty relative paths")
         if len(value) != len(set(value)):
             raise ValueError("expected context paths must be unique")
         return value
+
+    @model_validator(mode="after")
+    def validate_versioned_inputs(self) -> "CompilationConfig":
+        if self.schema_version == "1.1" and (
+            not self.inputs.agents or not self.inputs.skills or self.clause_inventory is None
+        ):
+            raise ValueError(
+                "compilation configuration 1.1 requires pinned AGENTS, SKILL, and clause inventory inputs"
+            )
+        keys = [(item.name, item.version) for item in self.inputs.all_pins()]
+        if len(keys) != len(set(keys)):
+            raise ValueError("compilation input pins must be unique")
+        return self
 
 
 class DocumentAuthorityMetadata(APIModel):
@@ -179,9 +243,7 @@ class PlacementDecisionContract(APIModel):
             "unsupported",
         ]
     ] = Field(min_length=1)
-    scope_slug: str | None = Field(
-        default=None, pattern=SLUG_PATTERN, min_length=1, max_length=120
-    )
+    scope_slug: str | None = Field(default=None, pattern=SLUG_PATTERN, min_length=1, max_length=120)
     rendering: str | None = None
     transform_kind: Literal[
         "verbatim",
@@ -249,27 +311,31 @@ class PlacementDecisionPatch(APIModel):
     expected_version: int = Field(ge=1)
     profile_name: str | None = Field(default=None, min_length=1, max_length=120)
     profile_version: str | None = Field(default=None, pattern=SEMVER_PATTERN)
-    destinations: list[
-        Literal[
-            "prompt_kernel",
-            "skill",
-            "knowledge",
-            "pre_tool_policy",
-            "test",
-            "human_review",
-            "unsupported",
+    destinations: (
+        list[
+            Literal[
+                "prompt_kernel",
+                "skill",
+                "knowledge",
+                "pre_tool_policy",
+                "test",
+                "human_review",
+                "unsupported",
+            ]
         ]
-    ] | None = Field(default=None, min_length=1)
-    scope_slug: str | None = Field(
-        default=None, pattern=SLUG_PATTERN, min_length=1, max_length=120
-    )
+        | None
+    ) = Field(default=None, min_length=1)
+    scope_slug: str | None = Field(default=None, pattern=SLUG_PATTERN, min_length=1, max_length=120)
     rendering: str | None = None
-    transform_kind: Literal[
-        "verbatim",
-        "reviewed_normalization",
-        "reviewer_authored_guidance",
-        "compiler_scaffold",
-    ] | None = None
+    transform_kind: (
+        Literal[
+            "verbatim",
+            "reviewed_normalization",
+            "reviewer_authored_guidance",
+            "compiler_scaffold",
+        ]
+        | None
+    ) = None
     disposition: Literal["routed", "blocked", "unsupported", "retired"] | None = None
     rationale: str | None = Field(default=None, min_length=1, max_length=5000)
     review_status: Literal["approved", "needs_review"] | None = None
@@ -280,9 +346,7 @@ class PlacementDecisionPatch(APIModel):
         changed = self.model_dump(exclude={"expected_version"}, exclude_none=True)
         if not changed:
             raise ValueError("at least one placement field must change")
-        if self.destinations is not None and len(self.destinations) != len(
-            set(self.destinations)
-        ):
+        if self.destinations is not None and len(self.destinations) != len(set(self.destinations)):
             raise ValueError("placement destinations must be unique")
         return self
 
@@ -348,9 +412,7 @@ class PlacementRecord(APIModel):
             "unsupported",
         ]
     ] = Field(min_length=1)
-    scope_slug: str | None = Field(
-        default=None, pattern=SLUG_PATTERN, min_length=1, max_length=120
-    )
+    scope_slug: str | None = Field(default=None, pattern=SLUG_PATTERN, min_length=1, max_length=120)
     rendering: str | None = None
     transform_kind: Literal[
         "verbatim",
@@ -385,9 +447,7 @@ class RoutingReportEntry(APIModel):
     rule_stable_key: str
     rule_revision: int = Field(ge=1)
     title: str
-    rule_status: Literal[
-        "candidate", "needs_review", "approved", "rejected", "superseded"
-    ]
+    rule_status: Literal["candidate", "needs_review", "approved", "rejected", "superseded"]
     severity: Literal["low", "medium", "high", "critical"]
     category: Literal[
         "style",
@@ -398,10 +458,11 @@ class RoutingReportEntry(APIModel):
         "handoff",
         "quality",
     ]
+    # Optional only so stored 1.0 reports produced before compiler 1.1 remain
+    # inspectable. New builds always record this typed classification.
+    decidability: Literal["machine_decidable", "model_judged", "human"] | None = None
     provenance_kind: Literal["source_anchored", "reviewer_authored_guidance"]
-    provenance_metadata: RuleProvenanceMetadata = Field(
-        default_factory=RuleProvenanceMetadata
-    )
+    provenance_metadata: RuleProvenanceMetadata = Field(default_factory=RuleProvenanceMetadata)
     verified_source_anchors: int = Field(ge=0)
     source_anchors: list[SourceAnchor]
     placement: PlacementRecord
@@ -425,6 +486,7 @@ class RoutingReportCounts(APIModel):
     routed: int = Field(ge=0)
     blocked: int = Field(ge=0)
     unsupported: int = Field(ge=0)
+    retired: int = Field(default=0, ge=0)
 
 
 class RoutingReportProfile(APIModel):
@@ -445,9 +507,8 @@ class RoutingReport(APIModel):
             "active": len(self.entries),
             "routed": sum(item.disposition == "routed" for item in self.entries),
             "blocked": sum(item.disposition == "blocked" for item in self.entries),
-            "unsupported": sum(
-                item.disposition == "unsupported" for item in self.entries
-            ),
+            "unsupported": sum(item.disposition == "unsupported" for item in self.entries),
+            "retired": sum(item.disposition == "retired" for item in self.entries),
         }
         if self.counts.model_dump() != expected:
             raise ValueError("routing counts must match the report entries")
@@ -467,6 +528,8 @@ class ProtectedLiteral(APIModel):
         "threshold_or_duration",
         "quoted_literal",
         "tool_name",
+        "enum_value",
+        "structured_literal",
         "boundary_or_exception",
     ]
     value: str
@@ -506,6 +569,7 @@ class RoutingMetrics(APIModel):
     high_critical_guard_and_test_placement: float = Field(ge=0, le=1)
     blocked_count: int = Field(ge=0)
     unsupported_count: int = Field(ge=0)
+    retired_count: int = Field(default=0, ge=0)
     unrouted_count: int = Field(ge=0)
     unresolved_count: int = Field(ge=0)
 
@@ -528,9 +592,7 @@ class CompilationMetrics(APIModel):
 
 class SourceMapArtifact(APIModel):
     schema_version: Literal["1.0"] = "1.0"
-    range_convention: Literal[
-        "1-based inclusive lines; 0-based half-open UTF-8 byte ranges"
-    ]
+    range_convention: Literal["1-based inclusive lines; 0-based half-open UTF-8 byte ranges"]
     spans: list[GeneratedSpan]
 
 
@@ -548,9 +610,7 @@ class UnsupportedRulesArtifact(APIModel):
 class Predicate(APIModel):
     kind: Literal["predicate"] = "predicate"
     fact: str
-    op: Literal[
-        "eq", "ne", "lt", "lte", "gt", "gte", "in", "not_in", "exists", "contains", "regex"
-    ]
+    op: Literal["eq", "ne", "lt", "lte", "gt", "gte", "in", "not_in", "exists", "contains", "regex"]
     value: Any = None
 
 
@@ -589,19 +649,22 @@ class RuleRequirement(APIModel):
     kind: Literal["prior_event", "approval", "fact"]
     event_type: str | None = None
     fact: str | None = None
-    op: Literal[
-        "eq",
-        "ne",
-        "lt",
-        "lte",
-        "gt",
-        "gte",
-        "in",
-        "not_in",
-        "exists",
-        "contains",
-        "regex",
-    ] | None = None
+    op: (
+        Literal[
+            "eq",
+            "ne",
+            "lt",
+            "lte",
+            "gt",
+            "gte",
+            "in",
+            "not_in",
+            "exists",
+            "contains",
+            "regex",
+        ]
+        | None
+    ) = None
     value: Any = None
     match_arguments: list[str] = Field(default_factory=list)
 
@@ -641,7 +704,9 @@ class RuleIR(APIModel):
     revision: int = Field(ge=1)
     title: str
     normative_text: str
-    category: Literal["style", "workflow", "knowledge", "runtime_fact", "hard_constraint", "handoff", "quality"]
+    category: Literal[
+        "style", "workflow", "knowledge", "runtime_fact", "hard_constraint", "handoff", "quality"
+    ]
     effect: Literal["allow", "deny", "require_approval", "require_prior_event", "observe_only"]
     severity: Literal["low", "medium", "high", "critical"]
     status: Literal["candidate", "needs_review", "approved", "rejected", "superseded"]
@@ -655,12 +720,8 @@ class RuleIR(APIModel):
     source_refs: list[CompiledSourceRef]
     target_tools: list[str] = Field(default_factory=list)
     reviewer_note: str = ""
-    provenance_kind: Literal[
-        "source_anchored", "reviewer_authored_guidance"
-    ] = "source_anchored"
-    provenance_metadata: RuleProvenanceMetadata = Field(
-        default_factory=RuleProvenanceMetadata
-    )
+    provenance_kind: Literal["source_anchored", "reviewer_authored_guidance"] = "source_anchored"
+    provenance_metadata: RuleProvenanceMetadata = Field(default_factory=RuleProvenanceMetadata)
 
     @model_validator(mode="after")
     def validate_rule_provenance(self) -> "RuleIR":
@@ -804,9 +865,7 @@ class PolicyArtifact(APIModel):
 
 
 class ToolJSONSchema(APIModel):
-    schema_uri: str | None = Field(
-        default=None, alias="$schema", serialization_alias="$schema"
-    )
+    schema_uri: str | None = Field(default=None, alias="$schema", serialization_alias="$schema")
     type: Literal["object", "string", "integer", "number", "boolean", "array"]
     properties: dict[str, "ToolJSONSchema"] = Field(default_factory=dict)
     required: list[str] = Field(default_factory=list)
@@ -827,6 +886,20 @@ class ToolJSONSchema(APIModel):
     pattern: str | None = None
     format: str | None = None
     const: str | int | bool | None = None
+    enum: list[str | int | float | bool] | None = None
+
+    @field_validator("enum")
+    @classmethod
+    def unique_enum_values(
+        cls, value: list[str | int | float | bool] | None
+    ) -> list[str | int | float | bool] | None:
+        if value is not None:
+            if not value:
+                raise ValueError("enum must contain at least one value")
+            canonical = [json.dumps(item, sort_keys=True) for item in value]
+            if len(canonical) != len(set(canonical)):
+                raise ValueError("enum values must be unique")
+        return value
 
 
 class ToolDefinition(APIModel):
@@ -961,10 +1034,20 @@ class FactFixture(APIModel):
 class TraceEvent(APIModel):
     sequence: int
     type: Literal[
-        "run_started", "user_message", "assistant_message", "tool_proposed",
-        "policy_evaluated", "tool_blocked", "approval_required", "tool_executed",
-        "tool_result", "state_changed", "final_answer", "assertion_evaluated",
-        "run_finished", "error"
+        "run_started",
+        "user_message",
+        "assistant_message",
+        "tool_proposed",
+        "policy_evaluated",
+        "tool_blocked",
+        "approval_required",
+        "tool_executed",
+        "tool_result",
+        "state_changed",
+        "final_answer",
+        "assertion_evaluated",
+        "run_finished",
+        "error",
     ]
     payload: dict[str, Any]
     rule_ids: list[str] = Field(default_factory=list)
@@ -1012,6 +1095,7 @@ class ManifestCompilerProfile(APIModel):
     version: str = Field(pattern=SEMVER_PATTERN)
     path: str = Field(min_length=1, max_length=500)
     digest: str = Field(pattern=SHA256_PATTERN)
+    project_digest: str | None = Field(default=None, pattern=SHA256_PATTERN)
 
 
 class ManifestPlacementInput(PlacementRecord):
@@ -1069,12 +1153,8 @@ class ManifestRuleInput(APIModel):
         "quality",
     ]
     enforcement: Literal["prompt", "guard", "test_only", "human_review"]
-    provenance_kind: Literal[
-        "source_anchored", "reviewer_authored_guidance"
-    ] = "source_anchored"
-    provenance_metadata: RuleProvenanceMetadata = Field(
-        default_factory=RuleProvenanceMetadata
-    )
+    provenance_kind: Literal["source_anchored", "reviewer_authored_guidance"] = "source_anchored"
+    provenance_metadata: RuleProvenanceMetadata = Field(default_factory=RuleProvenanceMetadata)
     source_documents: list[str]
     digest: str = Field(pattern=SHA256_PATTERN)
 
@@ -1330,9 +1410,7 @@ class DocumentOut(APIModel):
     token_estimate: int
     origin: dict[str, Any]
     authority_owner: str = "unspecified"
-    authority_status: Literal["current", "superseded", "draft", "reference"] = (
-        "reference"
-    )
+    authority_status: Literal["current", "superseded", "draft", "reference"] = "reference"
     effective_at: datetime | None = None
     supersedes_document_id: str | None = None
     jurisdictions: list[str] = Field(default_factory=list)
@@ -1376,12 +1454,8 @@ class RuleOut(APIModel):
     target_tools: list[str]
     exceptions: list[RuleException]
     reviewer_note: str
-    provenance_kind: Literal[
-        "source_anchored", "reviewer_authored_guidance"
-    ] = "source_anchored"
-    provenance_metadata: RuleProvenanceMetadata = Field(
-        default_factory=RuleProvenanceMetadata
-    )
+    provenance_kind: Literal["source_anchored", "reviewer_authored_guidance"] = "source_anchored"
+    provenance_metadata: RuleProvenanceMetadata = Field(default_factory=RuleProvenanceMetadata)
     created_at: datetime
     updated_at: datetime
 
@@ -1406,13 +1480,16 @@ class RulePatch(APIModel):
     normative_text: str | None = None
     condition: Condition | EmptyCondition | None = None
     enforcement: Literal["prompt", "guard", "test_only", "human_review"] | None = None
-    effect: Literal[
-        "allow",
-        "deny",
-        "require_approval",
-        "require_prior_event",
-        "observe_only",
-    ] | None = None
+    effect: (
+        Literal[
+            "allow",
+            "deny",
+            "require_approval",
+            "require_prior_event",
+            "observe_only",
+        ]
+        | None
+    ) = None
     scope: RuleScope | None = None
     requires: list[RuleRequirement] | None = None
     exceptions: list[RuleException] | None = None
@@ -1461,6 +1538,34 @@ class RunCreate(APIModel):
     build_id: str | None = None
 
 
+class BuildSizeStats(APIModel):
+    lines: int = Field(ge=0)
+    characters: int = Field(ge=0)
+    tokens: int = Field(ge=0)
+
+
+class BuildReductionStats(APIModel):
+    lines: int
+    characters: int
+    estimated_tokens: int
+    label: str = Field(min_length=1)
+
+
+class BuildRoutingStats(APIModel):
+    kept_in_prompt: int = Field(ge=0)
+    moved_to_workflow: int = Field(ge=0)
+    guarded: int = Field(ge=0)
+    tested: int = Field(ge=0)
+
+
+class BuildStats(APIModel):
+    original: BuildSizeStats
+    candidate: BuildSizeStats
+    reduction: BuildReductionStats
+    routing: BuildRoutingStats
+    compilation: CompilationMetrics
+
+
 class BuildOut(APIModel):
     id: str
     project_id: str
@@ -1470,7 +1575,7 @@ class BuildOut(APIModel):
     compiler_version: str
     artifacts: dict[str, Any]
     source_map: dict[str, Any]
-    stats: dict[str, Any]
+    stats: BuildStats | None
     content_hash: str
     created_at: datetime
 
@@ -1489,7 +1594,9 @@ class BuildInspectionOut(APIModel):
     content_hash: str = Field(pattern=SHA256_PATTERN)
     artifacts: list[BuildArtifactInspection]
     source_map: SourceMapArtifact | dict[str, list[str]]
-    stats: dict[str, Any]
+    stats: BuildStats | None
+    routing_report: RoutingReport | None
+    preservation_report: PreservationReport | None
     generated_spans: list[GeneratedSpanOut]
 
 
@@ -1516,6 +1623,15 @@ class RunOut(APIModel):
     metrics: dict[str, Any]
     started_at: datetime
     finished_at: datetime | None
+
+
+class ProjectSummaryOut(APIModel):
+    sources: int = Field(ge=0)
+    approved_rules: int = Field(ge=0)
+    critical_findings: int = Field(ge=0)
+    tests: int = Field(ge=0)
+    current_build: BuildOut | None
+    last_run: RunOut | None
 
 
 class TestSnapshot(APIModel):
@@ -1567,9 +1683,7 @@ class ProjectCreate(APIModel):
 
 class WorkspaceBootstrap(APIModel):
     name: str = Field(default="My workspace", min_length=1, max_length=200)
-    slug: str | None = Field(
-        default=None, max_length=100, pattern=r"^[a-z0-9]+(?:-[a-z0-9]+)*$"
-    )
+    slug: str | None = Field(default=None, max_length=100, pattern=r"^[a-z0-9]+(?:-[a-z0-9]+)*$")
 
 
 class WorkspaceOut(APIModel):

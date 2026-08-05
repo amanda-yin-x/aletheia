@@ -115,7 +115,7 @@ function SpanInspector({ projectId, spans, documents, selectedSpan, onSelect }: 
         <div><dt>Text digest</dt><dd><code title={span.text_sha256}>{shortHash(span.text_sha256)}</code></dd></div>
         <div><dt>Placement</dt><dd>{span.placement_decision_id ? `version ${span.placement_version}` : "No placement record"}</dd></div>
       </dl>
-      {span.transform_kind === "compiler_scaffold" ? <div className="artifact-scaffold-note"><AlertTriangle size={15} /><span>Compiler scaffold has no source-anchor claim.</span></div> : span.transform_kind === "reviewer_authored_guidance" && !span.source_refs.length ? <div className="artifact-guidance-note"><ShieldCheck size={15} /><span>Reviewer-authored guidance has no source-anchor claim. Reviewer attribution is pinned in the routing report below.</span></div> : span.source_refs.length ? <div className="artifact-source-anchors"><strong>Exact source anchors</strong>{span.source_refs.map((anchor) => {
+      {span.transform_kind === "compiler_scaffold" ? <div className="artifact-scaffold-note"><AlertTriangle size={15} /><span>Compiler scaffold has no source-anchor claim.</span></div> : span.transform_kind === "reviewer_authored_guidance" && !span.source_refs?.length ? <div className="artifact-guidance-note"><ShieldCheck size={15} /><span>Reviewer-authored guidance has no source-anchor claim. Reviewer attribution is pinned in the routing report below.</span></div> : span.source_refs?.length ? <div className="artifact-source-anchors"><strong>Exact source anchors</strong>{span.source_refs.map((anchor) => {
         const href = sourceAnchorHref(projectId, anchor, documents);
         return <article key={anchor.source_anchor_id}>
           <div><span>{anchor.document_name} · {anchor.version_label}</span><Badge tone={authorityTone(anchor.authority_status)}>{metadataLabel(anchor.authority_status)}</Badge></div>
@@ -145,8 +145,8 @@ export function BuildInspectionView({ projectId, build, inspection, documents }:
   const hashes = new Map(inspection.artifacts.map((item) => [item.path, item.sha256]));
   const tree = useMemo(() => artifactTree(paths), [paths]);
   const metrics = compilationMetrics(build, inspection.stats);
-  const routing = routingReport(build);
-  const preservation = preservationReport(build);
+  const routing = routingReport(build, inspection.routing_report);
+  const preservation = preservationReport(build, inspection.preservation_report);
 
   const onDemand = metrics ? sumContentMetrics(Object.fromEntries([
     ...Object.entries(metrics.skills).map(([path, value]) => [`skill:${path}`, value]),
@@ -154,12 +154,15 @@ export function BuildInspectionView({ projectId, build, inspection, documents }:
   ])) : null;
   const machine = metrics ? sumContentMetrics(metrics.machine_enforced) : null;
   const preservedCount = preservation?.checks.filter((check) => check.preserved).length || 0;
+  const alwaysLoadedReduction = metrics && metrics.baseline_always_loaded.estimated_tokens > 0
+    ? 1 - (metrics.compiled_kernel.estimated_tokens / metrics.baseline_always_loaded.estimated_tokens)
+    : 0;
 
   return <>
     <section className="panel build-snapshot-panel">
-      <div className="panel-header"><div><h2>Build snapshot <Badge tone="teal"><CheckCircle2 size={11} /> Stored</Badge></h2><p className="hash-line">Manifest {shortHash(build.content_hash)} · input {shortHash(build.input_hash)} · compiler {build.compiler_version}</p></div><Badge tone="blue">{new Date(build.created_at).toLocaleString()}</Badge></div>
+      <div className="panel-header"><div><h2>Compiled instruction bundle <Badge tone="teal"><CheckCircle2 size={11} /> Stored</Badge></h2><p className="hash-line">Manifest {shortHash(build.content_hash)} · input {shortHash(build.input_hash)} · compiler {build.compiler_version}</p></div><Badge tone="blue">{new Date(build.created_at).toLocaleString()}</Badge></div>
       <div className="bundle-layout">
-        <nav className="artifact-tree" aria-label="Compiled bundle tree"><div className="artifact-tree-title"><Folder size={14} /><strong>Compiled bundle</strong><span>{paths.length} files</span></div>{paths.length ? <ArtifactTree nodes={tree} selected={selectedArtifact} onSelect={(path) => { setSelectedPath(path); setSelectedSpanId(null); }} /> : <p>No artifact paths were returned.</p>}</nav>
+        <nav className="artifact-tree" aria-label="Compiled instruction bundle tree"><div className="artifact-tree-title"><Folder size={14} /><strong>Instruction bundle</strong><span>{paths.length} files</span></div>{paths.length ? <ArtifactTree nodes={tree} selected={selectedArtifact} onSelect={(path) => { setSelectedPath(path); setSelectedSpanId(null); }} /> : <p>No artifact paths were returned.</p>}</nav>
         <div className="artifact-inspector">
           <div className="panel-body artifact-detail">
             <div><strong>{selectedArtifact || "No artifact selected"}</strong><p className="hash-line">SHA-256 {hashes.get(selectedArtifact) || "Digest unavailable"}</p></div>
@@ -174,6 +177,12 @@ export function BuildInspectionView({ projectId, build, inspection, documents }:
     <section className="panel compilation-metrics-panel">
       <div className="panel-header"><div><h2>Compilation metrics</h2><p>Exact stored sizes with the named deterministic estimator.</p></div>{metrics && <Badge>{metrics.estimator.name} · {metrics.estimator.version}</Badge>}</div>
       {!metrics ? <div className="panel-body"><EmptyState title="Compilation metrics unavailable" detail="This stored build does not contain a valid Gate 1 compilation-metrics contract." /></div> : <>
+        <div className="panel-body stat-grid compilation-layer-cards">
+          <StatCard label="Always-loaded reduction" value={formatRatio(alwaysLoadedReduction)} note={`${metrics.baseline_always_loaded.estimated_tokens} → ${metrics.compiled_kernel.estimated_tokens} estimated tokens`} tone="teal" />
+          <StatCard label="On-demand content" value={formatBytes(onDemand!.estimated_tokens)} note={`${Object.keys(metrics.skills).length + Object.keys(metrics.knowledge).length} scoped skill / knowledge artifacts`} />
+          <StatCard label="Machine-enforced content" value={formatBytes(machine!.estimated_tokens)} note={`${Object.keys(metrics.machine_enforced).length} guard / test artifacts`} />
+          <StatCard label="Bundle content" value={formatBytes(metrics.total_bundle_without_manifest.estimated_tokens)} note="Estimated tokens across artifacts, excluding manifest" />
+        </div>
         <div className="metric-table-wrap"><table className="metric-table"><thead><tr><th>Context layer</th><th>Lines</th><th>Characters</th><th>UTF-8 bytes</th><th>Estimated tokens</th></tr></thead><tbody>
           <MetricRow name="Baseline always-loaded" scope="Pinned compiler input" metric={metrics.baseline_always_loaded} />
           <MetricRow name="Compiled kernel" scope="Always loaded" metric={metrics.compiled_kernel} />
@@ -183,19 +192,19 @@ export function BuildInspectionView({ projectId, build, inspection, documents }:
           <MetricRow name="Total bundle without manifest" scope="Stored compiler metric" metric={metrics.total_bundle_without_manifest} />
         </tbody></table></div>
         <div className="panel-body metric-routing-grid">
-          <StatCard label="Routing coverage" value={formatRatio(metrics.routing.routing_coverage)} note={`${metrics.routing.explicit_dispositions} of ${metrics.routing.active_normative_clauses} explicit dispositions`} tone={metrics.routing.routing_coverage === 1 ? "teal" : "amber"} />
+          <StatCard label="Routing coverage" value={formatRatio(metrics.routing.routing_coverage)} note={`${metrics.routing.explicit_dispositions} of ${metrics.routing.active_normative_clauses} non-retired ledger clauses · ${metrics.routing.retired_count} retired`} tone={metrics.routing.routing_coverage === 1 ? "teal" : "amber"} />
           <StatCard label="Verified anchors" value={formatRatio(metrics.routing.verified_source_anchor_coverage)} note="Source-anchored or reviewed guidance" tone={metrics.routing.verified_source_anchor_coverage === 1 ? "teal" : "amber"} />
           <StatCard label="Approved preservation" value={formatRatio(metrics.routing.approved_preservation)} note="Exact renderings + protected literals" tone={metrics.routing.approved_preservation === 1 ? "teal" : "amber"} />
-          <StatCard label="Guard + test placement" value={formatRatio(metrics.routing.high_critical_guard_and_test_placement)} note="Approved high/critical clauses" tone={metrics.routing.high_critical_guard_and_test_placement === 1 ? "teal" : "amber"} />
+          <StatCard label="Guard + test placement" value={formatRatio(metrics.routing.high_critical_guard_and_test_placement)} note="Approved high/critical ledger clauses in scope" tone={metrics.routing.high_critical_guard_and_test_placement === 1 ? "teal" : "amber"} />
         </div>
         <div className="behavioral-boundary"><AlertTriangle size={18} /><div><strong>Behavioral fidelity: Not measured</strong><p>{metrics.interpretation}</p></div></div>
       </>}
     </section>
 
     <section className="panel routing-report-panel">
-      <div className="panel-header"><div><h2><Route size={15} /> Routing report</h2><p>Build-pinned dispositions and destinations for every active clause.</p></div>{routing && <div className="routing-count-badges"><Badge tone="teal">{routing.counts.routed} routed</Badge><Badge tone={routing.counts.blocked ? "red" : "neutral"}>{routing.counts.blocked} blocked</Badge><Badge tone={routing.counts.unsupported ? "red" : "neutral"}>{routing.counts.unsupported} unsupported</Badge></div>}</div>
+      <div className="panel-header"><div><h2><Route size={15} /> Routing report</h2><p>Build-pinned dispositions and destinations for every reviewed ledger clause.</p></div>{routing && <div className="routing-count-badges"><Badge>{routing.counts.active} ledger entries</Badge><Badge tone="teal">{routing.counts.routed} routed</Badge><Badge tone={routing.counts.blocked ? "red" : "neutral"}>{routing.counts.blocked} blocked</Badge><Badge tone={routing.counts.unsupported ? "red" : "neutral"}>{routing.counts.unsupported} unsupported</Badge><Badge>{routing.counts.retired} retired</Badge></div>}</div>
       {!routing ? <div className="panel-body"><EmptyState title="Routing report unavailable" detail="This stored build does not contain a valid routing-report contract." /></div> : <>
-        <div className="routing-profile">Profile <strong>{routing.profile.name} {routing.profile.version}</strong> · <code title={routing.profile.sha256}>{shortHash(routing.profile.sha256)}</code> · {routing.counts.active} active clauses</div>
+        <div className="routing-profile">Profile <strong>{routing.profile.name} {routing.profile.version}</strong> · <code title={routing.profile.sha256}>{shortHash(routing.profile.sha256)}</code> · ledger includes explicit retired history</div>
         <div className="routing-report-list">{routing.entries.map((entry) => <article key={entry.rule_key}>
           <div className="routing-report-heading"><div><span>{entry.rule_key}</span><strong>{entry.title}</strong></div><Badge tone={dispositionTone(entry.disposition)}>{dispositionLabel(entry.disposition)}</Badge></div>
           <div className="routing-report-tags"><Badge>{transformLabel(entry.placement.transform_kind)}</Badge>{entry.destinations.map((destination) => <Badge key={destination} tone={destination === "unsupported" ? "red" : destination === "human_review" ? "amber" : "blue"}>{destinationLabel(destination)}</Badge>)}</div>
@@ -209,7 +218,7 @@ export function BuildInspectionView({ projectId, build, inspection, documents }:
       <div className="panel-header"><div><h2><ShieldCheck size={15} /> Preservation report</h2><p>Deterministic rendering and protected-literal conformance checks.</p></div>{preservation && <Badge tone={preservedCount === preservation.checks.length ? "teal" : "red"}>{preservedCount} / {preservation.checks.length} preserved</Badge>}</div>
       {!preservation ? <div className="panel-body"><EmptyState title="Preservation report unavailable" detail="This stored build does not contain a valid preservation-report contract." /></div> : <>
         <div className="preservation-list">{preservation.checks.map((check) => <details key={check.rule_key}>
-          <summary><span><strong>{check.rule_key}</strong><small>{check.artifact_paths.join(" · ") || "No output artifact"}</small></span><Badge tone={check.preserved ? "teal" : "red"}>{check.preserved ? "Preserved" : `${check.missing.length} missing`}</Badge></summary>
+          <summary><span><strong>{check.rule_key}</strong><small>{check.artifact_paths?.join(" · ") || "No output artifact"}</small></span><Badge tone={check.preserved ? "teal" : "red"}>{check.preserved ? "Preserved" : `${check.missing.length} missing`}</Badge></summary>
           <div><strong>Protected literals</strong>{check.literals.length ? <ul>{check.literals.map((literal, index) => <li key={`${literal.kind}:${literal.value}:${index}`} className={check.missing.some((missing) => missing.kind === literal.kind && missing.value === literal.value) ? "missing" : undefined}><code>{literal.value}</code><span>{literal.kind.replaceAll("_", " ")}</span></li>)}</ul> : <p>No protected literal was extracted for this rendering.</p>}</div>
         </details>)}</div>
         <p className="preservation-interpretation"><strong>Evidence boundary:</strong> {preservation.interpretation}</p>
