@@ -8,6 +8,7 @@
 **Original Gate 1 start:** `91055f6043edfd7f0cb171eac0bd04c611f2d509`  
 **Reconciliation starting HEAD:** `0d5b356e6143f784c726f55406ca1ba12d308af0`  
 **Verified implementation commit:** `2292a5f7089d061c9dc8b977852ee04d182373bc`  
+**Documentation checkpoint:** `4354479884ed142e028dc4ea18aaedb627ab33c3`  
 **Deployment boundary:** not deployed; public Workers remain on `147448a`
 
 ## 1. What this verdict means
@@ -40,7 +41,8 @@ At original Gate 1 start `91055f6`, the tracked tree was clean and exactly three
 historical research inputs were untracked. Before this reconciliation, local
 `main` and `origin/main` both resolved to `0d5b356`. The intervening local work
 was audited rather than reset. The same three historical inputs remain
-untracked and byte-identical after `2292a5f`.
+untracked and byte-identical after implementation checkpoint `2292a5f`,
+documentation checkpoint `4354479`, and the CI-evidence follow-up worktree.
 
 Preserved untracked inputs at both boundaries:
 
@@ -100,7 +102,7 @@ applies to the combined end state.
 | D / slice 2 — generic compiler | `services/compilation/` splits profile, provenance, rendering, metrics, and bundle logic from the compatibility facade. | Northstar parity, no-domain-string, fresh-process reproducibility, digest, and old-build tests pass. |
 | E / slice 3 — Acme | The long-form appointment domain pack, seed service, manual conflicts, placements, cases, and shared runner path establish a second domain. | Shared compile/run path passes; stale, ambiguous, and pending items remain explicit. |
 | F / slice 4 — UI | Project switcher, source authority, placement routing, build inspection, exact source links, metrics, and state handling extend the existing design system. | 87 web tests and six Playwright flows pass. |
-| G / slice 5 — evidence/docs | Successor documents, capability inventory, screenshots, build roots, provenance example, and claim boundary record the checkpoint. | Packaging/audits pass; final pushed CI pending; no Gate 2 or hosted Gate 1 claim. |
+| G / slice 5 — evidence/docs | Successor documents, capability inventory, screenshots, build roots, provenance example, and claim boundary record the checkpoint. | Packaging/audits and CI `30967934453` pass on `4354479`; no Gate 2 or hosted Gate 1 claim. |
 
 ## 5. Implemented source-to-artifact chain
 
@@ -145,7 +147,7 @@ source-anchor claim. Test-generated span markers and other generated framing are
 | Dry-run package observation | 53 assets; 8,026.44 KiB / 1,666.83 KiB gzip |
 | Local startup observation | Active startup 40.4 ms in a 174.9 ms local profile window |
 | Dependency audits | `pip-audit` and production `pnpm audit --audit-level high`: no known vulnerabilities reported |
-| GitHub Actions | Last pre-reconciliation run [30963753935](https://github.com/amanda-yin-x/aletheia/actions/runs/30963753935) passed on `0d5b356`; the final pushed documentation commit requires its own green run before this row is advanced. |
+| GitHub Actions | [Run 30967934453](https://github.com/amanda-yin-x/aletheia/actions/runs/30967934453) passed quality, PostgreSQL integration, and secret scanning on documentation checkpoint `4354479` containing implementation checkpoint `2292a5f`. |
 | Patch hygiene | `git diff --check` passed |
 
 ### Exact local command ledger

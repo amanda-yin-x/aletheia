@@ -738,10 +738,9 @@ Final local Gate 1 evidence:
   vulnerabilities;
 - `git diff --check` is clean; and
 - [GitHub Actions run
-  30963753935](https://github.com/amanda-yin-x/aletheia/actions/runs/30963753935)
-  passed quality, PostgreSQL integration, and secret scan on the
-  pre-reconciliation commit `0d5b356`; the final pushed documentation commit
-  requires its own green run.
+  30967934453](https://github.com/amanda-yin-x/aletheia/actions/runs/30967934453)
+  passed quality, PostgreSQL integration, and secret scanning on documentation
+  checkpoint `4354479`, which contains implementation checkpoint `2292a5f`.
 
 The dry-run size and startup observations do not prove hosted Gate 1 deployment,
 production performance, or behavioral fidelity.

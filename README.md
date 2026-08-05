@@ -332,10 +332,9 @@ order, so a mutation cannot cross the captured-input fence.
 The verified Gate 1 backend, web, build, Worker dry-run, and clean six-flow
 browser checks all passed locally. The repository's quality, secret-scan, and
 PostgreSQL integration jobs also passed in [GitHub Actions run
-#30963753935](https://github.com/amanda-yin-x/aletheia/actions/runs/30963753935)
-on the pre-reconciliation repository commit `0d5b356`; the current
-implementation checkpoint is `2292a5f` and requires its own final pushed CI
-run. The hosted Supabase schema is verified through
+#30967934453](https://github.com/amanda-yin-x/aletheia/actions/runs/30967934453)
+on documentation checkpoint `4354479` and implementation checkpoint
+`2292a5f`. The hosted Supabase schema is verified through
 `0005_guest_access_waitlist`, while migration `0006_gate1_compilation_contracts`
 has passed only in local/CI databases and is not deployed. The hosted Data API
 is disabled, `anon`/`authenticated` have no application-table privileges, and
@@ -400,10 +399,10 @@ See [docs/deployment.md](docs/deployment.md) for the exact runbook.
   remains only as relational identity; run, trace, and report presentation uses
   the stored result snapshot.
 - The settled backend suite reproduces equivalent build roots byte-for-byte.
-  The last pre-reconciliation repository CI passed on `0d5b356`; CI for the
-  current Gate 1 implementation/documentation checkpoint is recorded only
-  after the pushed run succeeds. Bundles remain unsigned database records
-  rather than signed objects in an append-only release store.
+  GitHub Actions run `30967934453` passed quality, PostgreSQL integration, and
+  secret scanning on the pushed Gate 1 documentation checkpoint. Bundles
+  remain unsigned database records rather than signed objects in an
+  append-only release store.
 - Tenant authorization is enforced in FastAPI query scopes; Postgres RLS is not
   defined. On the hosted Supabase target, the Data API is disabled,
   `anon`/`authenticated` hold no application-table privileges, and a

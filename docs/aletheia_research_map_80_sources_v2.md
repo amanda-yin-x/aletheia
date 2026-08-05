@@ -4,7 +4,7 @@
 **Repository reconciliation date:** 2026-08-04  
 **Last independently audited anchor:** `4f4e410a2b114bb16b55566bca79c555a489bd9b`  
 **Inspected repository start:** `91055f6043edfd7f0cb171eac0bd04c611f2d509`  
-**Verified Gate 1 implementation:** `2292a5f7089d061c9dc8b977852ee04d182373bc`; final pushed CI pending  
+**Verified Gate 1 implementation:** `2292a5f7089d061c9dc8b977852ee04d182373bc`; documentation checkpoint `4354479` passed [CI 30967934453](https://github.com/amanda-yin-x/aletheia/actions/runs/30967934453)  
 **Version:** 2.0  
 **Purpose:** product positioning, adjacent-product analysis, user/practitioner evidence, benchmark design, formal/AI implementation, and enterprise architecture  
 **Companion files:** `aletheia_independent_review_and_product_decision_v2.md` and `aletheia_refined_codex_execution_handoff_v3.md`  

@@ -4,7 +4,7 @@
 **Reconciliation date:** 2026-08-04  
 **Last independently audited anchor:** `4f4e410a2b114bb16b55566bca79c555a489bd9b`  
 **Repository inspected:** local Gate 1 implementation `2292a5f7089d061c9dc8b977852ee04d182373bc`, reconciled from `0d5b356e6143f784c726f55406ca1ba12d308af0` and based on original start `91055f6043edfd7f0cb171eac0bd04c611f2d509`  
-**Last pre-reconciliation CI:** [30963753935](https://github.com/amanda-yin-x/aletheia/actions/runs/30963753935) passed on `0d5b356`; final pushed CI pending  
+**Repository CI:** [30967934453](https://github.com/amanda-yin-x/aletheia/actions/runs/30967934453) passed on documentation checkpoint `4354479`  
 **Predecessor:** `aletheia_independent_review_and_product_decision (1).md`, version 1.0, retained unchanged as historical input  
 **Predecessor SHA-256:** `60b2cb7445f24965a485aadcbda54dfca15b38a971c418d7fe4a1a5c07ac6e53`
 
@@ -94,7 +94,7 @@ removed after the run.
 | PostgreSQL migration marker | `cd apps/api && TEST_DATABASE_URL=postgresql+asyncpg://amandayin@localhost:5432/aletheia_gate1_verify_20260804_2130 TEST_MIGRATION_DATABASE_URL=postgresql+psycopg://amandayin@localhost:5432/aletheia_gate1_verify_20260804_2130 ENVIRONMENT=test uv run pytest -q -m postgres tests/test_migrations_integration.py` | 1 passed, 4 deselected; database removed |
 | Web | `corepack pnpm --filter @aletheia/web lint && corepack pnpm --filter @aletheia/web typecheck && corepack pnpm --filter @aletheia/web test` plus the OpenNext production build | Lint/type/build passed; 87/87 tests |
 | Browser | `PLAYWRIGHT_API_PORT=8014 PLAYWRIGHT_WEB_PORT=3014 PLAYWRIGHT_ISOLATED_WEB=1 corepack pnpm --filter @aletheia/web test:e2e` | 6/6 passed |
-| Repository CI | GitHub Actions run `30963753935` on `0d5b356` | Last pre-reconciliation quality/PostgreSQL/secret-scan pass; final pushed CI pending |
+| Repository CI | GitHub Actions run `30967934453` on `4354479` | Quality, PostgreSQL integration, and secret scanning passed |
 
 ### Gate 0 foundation retained
 

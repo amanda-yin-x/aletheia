@@ -4,7 +4,7 @@
 **Reconciliation date:** 2026-08-04  
 **Last independently audited anchor:** `4f4e410a2b114bb16b55566bca79c555a489bd9b`  
 **Original Gate 1 base:** `91055f6043edfd7f0cb171eac0bd04c611f2d509`; reconciliation start: `0d5b356e6143f784c726f55406ca1ba12d308af0`  
-**Verified Gate 1 implementation:** `2292a5f7089d061c9dc8b977852ee04d182373bc`; last pre-reconciliation CI [30963753935](https://github.com/amanda-yin-x/aletheia/actions/runs/30963753935) passed  
+**Verified Gate 1 implementation:** `2292a5f7089d061c9dc8b977852ee04d182373bc`; documentation checkpoint `4354479` passed [CI 30967934453](https://github.com/amanda-yin-x/aletheia/actions/runs/30967934453)  
 **Predecessor:** `aletheia_refined_codex_execution_handoff_v2 (1).md`, retained unchanged as historical input  
 **Predecessor SHA-256:** `325e6c980eeee5b11457e1ebe7475aef04d734962345fc84a83e81ba46c63948`
 
@@ -88,11 +88,10 @@ local results and packaging observations are not a deployment or
 production-performance claim; the public Workers remain the separate
 `147448a` bundle.
 
-The last pre-reconciliation repository CI
-[30963753935](https://github.com/amanda-yin-x/aletheia/actions/runs/30963753935)
-passed quality, PostgreSQL integration, and secret scan on `0d5b356`; the final
-pushed documentation commit requires its own green run. Hosted schema
-verification remains at `0005`; `0006` is local/CI only.
+Repository [CI 30967934453](https://github.com/amanda-yin-x/aletheia/actions/runs/30967934453)
+passed quality, PostgreSQL integration, and secret scanning on documentation
+checkpoint `4354479`, which contains implementation checkpoint `2292a5f`.
+Hosted schema verification remains at `0005`; `0006` is local/CI only.
 
 See [`gate-1-verification-report.md`](gate-1-verification-report.md) for the
 verified roots, artifact tree, representative provenance/metrics, demo path,
@@ -293,7 +292,7 @@ combined verified end state is marked passed.
 | D / slice 2 — generic compiler | profile/router/renderer/provenance/metrics/bundle modules and Northstar parity | Two-process reproducibility, no-domain-string, old-build immutability, and Northstar regressions pass |
 | E / slice 3 — Acme | long-form source pack, seeded authority conflicts/placements, shared runner | Acme compiles/runs without entering unsupported daylight or pending temporal clauses into the guard |
 | F / slice 4 — review/compilation UI | domain switch, authority review, placement ledger, bundle tree, metrics, exact span links | 87 component/unit tests and the six-flow browser suite pass |
-| G / slice 5 — evidence/docs | report, successor documents, capability inventory, screenshots, packaging checks | Local claims and hosted/non-behavioral boundaries recorded; final pushed CI pending |
+| G / slice 5 — evidence/docs | report, successor documents, capability inventory, screenshots, packaging checks | Local claims and hosted/non-behavioral boundaries recorded; CI `30967934453` passed on `4354479` |
 
 The exact commands, pass counts, build roots, and source-span example are in
 [`gate-1-verification-report.md`](gate-1-verification-report.md).

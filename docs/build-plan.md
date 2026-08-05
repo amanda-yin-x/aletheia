@@ -100,10 +100,11 @@ combined end state carries the recorded pass claim.
 | 4 — review and inspection UI | project switcher, routing/placement workbench, build inspection, presentation helpers | Source authority, placement versions, bundle tree, metrics, and exact span links passed unit/component and browser coverage. |
 | 5 — evidence and documentation | verification report, successor documents, capability inventory, screenshots | Claims, artifact roots, unsupported boundaries, and local-versus-hosted status were recorded without starting Gate 2. |
 
-The last pre-reconciliation repository-wide CI evidence is [run
-30963753935](https://github.com/amanda-yin-x/aletheia/actions/runs/30963753935)
-on `0d5b356`, where quality, PostgreSQL integration, and secret-scan jobs all
-passed. The final pushed documentation commit requires its own green run.
+Repository-wide [GitHub Actions run
+30967934453](https://github.com/amanda-yin-x/aletheia/actions/runs/30967934453)
+passed quality, PostgreSQL integration, and secret scanning on documentation
+checkpoint `4354479884ed142e028dc4ea18aaedb627ab33c3`, which contains verified
+implementation checkpoint `2292a5f`.
 Hosted Supabase/Render remains at migration `0005`; local/CI migration head is
 `0006`.
 

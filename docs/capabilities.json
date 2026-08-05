@@ -6,8 +6,8 @@
     "repository": "https://github.com/amanda-yin-x/aletheia",
     "canonical_site": "https://aletheia.aletheia-web.workers.dev",
     "source_commit": "2292a5f7089d061c9dc8b977852ee04d182373bc",
-    "reconciled_repository_head": "2292a5f7089d061c9dc8b977852ee04d182373bc",
-    "last_green_ci_run": "30963753935",
+    "reconciled_repository_head": "4354479884ed142e028dc4ea18aaedb627ab33c3",
+    "last_green_ci_run": "30967934453",
     "deployed_source_commit": "147448a",
     "inspected_repository_base": "91055f6043edfd7f0cb171eac0bd04c611f2d509",
     "gate1_deployment_boundary": "Gate 1 evidence describes verified implementation commit 2292a5f7089d061c9dc8b977852ee04d182373bc. The public staging and canonical Workers remain the separately identified deployed 147448a bundle; no Gate 1 deployment is claimed.",
@@ -458,7 +458,7 @@
       "environment": "GitHub Actions target",
       "scope": "Runs Python audit/lint/types/tests, SQLite migration drift, generated contracts, web lint/types/tests, OpenNext build, production/staging Wrangler dry-runs, Playwright, PostgreSQL lifecycle and role-privilege integration, and secret scanning.",
       "evidence": [".github/workflows/ci.yml", "Makefile"],
-      "limitations": ["Run 30963753935 is the last pre-reconciliation quality, PostgreSQL integration, and secret-scan pass on 0d5b356e6143f784c726f55406ca1ba12d308af0. Verified implementation commit 2292a5f7089d061c9dc8b977852ee04d182373bc requires its own final pushed CI; repository checks do not verify hosted Cloudflare, Render, or Supabase behavior."]
+      "limitations": ["Run 30967934453 passed quality, PostgreSQL integration, and secret scanning on documentation checkpoint 4354479884ed142e028dc4ea18aaedb627ab33c3 containing verified implementation commit 2292a5f7089d061c9dc8b977852ee04d182373bc. Repository checks do not verify hosted Cloudflare, Render, or Supabase behavior."]
     },
     {
       "id": "ci.customer_release_check",
@@ -554,9 +554,9 @@
     },
     {
       "id": "final_combined_ci",
-      "status": "unverified",
+      "status": "operating",
       "scope": "Aggregated GitHub Actions workflow on the final Gate 1 documentation checkpoint",
-      "result": "GitHub Actions run 30963753935 is the last pre-reconciliation quality, secret-scan, and PostgreSQL integration pass on 0d5b356e6143f784c726f55406ca1ba12d308af0. Final pushed CI for verified implementation commit 2292a5f7089d061c9dc8b977852ee04d182373bc and its documentation checkpoint is pending."
+      "result": "GitHub Actions run 30967934453 passed quality, PostgreSQL integration, and secret scanning on documentation checkpoint 4354479884ed142e028dc4ea18aaedb627ab33c3 containing verified implementation commit 2292a5f7089d061c9dc8b977852ee04d182373bc."
     },
     {
       "id": "clean_browser_e2e",
