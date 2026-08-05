@@ -8,6 +8,11 @@
 **Predecessor:** `aletheia_refined_codex_execution_handoff_v2 (1).md`, retained unchanged as historical input  
 **Predecessor SHA-256:** `325e6c980eeee5b11457e1ebe7475aef04d734962345fc84a83e81ba46c63948`
 
+> **Pre-deployment snapshot.** This handoff freezes the 2026-08-04 local Gate 1
+> checkpoint; its later public-bundle and hosted-schema statements are
+> historical. Use the [README](../README.md) and [current-state record](current-state-and-production-roadmap.md)
+> for post-release deployment and verification status.
+
 ## 1. Purpose and precedence
 
 This is the current continuation brief for the existing repository. It does not

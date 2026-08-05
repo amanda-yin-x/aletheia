@@ -9,7 +9,8 @@
 **Reconciliation starting HEAD:** `0d5b356e6143f784c726f55406ca1ba12d308af0`  
 **Verified implementation commit:** `2292a5f7089d061c9dc8b977852ee04d182373bc`  
 **Documentation checkpoint:** `4354479884ed142e028dc4ea18aaedb627ab33c3`  
-**Deployment boundary:** not deployed; public Workers remain on `147448a`
+**Release commit:** `2329a1e39c00bf6313965bc06454f9bd49119816`  
+**Deployment boundary:** Gate 1 is deployed; complete hosted build/run remains unverified
 
 ## 1. What this verdict means
 
@@ -28,9 +29,31 @@ The verdict is deliberately narrow:
 - the implementation commit contains code, fixtures, tests, and generated
   contracts; this successor report and refreshed screenshots are a separate
   documentation checkpoint;
-- no Gate 1 bundle was promoted to Cloudflare, Render, or Supabase;
+- Gate 1 was later promoted through release commit `2329a1e`; the local verdict
+  does not by itself establish hosted operation;
 - Gate 0H anonymous hosted verification remains a separate in-progress track;
 - behavioral fidelity remains `not_measured`.
+
+### Post-verdict hosted release record
+
+- staging Worker `7a049fd2-5053-4334-bea1-92d7f1099235` (rollback
+  `3788c6b0-291c-43a9-bef3-b48aaa4a0498`);
+- canonical Worker `091618a0-3582-48f3-9b53-8d2733387ed8` (rollback
+  `935c3c39-f63e-4041-804b-ef40431d50fc`);
+- Render `dep-d9pa9f6417fc73dfhcvg` at `2329a1e`, Alembic `0006`; and
+- [CI 30970432139](https://github.com/amanda-yin-x/aletheia/actions/runs/30970432139)
+  green, including a production API-image runtime-data smoke.
+
+A protected pre-migration `0005` archive contains 458 objects in 319,877 bytes
+with SHA-256
+`8416aa098748ba7bac1a82949c452bb849d3c91e861404b91911fc6d8a4bccf9`;
+its restore path remains untested.
+
+Fresh staging guest bootstrap passed at `2026-08-05T02:53:56Z`; fresh canonical
+production bootstrap passed at `2026-08-05T02:59:13Z`. Both environments passed
+basic Northstar/Acme navigation and inventory and found zero leaks in bounded
+ownership/reference probes. No hosted build/run/report/download or complete
+adversarial tenant test is inferred from those observations.
 
 The audited anchor moved before Gate 1 work began. The inspected
 `4f4e410..91055f6` range contains the five guest-preview, waitlist, resilience,
@@ -60,8 +83,8 @@ Feature gates and production maturity are separate ladders:
 | Capability/track | Evidence-backed status | Boundary |
 |---|---|---|
 | Gate 0 — Local deterministic foundation | Complete in the settled tested Northstar fixture/local scope | Source review, authority resolution, build, 16-case/three-arm run, trace, and report remain the regression floor. |
-| Gate 0H — Hosted verification and release hardening | In progress / unverified | Permanent-user Northstar staging passed; anonymous Turnstile redemption and complete guest E2E remain unverified. Hosted schema is at `0005`. |
-| Gate 1 — Source-aware policy refactoring and prompt/skill compilation | Complete in verified local two-domain fixture scope | Northstar and Acme API/database/frontend/packaging/browser evidence passed. Migration `0006` and Gate 1 are not deployed. |
+| Gate 0H — Hosted verification and release hardening | In progress / unverified | Permanent-user Northstar staging passed historically; fresh staging/production guest bootstrap, two-domain inventory, and bounded isolation probes now pass; complete guest E2E remains unverified. |
+| Gate 1 — Source-aware policy refactoring and prompt/skill compilation | Complete locally and deployed to the hosted preview | Northstar and Acme API/database/frontend/packaging/browser evidence passed locally; migration `0006` and the release are live, while hosted build/run/report remains unverified. |
 | Gates 2–8 | Absent as product capabilities | Interfaces, research, and tau sync do not establish solver, temporal, mutation, model, live evaluation, tau execution, or runtime SDK operation. |
 | Production maturity | Preview, not production-ready | Database RLS/private-schema isolation, signed promotion, customer ingestion/runtime, operational assurance, and enterprise controls remain absent. |
 
@@ -102,7 +125,7 @@ applies to the combined end state.
 | D / slice 2 — generic compiler | `services/compilation/` splits profile, provenance, rendering, metrics, and bundle logic from the compatibility facade. | Northstar parity, no-domain-string, fresh-process reproducibility, digest, and old-build tests pass. |
 | E / slice 3 — Acme | The long-form appointment domain pack, seed service, manual conflicts, placements, cases, and shared runner path establish a second domain. | Shared compile/run path passes; stale, ambiguous, and pending items remain explicit. |
 | F / slice 4 — UI | Project switcher, source authority, placement routing, build inspection, exact source links, metrics, and state handling extend the existing design system. | 87 web tests and six Playwright flows pass. |
-| G / slice 5 — evidence/docs | Successor documents, capability inventory, screenshots, build roots, provenance example, and claim boundary record the checkpoint. | Packaging/audits and CI `30967934453` pass on `4354479`; no Gate 2 or hosted Gate 1 claim. |
+| G / slice 5 — evidence/docs | Successor documents, capability inventory, screenshots, build roots, provenance example, and claim boundary record the checkpoint. | Packaging/audits passed locally; release CI `30970432139` additionally validates the production API image. No Gate 2 claim. |
 
 ## 5. Implemented source-to-artifact chain
 
@@ -144,10 +167,10 @@ source-anchor claim. Test-generated span markers and other generated framing are
 | Complete browser path | Playwright **6/6** in 1.1 minutes using fresh isolated API/web ports and Next output |
 | Cloudflare bundle | OpenNext passed at compatibility date `2026-08-04` |
 | Wrangler | Version `4.118.0` type generation, root/staging deploy dry-runs, and startup check passed |
-| Dry-run package observation | 53 assets; 8,026.44 KiB / 1,666.83 KiB gzip |
+| Dry-run package observation | 53 assets; 8,026.44 KiB / 1,666.85 KiB gzip |
 | Local startup observation | Active startup 40.4 ms in a 174.9 ms local profile window |
 | Dependency audits | `pip-audit` and production `pnpm audit --audit-level high`: no known vulnerabilities reported |
-| GitHub Actions | [Run 30967934453](https://github.com/amanda-yin-x/aletheia/actions/runs/30967934453) passed quality, PostgreSQL integration, and secret scanning on documentation checkpoint `4354479` containing implementation checkpoint `2292a5f`. |
+| GitHub Actions | [Run 30970432139](https://github.com/amanda-yin-x/aletheia/actions/runs/30970432139) is green on release commit `2329a1e`, including the API-container smoke for the pinned profile and both packs. |
 | Patch hygiene | `git diff --check` passed |
 
 ### Exact local command ledger
@@ -221,8 +244,10 @@ workaround. This is why the final 6/6 result, not the earlier intermediate run,
 is the accepted browser evidence.
 
 The dry-run size and startup values are packaging observations. They do not
-measure production latency, capacity, availability, or a deployed Gate 1
-Worker. Dependency audits are not an independent security assessment.
+measure production latency, capacity, or availability. Release commit `2329a1e`
+also fixes API-image packaging by copying the compiler-profile directory; CI
+checks that directory and both packs in the built container. Dependency audits
+are not an independent security assessment.
 
 ## 7. Two-domain proof
 
@@ -421,7 +446,7 @@ matches the source-map span count.
 - a live scheduling/refund integration or customer runtime SDK;
 - upstream tau benchmark execution or a benchmark score;
 - policy mutation scoring or generic temporal monitors;
-- hosted Gate 1 operation, anonymous guest verification, or production SLOs;
+- complete hosted Gate 1 build/run/report operation or production SLOs;
 - database RLS, secure customer uploads, signed promotion, enterprise controls,
   compliance, certification, or independent security assurance.
 
@@ -431,9 +456,10 @@ The immediate next step is a product/evidence checkpoint, not automatic scope
 expansion:
 
 1. retain `2292a5f7089d061c9dc8b977852ee04d182373bc` as the exact local
-   implementation checkpoint and deploy it only as a separate, verified release;
-2. keep Gate 0H anonymous hosted verification separate and do not infer it from
-   local Gate 1;
+   implementation checkpoint and `2329a1e` as the packaging/release commit;
+2. complete Gate 0H hosted build/run/report, Acme navigation, quota, retention,
+   and broader tenant-isolation verification; do not infer those results from
+   bootstrap/navigation or local Gate 1;
 3. treat a stable customer-facing `aletheia check` exit/evidence contract and a
    narrow pre-side-effect dispatcher as the immediate post-Gate-1 integration
    checkpoint if product validation calls for them; the existing

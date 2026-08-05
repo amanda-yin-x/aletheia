@@ -7,9 +7,12 @@ Next.js is the product surface and the same-origin backend-for-frontend on
 Cloudflare.
 
 **Gate 1 — Source-aware policy refactoring and prompt/skill compilation** is
-complete in the verified local Northstar/Acme fixture scope. That compiler/UI
-result is not deployed: the public Workers remain on the separately recorded
-`147448a` bundle.
+complete in the verified local Northstar/Acme fixture scope. Release commit
+`2329a1e` is deployed to the named staging and canonical Workers, backed by
+Render deploy `dep-d9pa9f6417fc73dfhcvg` and hosted Alembic `0006`. Fresh guests
+passed bootstrap, basic two-domain navigation/inventory, and bounded isolation
+on both Workers; the complete hosted build/run/report/download lifecycle remains
+unverified.
 
 ## Hosted request path
 
@@ -108,9 +111,11 @@ ownership chain.
 
 Bootstrap is idempotent: current Gate 1 source creates a personal workspace and
 the seeded Northstar and Acme fixture projects; later access reopens them. Reset
-replaces only the requested seeded project’s contents while preserving its ID.
-The deployed `147448a` path remains Northstar-only. Hosted arbitrary project
-creation and source upload remain disabled.
+replaces only the requested seeded project’s contents while preserving its ID
+when the caller is authorized; bounded hosted guests cannot reset projects.
+Fresh staging and production guests returned both seeded project inventories.
+Repeat-bootstrap idempotency still requires connected release verification.
+Hosted arbitrary project creation and source upload remain disabled.
 
 Alembic is the only production schema creator. API/worker startup does not call
 `create_all()` or globally seed data. Render Free applies migrations under a

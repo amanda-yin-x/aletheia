@@ -2,22 +2,25 @@
 
 **Snapshot:** 2026-08-04  
 **Target:** Cloudflare Workers + Render FastAPI + Supabase Auth/Postgres  
-**Current status:** Supabase and Render are provisioned. Commit `147448a` is
-deployed as the same bundle on staging Worker version
-`3788c6b0-291c-43a9-bef3-b48aaa4a0498` and canonical production Worker version
-`935c3c39-f63e-4041-804b-ef40431d50fc`. The public surface and real Turnstile
-render are verified; Turnstile token redemption and the complete anonymous
-hosted workflow are not.
+**Current status:** Gate 1 release commit
+`2329a1e39c00bf6313965bc06454f9bd49119816` is deployed on staging Worker
+version `7a049fd2-5053-4334-bea1-92d7f1099235`, canonical production Worker
+version `091618a0-3582-48f3-9b53-8d2733387ed8`, and Render deploy
+`dep-d9pa9f6417fc73dfhcvg`. Hosted Alembic is at
+`0006_gate1_compilation_contracts`. Fresh guest bootstrap passed on staging at
+`2026-08-05T02:53:56Z` and canonical production at
+`2026-08-05T02:59:13Z`; both passed basic Northstar/Acme navigation and
+inventory plus bounded ownership/reference-isolation probes. Complete
+review/build/run/report/download, quota, and retention paths remain unverified.
 
-This runbook distinguishes the deployed Worker bundle, public-edge
-verification, the previously verified permanent-user staging lifecycle, and
-the still-unverified anonymous lifecycle. The Aletheia Supabase project, its
+This runbook distinguishes deployment, the narrow canonical guest-bootstrap
+smoke, the previously verified permanent-user staging lifecycle, and the still
+unverified complete guest lifecycle. The Aletheia Supabase project, its
 Postgres schema, the Render service, Turnstile, runtime secrets, and both
 Cloudflare Workers exist.
 Supabase anonymous sign-in is enabled and requires Turnstile. GitHub OAuth and
 custom SMTP do not exist. Do not describe the guest workflow as end-to-end
-verified until a real token is redeemed and the remaining checks in section 8
-pass.
+verified until the remaining checks in section 8 pass.
 
 ## 1. Target request path
 
@@ -70,26 +73,26 @@ by the current application.
 
 | Component | Implementation | Verification |
 |---|---|---|
-| Public landing and `/demo` guest entry | Deployed on staging and production | `/` and `/demo` return `200`; current composite scenario and `ALETHEIA` brand are served; anonymous E2E remains unverified |
-| Supabase browser/server clients | Deployed | Permanent-user path previously verified on staging; anonymous sign-in is enabled, but hosted token redemption and bootstrap still need verification |
+| Public landing and `/demo` guest entry | Gate 1 deployed on staging and production | Current release versions are recorded below; complete anonymous E2E remains unverified |
+| Supabase browser/server clients | Deployed | Fresh staging and production anonymous session/bootstrap/navigation passed; session longevity and complete workflow remain unverified |
 | Cookie refresh before private rendering | Deployed | Focused tests pass and the permanent-user hosted session path was previously verified; repeat with a guest session |
 | Email magic link | Enabled with a preview limitation | Turnstile-protected; Supabase default SMTP sends only to authorized project-team addresses until custom SMTP is configured |
 | Manual email OTP and GitHub login | Implemented in code; disabled in deployment | OTP is hidden by runtime configuration; GitHub remains off until its OAuth application and secret are configured |
-| Turnstile anonymous sign-in | Deployed; render verified | Real script and challenge frame render and UI reaches `waiting`; the previous `ready()` load failure is gone. Automated browsers were challenged, so token redemption, replay rejection, and guest bootstrap remain unverified |
-| Same-origin streaming API proxy | Deployed | Unauthenticated `/api/v1/me` returns `401`; permanent-user staging previously passed downloads and credential filtering; anonymous JWT path remains to verify |
+| Turnstile anonymous sign-in | Deployed; fresh redemption passed on both Workers | Fresh anonymous sessions bootstrapped on staging and production; replay rejection and wider lifecycle checks remain pending |
+| Same-origin streaming API proxy | Deployed | Fresh staging and production anonymous bootstrap traversed the proxy; streaming downloads and adversarial anonymous-session checks remain release gates |
 | Origin and CSRF mutation protection | Implemented | Local adversarial checks and hosted boundary checks passed |
 | Per-user edge rate policy | Deployed | Per-location 120 general, 90 polling, and 30 heavy thresholds per minute; permissive/eventually consistent rather than an exact global quota; hosted exhaustion verification pending |
 | Request size/deadline | Worker and guest-capable API deployed | 64 KiB mutation cap at Worker/API plus 85 seconds to receive upstream response headers; streamed bodies are outside that deadline; hosted anonymous-boundary verification remains pending |
-| FastAPI JWT and origin-token checks | Guest-capable API deployed and ready | Existing hosted Supabase JWKS/direct-origin checks passed; Render deploy `dep-d9p481tbedkc73e3677g` is ready, while the anonymous `role=authenticated` token path remains to verify with a redeemed CAPTCHA session |
+| FastAPI JWT and origin-token checks | Gate 1 API deployed and ready | Render deploy `dep-d9pa9f6417fc73dfhcvg` accepted signed anonymous bootstrap requests. On this release, direct product API access without the origin token returned `403`, and the correct origin token without a bearer returned `401`; invalid/expired JWT cases remain to repeat. |
 | Pre-routing hosted upload denial | Implemented | Verified without accepting hosted upload data; focused streaming-body coverage also passes |
-| Workspace tenancy and scoped resources | Implemented in source | Permanent-user two-user isolation previously passed; guest isolation, no-reset, quotas, and expiry remain to verify hosted |
+| Workspace tenancy and scoped resources | Implemented and bounded guest checks passed | Fresh staging and production workspaces had distinct owners, the expected two-project inventories, and zero leaks in the bounded ownership/reference probes. Adversarial cross-resource access, no-reset, quotas, and expiry remain to verify hosted. |
 | Guest write/operation limits | Implemented in source | 30 successful writes and six live operations per guest; hosted exhaustion tests pending |
 | Guest retention cleanup | Implemented in source | Seven-day access TTL; 30-day cleanup at startup and every 24 hours; dry-run CLI; failure alerts and fails open; hosted verification pending |
 | Waitlist consent | Implemented in source | Normalized unique email behind guest/permanent authenticated API; survives guest cleanup; hosted submission and persistence verification pending |
-| Alembic PostgreSQL migration | Guest migration applied on hosted startup | Render logs record `0004 → 0005_guest_access_waitlist` before successful startup; the existing hosted Data API/grant checks passed, while the connected guest data lifecycle remains unverified |
-| Render service | Guest-capable API deployed and ready | Free Virginia deploy `dep-d9p481tbedkc73e3677g` is connected to Supabase through SSL and `/readyz` returns `200`; the permanent-user lifecycle previously passed, while the guest lifecycle remains unverified |
+| Alembic PostgreSQL migration | Gate 1 migration applied on hosted startup | Hosted head is `0006_gate1_compilation_contracts`; a protected pre-Gate-1 `0005` archive exists, but no restore drill is claimed |
+| Render service | Gate 1 API deployed and ready | Free Virginia deploy `dep-d9pa9f6417fc73dfhcvg` at `2329a1e` is live; fresh staging/production bootstrap passed while the complete guest lifecycle remains unverified |
 | Cloudflare runtime configuration | Deployed | Exact commit bundle is on named staging and canonical production; HTTP redirects to HTTPS with `308` |
-| Full Cloudflare → Render → Supabase flow | Permanent-user staging workflow previously verified | Guest token redemption, bootstrap, workflow, and retention boundaries remain unverified |
+| Full Cloudflare → Render → Supabase flow | Guest bootstrap/inventory verified on both Workers; full E2E pending | Basic Northstar/Acme navigation/inventory and bounded isolation crossed all services; build/run/report/download, quotas, and retention remain unverified |
 
 ## 3. Local mode and hosted mode are intentionally different
 
@@ -232,10 +235,14 @@ sign-in` Turnstile integration are configured. Database and origin credentials
 remain in platform secret stores; no service-role or secret API key is used by
 the application.
 
-Alembic upgraded the hosted database through
-`0005_guest_access_waitlist`. Current source head
-`0006_gate1_compilation_contracts` has passed local and CI migration checks but
-has not been applied to the hosted database because Gate 1 is not deployed.
+Alembic upgraded the hosted database through current source head
+`0006_gate1_compilation_contracts` during Render deploy
+`dep-d9pa9f6417fc73dfhcvg`. Before migration, the operator created a protected
+local custom-format archive of the `0005` database: 319,877 bytes, 458 archive
+objects, SHA-256
+`8416aa098748ba7bac1a82949c452bb849d3c91e861404b91911fc6d8a4bccf9`,
+stored with file mode `0600` inside a `0700` directory. The absolute local path
+is intentionally omitted; this backup has not been restore-tested.
 The hosted release database boundary was checked independently of FastAPI:
 
 - the Data API is disabled (`db_schema` is empty and the REST probe is
@@ -295,7 +302,10 @@ Deployment preview URLs remain disabled and must not be added as Auth origins.
 Render's Virginia region. It connects over SSL to Supabase's `us-east-1`
 Supavisor session pooler. It intentionally uses inline operations because this
 Free preview topology does not include a continuously running background
-worker.
+worker. Current deploy `dep-d9pa9f6417fc73dfhcvg` runs source commit
+`2329a1e39c00bf6313965bc06454f9bd49119816`. That release fixes the production
+image boundary by copying `data/compiler-profiles` alongside `data/demo`; CI
+now builds the image and imports the pinned profile plus both fixture packs.
 
 For a redeploy or replacement service:
 
@@ -372,8 +382,10 @@ server-only secrets configured separately on the named staging and canonical
 Workers. Deployment preview URLs are disabled so they cannot become unreviewed
 Auth origins.
 
-The named staging and canonical Workers now serve the same commit `147448a`
-bundle. Use the procedures below for a subsequent deploy or secret rotation.
+The named staging and canonical Workers now serve release commit `2329a1e`:
+staging version `7a049fd2-5053-4334-bea1-92d7f1099235` and canonical version
+`091618a0-3582-48f3-9b53-8d2733387ed8`. Use the procedures below for a
+subsequent deploy or secret rotation.
 Never place the API origin token in
 `vars`, a `NEXT_PUBLIC_*` value, a shell history argument, or the repository.
 Wrangler resolves the named environment as a separate Worker at the staging
@@ -426,28 +438,30 @@ The named staging Worker has passed the connected permanent-user preview path:
   zero current `anon`/`authenticated` grants, and zero future-table default
   grants.
 
-The current public-guest bundle is deployed from commit `147448a` with this
-release record:
+The current Gate 1 release record is:
 
-- the release web suite passed 71 Vitest tests across 18 files;
-- staging Worker version `3788c6b0-291c-43a9-bef3-b48aaa4a0498`;
+- source commit `2329a1e39c00bf6313965bc06454f9bd49119816`;
+- [CI run 30970432139](https://github.com/amanda-yin-x/aletheia/actions/runs/30970432139)
+  green, including the production API-image runtime-data smoke;
+- staging Worker version `7a049fd2-5053-4334-bea1-92d7f1099235` with rollback
+  version `3788c6b0-291c-43a9-bef3-b48aaa4a0498`;
 - canonical production Worker version
+  `091618a0-3582-48f3-9b53-8d2733387ed8` with rollback version
   `935c3c39-f63e-4041-804b-ef40431d50fc`;
-- `/` and `/demo` return `200`, while unauthenticated `/api/v1/me` returns
-  `401`;
-- HTTP redirects to HTTPS with `308`;
-- the stale API-boundary notice is absent, and the current composite refund
-  scenario plus `ALETHEIA` brand are served; and
-- the real Turnstile script and challenge frame render on both Workers, the UI
-  reaches `waiting`, and the former `ready()` load failure is absent.
+- Render deploy `dep-d9pa9f6417fc73dfhcvg` at `2329a1e`; the last pre-Gate-1
+  live Render deploy was `dep-d9p481tbedkc73e3677g` at
+  `85e6666d513958ed94b0878ab101e66838c3d942`;
+- hosted Alembic head `0006_gate1_compilation_contracts`; and
+- fresh staging guest bootstrap passed at `2026-08-05T02:53:56Z` and fresh
+  canonical production bootstrap passed at `2026-08-05T02:59:13Z`; both
+  environments passed basic Northstar/Acme navigation and inventory and found
+  zero leaks in bounded ownership/reference probes.
 
-The automated browser was challenged. It did not redeem a Turnstile token, so
-this record does not prove anonymous Supabase sign-in, workspace bootstrap, or
-the complete guest workflow. Before describing that path as end-to-end hosted
-verified—and before the next production promotion—additionally verify:
+Those observations verify bootstrap/navigation/inventory and bounded isolation
+only. They do not prove the complete guest workflow. Before
+describing Gate 1 as end-to-end hosted verified, additionally verify:
 
-- `/demo` is public, completes Turnstile, creates a signed anonymous Supabase
-  session, and bootstraps an isolated personal Northstar workspace;
+- verify session refresh plus repeat-bootstrap idempotency;
 - the Turnstile widget allowlist contains only canonical and staging hosts and
   an unlisted host cannot complete the flow; local checks use local auth or the
   Cloudflare test key, and client `action` labels are not a server-enforced gate;
@@ -477,8 +491,8 @@ verified—and before the next production promotion—additionally verify:
   mutations share the `Project → child` lock order, so the mutation waits until
   the operation releases its snapshot fence.
 
-The current Worker bundle has already been promoted to production with the
-limited public-edge record above. Complete the guest path and security boundary
+The current Worker bundle has been promoted to production with the limited
+bootstrap/navigation record above. Complete the guest path and security boundary
 on `https://aletheia.aletheia-web.workers.dev` before claiming full hosted
 functionality. For every subsequent promotion, record the Worker version,
 source commit, Render deploy, Alembic head, UTC timestamp, and rollback version.
@@ -496,7 +510,7 @@ for failed core deployment:
    verify the UI shows “Waking your workspace…”, and retain the explicit Retry
    recovery when the bounded window expires.
 5. Complete log-redaction, browser Back/cache logout, accessibility,
-   narrow-viewport, load, fault-injection, backup/restore, and incident drills
+   narrow-viewport, load, fault-injection, backup restore, and incident drills
    before treating the preview as a production service.
 6. Guest workspaces are deliberately disposable: no uploads, arbitrary
    projects, or reset; 30 successful writes; six live operations; seven-day
@@ -534,10 +548,18 @@ Free services are suitable for evaluation, not an availability claim.
 
 ## 10. Rollback and incident notes
 
-- Keep the previous Cloudflare Worker version available and roll traffic back
-  if auth, proxying, or rendering regresses.
-- Render Free supports only limited recent rollbacks; retain a known-good image
-  or commit and verify database migration compatibility before rollback.
+- Current Cloudflare rollback targets are staging
+  `3788c6b0-291c-43a9-bef3-b48aaa4a0498` and canonical production
+  `935c3c39-f63e-4041-804b-ef40431d50fc`. Roll traffic back if auth, proxying,
+  rendering, or the connected API path regresses.
+- The last pre-Gate-1 Render deploy was `dep-d9p481tbedkc73e3677g` at commit
+  `85e6666d513958ed94b0878ab101e66838c3d942`. Render Free supports only limited
+  recent rollbacks; verify schema compatibility before selecting it.
+- The protected pre-migration `0005` database archive is 319,877 bytes with 458
+  archive objects and SHA-256
+  `8416aa098748ba7bac1a82949c452bb849d3c91e861404b91911fc6d8a4bccf9`.
+  It is stored locally with file mode `0600` under a `0700` directory; its
+  absolute path is deliberately not committed. A restore drill is still open.
 - Alembic migrations are the database source of truth. Never run destructive
   downgrade commands against a hosted database without a reviewed data plan and
   backup.

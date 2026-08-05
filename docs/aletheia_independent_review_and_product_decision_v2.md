@@ -8,6 +8,11 @@
 **Predecessor:** `aletheia_independent_review_and_product_decision (1).md`, version 1.0, retained unchanged as historical input  
 **Predecessor SHA-256:** `60b2cb7445f24965a485aadcbda54dfca15b38a971c418d7fe4a1a5c07ac6e53`
 
+> **Pre-deployment snapshot.** This review freezes the 2026-08-04 local Gate 1
+> assessment; its later references to the former public bundle are historical.
+> Use the [README](../README.md) and [current-state record](current-state-and-production-roadmap.md)
+> for post-release deployment and verification status.
+
 ## 1. Decision
 
 Continue Aletheia as a **source-aware policy refactoring and compilation

@@ -18,27 +18,32 @@ subject's workspace membership.
 
 Supabase Auth/Postgres, Render, Turnstile, server-only runtime credentials, and
 the named Cloudflare Workers are provisioned. A permanent-user staging revision
-passed the connected personal-workspace, two-user isolation,
+previously passed the connected personal-workspace, two-user isolation,
 review/build/run/trace/report/download, Data API denial, and direct-origin
-security path. Commit `147448a` is pushed, and its exact web bundle is deployed
-at `https://aletheia-staging.aletheia-web.workers.dev` as staging Worker version
-`3788c6b0-291c-43a9-bef3-b48aaa4a0498` and at
-`https://aletheia.aletheia-web.workers.dev` as canonical production Worker
-version `935c3c39-f63e-4041-804b-ef40431d50fc`. The honest release status is:
+security path. Gate 1 release commit `2329a1e39c00bf6313965bc06454f9bd49119816`
+is now deployed at `https://aletheia-staging.aletheia-web.workers.dev` as Worker
+version `7a049fd2-5053-4334-bea1-92d7f1099235` and at
+`https://aletheia.aletheia-web.workers.dev` as canonical Worker version
+`091618a0-3582-48f3-9b53-8d2733387ed8`, backed by Render deploy
+`dep-d9pa9f6417fc73dfhcvg` and Alembic `0006`. The honest release status is:
 
-> **The current public release is live on staging and canonical production;
-> public/edge smoke checks pass, while Turnstile token redemption and the
-> complete anonymous hosted workflow still need connected verification.**
+> **Gate 1 is deployed on staging and canonical production. Fresh guest
+> bootstrap plus basic Northstar/Acme navigation, inventory, and bounded
+> ownership/reference isolation passed on both; complete hosted
+> build/run/report/download, quota, and retention verification remains open.**
 
-Live checks confirmed `/` and `/demo` return `200`, unauthenticated
-`/api/v1/me` returns `401`, and HTTP redirects to HTTPS with `308`. The current
-composite refund scenario and `ALETHEIA` brand are served, and the stale
-API-boundary copy is absent. On staging and canonical production, the real
-Turnstile script and challenge frame render, the UI reaches its waiting state,
-and the former `ready()` load failure is gone. Automated browsers were
-challenged before token redemption,
-so these checks do not prove anonymous session creation or the complete hosted
-guest workflow.
+Recorded rollback targets are staging Worker
+`3788c6b0-291c-43a9-bef3-b48aaa4a0498`, canonical Worker
+`935c3c39-f63e-4041-804b-ef40431d50fc`, and pre-Gate-1 Render deploy
+`dep-d9p481tbedkc73e3677g` at commit
+`85e6666d513958ed94b0878ab101e66838c3d942` (subject to `0006` schema
+compatibility).
+
+Fresh staging guest bootstrap passed at `2026-08-05T02:53:56Z`; fresh canonical
+production bootstrap passed at `2026-08-05T02:59:13Z`. Both environments passed
+basic Northstar/Acme navigation and inventory and found zero leaks in bounded
+ownership/reference probes. These checks do not prove the complete hosted guest
+workflow.
 
 Supabase anonymous sign-in is enabled and requires Turnstile. Email magic link
 remains available for permanent accounts, but default SMTP reaches only
@@ -97,11 +102,13 @@ For a guest or permanent subject, the backend creates or reuses:
 
 - one `user_account` keyed by the Supabase `sub` claim;
 - one personal workspace owned by that subject;
-- one Northstar project inside the workspace.
+- one Northstar project and one Acme appointments project inside the workspace.
 
 The derived workspace slug includes a hash of the user subject, so users do not
-compete for one fixed `northstar-workspace` slug. Repeating bootstrap returns the
-same workspace/project and reports that it was not newly created.
+compete for one fixed `northstar-workspace` slug. Repeating bootstrap is
+designed to return the same workspace/projects and report that the workspace
+was not newly created; connected repeat-bootstrap verification remains open for
+the current release.
 
 The browser then navigates to:
 
@@ -389,28 +396,28 @@ link and preserves the normalized unique email record.
 
 | Feature | Status | Notes |
 |---|---|---|
-| Marketing landing | Current release deployed and smoke-verified | Commit `147448a` and the current composite scenario/brand are served on staging and canonical production. |
-| `/demo` guest entry | Deployed; connected verification pending | The real Turnstile client reaches the waiting state; token redemption → anonymous session → bootstrap remains unverified. |
+| Marketing landing | Gate 1 release deployed | Commit `2329a1e` is served on staging and canonical production. |
+| `/demo` guest entry | Fresh bootstrap passed on both Workers; complete E2E pending | Staging passed at `02:53:56Z`; production passed at `02:59:13Z`. |
 | Permanent login UI | Hosted preview operating with limits | Magic link is limited to project-team addresses; manual OTP and GitHub are disabled. |
-| Session refresh/private routes | Permanent-user staging path verified | Guest cookie/session behavior still needs hosted verification. |
-| Turnstile | Client render verified; redemption pending | The real script/challenge frame renders on both Workers without the former `ready()` failure; Supabase CAPTCHA redemption was not completed. |
-| Same-origin proxy | Permanent-user staging path verified | Reverify credential injection/streaming with anonymous JWTs. |
+| Session refresh/private routes | Permanent-user staging historical path verified | Initial guest navigation passed; refresh/expiry/back-cache behavior still needs current-release verification. |
+| Turnstile | Fresh redemption passed on both Workers | Replay rejection and broader abuse checks remain pending. |
+| Same-origin proxy | Fresh bootstrap passed on both Workers | Reverify complete mutations, credential filtering, and streaming downloads with anonymous JWTs. |
 | Edge/API request controls | Current web release deployed; connected verification pending | Unauthenticated `/api/v1/me` rejects with `401` and HTTP redirects with `308`; per-location limits, two-hop body cap, and deadline still need full hosted exercise. |
-| JWT/origin verification | Permanent-user path verified; anonymous path pending | Signed anonymous `role=authenticated` JWT support is implemented, but token redemption and guest acceptance were not completed. |
-| Personal workspace bootstrap | Permanent-user staging path verified; guest pending | Each signed subject receives a distinct repeatable workspace. |
+| JWT/origin verification | Anonymous bootstrap and direct-origin boundary passed | Signed anonymous sessions reached bootstrap on both Workers. On the current Render release, no origin token returned `403` and origin-token-only returned `401`; invalid/expired JWT and broader adversarial checks remain open. |
+| Personal workspace bootstrap | Fresh guests passed on both Workers | Basic two-domain navigation/inventory and bounded ownership/reference isolation passed; repeatability and broader isolation remain pending. |
 | Tenant-scoped API | Staging verified at the app boundary | Two-user denial passes; hosted Data API is disabled and role grants are zero. Postgres RLS is still absent. |
 | Guest limits/reset | Implemented; connected hosted verification pending | 30 successful writes, six live operations, and reset denied. |
 | Guest expiry/cleanup | Implemented; connected hosted verification pending | Seven-day TTL; auth-created-at 30-day cleanup at startup/every 24 hours, including auth-only anonymous identities; dry-run CLI; failures alert and fail open. |
 | Waitlist | Implemented; connected hosted verification pending | Normalized unique consent survives guest cleanup. |
-| Rule review/build gate | Hosted Northstar release plus local Gate 1 | The deployed `147448a` path is Northstar-only; two-domain placement/refactoring is local and not deployed. |
-| Compiler/artifacts | Local Gate 1 verified; deployed release older | Exact generated provenance and the Gate 1 bundle schema pass locally; hosted `147448a` retains the earlier Northstar artifact path. Storage/signing gaps remain. |
+| Rule review/build gate | Gate 1 deployed; connected execution pending | Two-domain source/placement/build UI and API code are live, but no current-release hosted build/run has been verified. |
+| Compiler/artifacts | Gate 1 deployed; local behavior verified | The API image now contains the pinned compiler profile and both packs; hosted compilation and artifact inspection remain unverified. Storage/signing gaps remain. |
 | Operation contract/polling | Permanent-user staging path verified | Inline on Render Free; guest six-operation boundary pending. |
 | Labelled-arm run/trace/report | Implemented; evaluation-limited | Deterministic fixture, no live model. |
 | Report streaming | Staging verified | Markdown/JSON responses traverse both Cloudflare and Render hops. |
 | Account/logout/cache clear | Implemented; staging session path verified | Broader browser/back-cache audit remains. |
-| Supabase Postgres target | Provisioned; hosted schema at `0005` | Data API off and current/default app-table grants denied. Current source migration `0006` is local/CI-only. |
-| Render deployment | Provisioned and staging verified | Free Virginia service; inline work and cold-start limits apply. |
-| Current Cloudflare revision | Exact bundle deployed to both environments | Commit `147448a`; staging `3788c6b0-291c-43a9-bef3-b48aaa4a0498`; canonical production `935c3c39-f63e-4041-804b-ef40431d50fc`. |
+| Supabase Postgres target | Provisioned; hosted schema at `0006` | A protected pre-migration `0005` archive exists. Post-migration checks found the Data API disabled and zero effective application-table privileges for `anon` and `authenticated`; this is coarse denial, not tenant-level RLS. |
+| Render deployment | Gate 1 deploy live | `dep-d9pa9f6417fc73dfhcvg` at `2329a1e`; Free service, inline work, and cold-start limits apply. |
+| Current Cloudflare revision | Exact release deployed to both environments | Staging `7a049fd2-5053-4334-bea1-92d7f1099235`; canonical `091618a0-3582-48f3-9b53-8d2733387ed8`. |
 
 ## 9. Verification completed in this implementation pass
 
@@ -471,10 +478,20 @@ PostgreSQL-marked test.
 That real two-session PostgreSQL path includes the `Project → child`
 input-snapshot lock fence. Hosted verification remains separate.
 
+Current release commit `2329a1e` fixes the production image package by copying
+the pinned compiler-profile directory in addition to both demo packs. [CI run
+30970432139](https://github.com/amanda-yin-x/aletheia/actions/runs/30970432139)
+is green and includes a production API-image smoke that imports those runtime
+assets. Before hosted migration `0006`, the operator created a protected local
+`0005` archive (319,877 bytes, 458 objects, SHA-256
+`8416aa098748ba7bac1a82949c452bb849d3c91e861404b91911fc6d8a4bccf9`);
+the archive has not been restore-tested.
+
 ### Hosted connected-system and current-release verification
 
-- the target Supabase database migrated through hosted release migration
-  `0005_guest_access_waitlist`; current source head `0006` is local/CI-only;
+- the target Supabase database migrated through current source head
+  `0006_gate1_compilation_contracts` on Render deploy
+  `dep-d9pa9f6417fc73dfhcvg`;
 - the Data API is disabled, negative REST access is unavailable, current
   `anon`/`authenticated` application-table grants are zero, and a transactional
   probe table inherited zero default grants;
@@ -486,18 +503,18 @@ input-snapshot lock fence. Hosted verification remains separate.
 - the complete deterministic review, compile, 16-case/three-arm run, blocked
   trace, report, and streamed Markdown export path passed with hosted Postgres.
 
-Those lifecycle checks used a permanent-user staging session. The current web
-bundle is separately confirmed live at the staging and canonical production
-version identifiers recorded above. Public-route/API-boundary smoke checks pass,
-and the real Turnstile client renders through its waiting state on both Workers
-without the former load failure.
+Those complete lifecycle checks used an older permanent-user staging session.
+For the current release, fresh guests on staging and production passed
+Turnstile, anonymous session creation, `200` bootstrap, basic Northstar/Acme
+navigation and inventory, and bounded ownership/reference-isolation probes.
+These are not full build/run/report/download evidence.
 
 ### Deliberately not claimed
 
-- no complete hosted guest flow is claimed yet: automated browsers were
-  challenged before Turnstile token redemption, so anonymous sign-in, quotas,
-  expiry, cleanup, reset denial, and waitlist persistence have not been
-  exercised end to end;
+- no complete hosted guest flow is claimed yet: bootstrap/navigation/inventory
+  and bounded ownership/reference probes passed, while build/run,
+  report/download, quotas, expiry, cleanup, reset denial, and waitlist
+  persistence have not been exercised end to end on this release;
 - no hosted claim is made yet for the new per-location rate policies, two-hop
   64 KiB mutation cap, 85-second response-header deadline, 24-hour cleanup loop,
   auth-only identity cleanup, or lock-fence revision;
@@ -508,11 +525,11 @@ without the former load failure.
   OAuth application configuration;
 - no production Render availability or SLO is claimed; Free cold-start behavior
   remains a preview limitation;
-- exact staging and production Cloudflare deployment is confirmed, but that
-  deployment fact is not evidence of successful anonymous token redemption or
-  a complete connected guest lifecycle;
-- no penetration, load, accessibility-conformance, backup/restore, or disaster
-  recovery exercise was completed.
+- exact staging and production deployment plus fresh token redemption/bootstrap
+  and bounded inventory/isolation probes are confirmed, but they do not establish a complete
+  connected guest lifecycle;
+- a protected pre-migration archive was created, but no restore, penetration,
+  load, accessibility-conformance, or disaster-recovery exercise was completed.
 
 ## 10. Known issues that matter most
 
@@ -569,16 +586,16 @@ declared boundary; it does not prove business safety in general.
 
 ### Step 1: complete connected verification of the deployed guest release
 
-- on staging Worker version `3788c6b0-291c-43a9-bef3-b48aaa4a0498`, complete a
-  human-solvable Turnstile challenge and verify token redemption, anonymous
-  sign-in, isolated bootstrap, all guest
-  limits, reset/upload/project-creation denial, seven-day expiry, 30-day
+- on staging Worker version `7a049fd2-5053-4334-bea1-92d7f1099235`, extend the
+  passed guest bootstrap/inventory path through all guest limits,
+  reset/upload/project-creation denial, seven-day expiry, 30-day
   cleanup, fail-open alerting, and waitlist persistence;
-- repeat the complete Northstar workflow and cross-tenant security checks with
-  guest and permanent identities; and
-- repeat the connected guest path on canonical production Worker version
-  `935c3c39-f63e-4041-804b-ef40431d50fc`, then record Worker/Render versions,
-  Alembic head, timestamp, evidence, and rollback version.
+- complete Northstar and Acme build/run/report/download plus broader
+  cross-tenant security checks with guest and permanent identities; and
+- retain canonical production Worker version
+  `091618a0-3582-48f3-9b53-8d2733387ed8`; its fresh
+  bootstrap/navigation/inventory and bounded isolation smoke has passed, while the workflows above
+  remain pending.
 
 ### Step 2: finish permanent-account authentication delivery
 
@@ -643,14 +660,12 @@ declared boundary; it does not prove business safety in general.
 ## Final assessment
 
 The review/compiler/runner flow works inside a controlled deterministic scope.
-Its permanent-user security/tenancy path is connected and verified on the named
-staging Worker: Supabase Postgres is migrated, Data API/grant denial is checked,
-and two-user isolation plus the complete Northstar lifecycle passed. Commit
-`147448a` is now the exact web release on staging and canonical production, and
-its public routes, unauthenticated API rejection, HTTPS redirect, current
-landing content, brand, and Turnstile client rendering passed smoke checks. The
-immediate milestone is human-solvable token redemption and the complete
-connected guest lifecycle—not another web promotion. Broader permanent-account
+Gate 1 release `2329a1e` is live on both Workers and Render with hosted Alembic
+`0006`. Fresh staging and production guests passed bootstrap, basic two-domain
+navigation/inventory, and bounded ownership/reference-isolation probes. The
+complete hosted build/run/report/download paths for Northstar and Acme, limits,
+retention, and broader adversarial isolation remain
+unverified. Broader permanent-account
 onboarding still requires custom SMTP and GitHub OAuth; a production-capable
 service still requires database defense in depth, paid availability,
 observability, recovery drills, and independent security/accessibility work.

@@ -3,15 +3,16 @@
 **Reconciled:** 2026-08-04  
 **Last independently audited anchor:** `4f4e410a2b114bb16b55566bca79c555a489bd9b`  
 **Original Gate 1 start:** `91055f6043edfd7f0cb171eac0bd04c611f2d509`  
-**Reconciliation start:** `0d5b356e6143f784c726f55406ca1ba12d308af0`; verified implementation: `2292a5f7089d061c9dc8b977852ee04d182373bc`
+**Reconciliation start:** `0d5b356e6143f784c726f55406ca1ba12d308af0`; verified implementation: `2292a5f7089d061c9dc8b977852ee04d182373bc`  
+**Hosted release:** `2329a1e39c00bf6313965bc06454f9bd49119816`; Render `dep-d9pa9f6417fc73dfhcvg`; Alembic `0006`
 
 ## Status at a glance
 
 | Track | Status | Exit boundary |
 |---|---|---|
 | Gate 0 — Local deterministic foundation | Complete in the settled tested Northstar fixture/local scope | Preserve ingest → review → build → run → trace → report behavior and its no-key path. |
-| Gate 0H — Hosted verification and release hardening | In progress | Permanent-user staging passed; anonymous Turnstile redemption and the complete guest lifecycle still require hosted verification. |
-| Gate 1 — Source-aware policy refactoring and prompt/skill compilation | Complete in verified local two-domain fixture scope | API/database/frontend/packaging/browser checks cover the shared Northstar/Acme path; not deployed. |
+| Gate 0H — Hosted verification and release hardening | In progress | Permanent-user Northstar staging passed historically; fresh guest bootstrap, basic two-domain navigation/inventory, and bounded isolation passed on staging and production. Complete guest E2E remains unverified. |
+| Gate 1 — Source-aware policy refactoring and prompt/skill compilation | Complete locally; deployed preview | API/database/frontend/packaging/browser checks cover the shared Northstar/Acme path. The code and migration are live; hosted build/run/report remains unverified. |
 | Gates 2–8 | Absent | Start only after a recorded Gate 1 review. |
 
 ## Gate 0 foundation to preserve
@@ -33,16 +34,22 @@
 
 ## Gate 0H remaining checkpoint
 
-The Supabase → Render → Cloudflare stack is provisioned and the permanent-user
-staging lifecycle passed. Complete the anonymous guest path before calling the
-public preview end-to-end verified:
+The Supabase → Render → Cloudflare stack is provisioned. Fresh Turnstile
+redemption, anonymous session creation, bootstrap, basic Northstar/Acme
+navigation/inventory, and bounded ownership/reference isolation passed on both
+named Workers. Complete the remaining guest path before calling the public
+preview end-to-end verified:
 
-1. redeem a real Turnstile token and obtain/refresh/revoke the guest session;
-2. verify guest-to-guest and guest-to-permanent isolation;
+1. verify session refresh, repeat-bootstrap idempotency, logout/revocation, and
+   replay rejection;
+2. broaden guest-to-guest and guest-to-permanent read, mutation, job, and export
+   isolation checks;
 3. exercise limits, expiry, cleanup, reset denial, waitlist persistence, and
-   cold-start recovery on hosted infrastructure;
-4. run the complete Northstar review/build/run/trace/report/download path;
-5. record exact Worker/Render/Supabase identifiers and observable failures.
+   cold-start/outage recovery on hosted infrastructure;
+4. run the complete Northstar and Acme
+   review/build/run/trace/report/download paths; and
+5. repeat invalid/expired JWT, direct-origin, Origin/CSRF, and credential-
+   stripping checks against the current release.
 
 This hosted checkpoint is independent of Gate 1 local completion.
 
@@ -76,9 +83,10 @@ database was removed. OpenNext at compatibility date `2026-08-04`, Wrangler
 E2E passed. The focused two-domain E2E passed 1/1 in 34.6 seconds; the complete
 fresh-isolated Playwright suite passed 6/6 in 1.1 minutes. `pip-audit` and the
 production high-severity `pnpm audit` reported no known vulnerabilities. The
-dry-run bundle/startup values are packaging observations, not deployment or
-production-performance evidence. None of this changes the deployed public
-`147448a` release.
+dry-run bundle/startup values remain local packaging observations, not
+production-performance evidence. Release commit `2329a1e` subsequently
+packaged and deployed this implementation; deployment does not convert those
+local measurements into hosted behavioral evidence.
 
 See [the Gate 1 local verification report](gate-1-verification-report.md) for
 the exact build roots, artifact tree, representative provenance/metrics, demo
@@ -101,12 +109,11 @@ combined end state carries the recorded pass claim.
 | 5 — evidence and documentation | verification report, successor documents, capability inventory, screenshots | Claims, artifact roots, unsupported boundaries, and local-versus-hosted status were recorded without starting Gate 2. |
 
 Repository-wide [GitHub Actions run
-30967934453](https://github.com/amanda-yin-x/aletheia/actions/runs/30967934453)
-passed quality, PostgreSQL integration, and secret scanning on documentation
-checkpoint `4354479884ed142e028dc4ea18aaedb627ab33c3`, which contains verified
-implementation checkpoint `2292a5f`.
-Hosted Supabase/Render remains at migration `0005`; local/CI migration head is
-`0006`.
+30970432139](https://github.com/amanda-yin-x/aletheia/actions/runs/30970432139)
+is green on release commit `2329a1e`, including the production API-container
+smoke for the pinned profile and both domain packs. Hosted Supabase/Render is at
+`0006_gate1_compilation_contracts`. A protected pre-migration `0005` archive
+exists, but no restore drill is claimed.
 
 The existing CLI retains deterministic `compile`, `test`, and `report`
 commands. A stable customer-facing `aletheia check` exit/evidence contract and

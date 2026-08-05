@@ -3,22 +3,25 @@
 **Source-aware policy refactoring and compilation for AI agents.**
 
 [![CI](https://github.com/amanda-yin-x/aletheia/actions/workflows/ci.yml/badge.svg)](https://github.com/amanda-yin-x/aletheia/actions/workflows/ci.yml)
-[![Status: deployed; guest E2E pending](https://img.shields.io/badge/status-deployed%3B_guest_E2E_pending-2563eb)](docs/deployment.md)
+[![Status: Gate 1 deployed; guest E2E pending](https://img.shields.io/badge/status-Gate_1_deployed%3B_guest_E2E_pending-2563eb)](docs/deployment.md)
 [![License: MIT](https://img.shields.io/badge/license-MIT-0f766e)](LICENSE)
 
 **Public site:** [aletheia.aletheia-web.workers.dev](https://aletheia.aletheia-web.workers.dev)
 
-The public URL is the canonical Next.js site. Commit `147448a` is deployed as
-the same bundle on the named staging Worker (version
-`3788c6b0-291c-43a9-bef3-b48aaa4a0498`) and the canonical production Worker
-(version `935c3c39-f63e-4041-804b-ef40431d50fc`). Public checks confirm `/` and
-`/demo` return `200`, unauthenticated `/api/v1/me` returns `401`, HTTP redirects
-to HTTPS with `308`, the current composite refund scenario and `ALETHEIA` brand
-are served, and the real Turnstile challenge reaches its waiting state. An
-automated browser was challenged, so Turnstile token redemption and the
-complete anonymous hosted workflow are not yet claimed as verified. The
-permanent-user Northstar lifecycle was previously verified on staging; see
-[the deployment runbook](docs/deployment.md) for the exact boundary.
+The public URL is the canonical Next.js site. Gate 1 release commit
+`2329a1e39c00bf6313965bc06454f9bd49119816` is deployed on the named staging
+Worker (version `7a049fd2-5053-4334-bea1-92d7f1099235`) and canonical
+production Worker (version `091618a0-3582-48f3-9b53-8d2733387ed8`), backed by
+Render deploy `dep-d9pa9f6417fc73dfhcvg` and hosted Alembic head `0006`.
+Fresh guest bootstrap passed on staging at `2026-08-05T02:53:56Z` and canonical
+production at `2026-08-05T02:59:13Z`. Both environments passed basic
+Northstar/Acme navigation and inventory checks plus bounded
+ownership/reference-isolation probes. This is bootstrap/navigation/inventory
+evidence—not a claim that the complete guest review/build/run/report/download,
+quota, or cleanup lifecycle has passed hosted testing.
+The permanent-user Northstar lifecycle was previously verified on staging; see
+[the deployment runbook](docs/deployment.md) for the exact boundary and
+rollback record.
 
 Aletheia refactors reviewed prompts, skills, policies, SOPs, and tool schemas
 into a smaller always-loaded prompt kernel plus scoped skills, knowledge,
@@ -46,13 +49,14 @@ records or real business side effects are included.
 | Product track | Current status |
 |---|---|
 | Gate 0 — Local deterministic foundation | Complete in the settled tested Northstar fixture scope. |
-| Gate 0H — Hosted verification and release hardening | In progress: permanent-user staging passed; anonymous Turnstile redemption and complete guest E2E remain unverified. |
-| Gate 1 — Source-aware policy refactoring and prompt/skill compilation | Complete in the verified local two-domain fixture scope. This is not deployed/hosted Gate 1 evidence. |
+| Gate 0H — Hosted verification and release hardening | In progress: fresh guest bootstrap plus basic two-domain navigation/inventory and bounded isolation passed on staging and production; complete guest E2E remains unverified. |
+| Gate 1 — Source-aware policy refactoring and prompt/skill compilation | Complete in the verified local two-domain fixture scope and deployed to the hosted preview; connected hosted build/run/report and the detailed Acme workflow remain open. |
 | Gates 2–8 | Not implemented. Provider interfaces, tau data sync, schemas, or research notes do not make these operating capabilities. |
 
-Gate 1 evidence is pinned to local implementation checkpoint `2292a5f`; it is
-not deployed status. The public Workers still serve the separately identified
-`147448a` bundle until a later verified promotion.
+Gate 1 implementation evidence remains pinned to checkpoint `2292a5f`; release
+commit `2329a1e` packages that implementation for Render and the current
+Workers. Deployment establishes release presence, not full hosted Gate 1
+behavioral verification.
 
 ## Why policy CI
 
@@ -132,12 +136,12 @@ still a release gate in this repository snapshot.
    placement version, and exact source anchor. Then create an evidence report
    and download Markdown or canonical JSON.
 
-The verified local Gate 1 implementation includes an Acme appointments domain pack to
+The verified Gate 1 implementation includes an Acme appointments domain pack to
 test the same compiler outside refunds. It is synthetic evaluation data, not a
-live scheduling integration. The confirmed local Gate 1 suite exercises it
-through the shared compiler/runner, placement/build UI, release-bundle checks,
-and the sixth Playwright flow. Those checks passed locally; they do not imply a
-hosted Acme deployment.
+live scheduling integration. The release contains that pack and the generic
+compiler, while the confirmed source/placement/build/run and sixth Playwright
+flow remain local evidence; connected hosted Acme navigation and execution have
+not yet been verified.
 
 The exact 90-second talk track is in [docs/demo-script.md](docs/demo-script.md).
 
@@ -291,10 +295,13 @@ database was removed. The frontend passed ESLint, strict type checking, all 87
 Vitest tests across 23 files, and a production Next.js build including the
 dynamic Placements route. The OpenNext bundle passed at compatibility date
 `2026-08-04`; Wrangler `4.118.0` type generation, root/staging deploy dry-runs,
-and startup check passed. The dry-runs packaged 53 assets and an 8,026.44 KiB
-bundle (1,666.83 KiB gzip); local active startup measured 40.4 ms. These are
-packaging checks, not deployment or production-performance evidence. None of
-these local results changes the deployed `147448a` Worker claim.
+and startup check passed. The release dry-run packaged 53 assets and an
+8,026.44 KiB bundle (1,666.85 KiB gzip); local active startup measured 40.4 ms.
+These remain packaging observations, not production-performance evidence. The
+API image initially omitted the pinned compiler-profile directory; release
+commit `2329a1e` copies `data/compiler-profiles` into `/data/compiler-profiles`,
+and CI now builds the production image and verifies the profile plus both demo
+packs before a release can pass.
 
 The focused two-domain browser flow passed 1/1 in 34.6 seconds including fresh
 server startup. The complete
@@ -304,8 +311,8 @@ development output and disappeared on the clean run; no product workaround was
 added. `pip-audit` and the production high-severity `pnpm audit` reported no
 known vulnerabilities.
 
-The counts below describe the settled pre-Gate-1/public-guest release and must
-not be read as verification of Gate 1 implementation commit `2292a5f`.
+The counts below are retained as historical pre-Gate-1/public-guest regression
+evidence and must not be substituted for the current Gate 1 test record.
 
 The hosted changes have automated coverage for JWT validation,
 tenant scoping, operation idempotency and lease recovery, migrations, CSRF and
@@ -313,16 +320,12 @@ Origin checks, the code-only PKCE callback, pre-routing hosted upload rejection,
 session-cookie refresh, Turnstile token reuse prevention, operation polling,
 strict Draft 2020-12 tool schemas, exact USD minor-unit fixtures,
 build/evidence contracts, strict TypeScript, the Next.js production build, the
-OpenNext Cloudflare bundle, and a five-flow local Playwright suite. In the
-current public-guest release, all 71 web unit/component tests pass across 18
-files.
-All 116 backend tests pass across two local runs: 115 in the default run and one
-PostgreSQL-marked integration test in the real PostgreSQL run. The five browser
-flows also pass locally. The same bundle is now deployed on staging and
-production, where public routing, current content, the unauthenticated API
-boundary, and Turnstile rendering have been checked. Token redemption and the
-complete anonymous flow remain unverified on hosted infrastructure. A real
-local PostgreSQL 14 run also passed the empty-database migration,
+OpenNext Cloudflare bundle, and a five-flow local Playwright suite. At the
+historical `147448a` checkpoint, 71 web unit/component tests passed across 18
+files, 116 backend tests passed across the default and PostgreSQL-marked runs,
+and five browser flows passed locally. The successor Gate 1 release has the
+separate current test and hosted evidence recorded below. A real local
+PostgreSQL 14 run also passed the empty-database migration,
 Supabase-named role
 privilege denial, bootstrap, queued build/run worker, polling, and downgrade
 path. A real two-session PostgreSQL test also proves that snapshot-consuming
@@ -330,23 +333,19 @@ operations and child-row mutations take locks in the same `Project → child`
 order, so a mutation cannot cross the captured-input fence.
 
 The verified Gate 1 backend, web, build, Worker dry-run, and clean six-flow
-browser checks all passed locally. The repository's quality, secret-scan, and
-PostgreSQL integration jobs also passed in [GitHub Actions run
-#30967934453](https://github.com/amanda-yin-x/aletheia/actions/runs/30967934453)
-on documentation checkpoint `4354479` and implementation checkpoint
-`2292a5f`. The hosted Supabase schema is verified through
-`0005_guest_access_waitlist`, while migration `0006_gate1_compilation_contracts`
-has passed only in local/CI databases and is not deployed. The hosted Data API
-is disabled, `anon`/`authenticated` have no application-table privileges, and
-the future-table default denial was verified transactionally. The Render service
-and named Cloudflare staging Worker passed the permanent-user authenticated
-bootstrap,
-two-user isolation, build/run/trace/report, download, and direct-origin security
-path. The new anonymous-guest path, limits, expiry/cleanup, reset denial, and
-waitlist persistence have not yet passed against the hosted stack. Deployment
-of commit `147448a` is therefore evidence of release parity and the recorded
-public-edge checks, not a claim that the guest lifecycle or a production
-reliability program has completed.
+browser checks all passed locally. [GitHub Actions run
+#30970432139](https://github.com/amanda-yin-x/aletheia/actions/runs/30970432139)
+is green on release commit `2329a1e`, including the production API-container
+smoke that checks the pinned profile and both fixture packs. The hosted database
+is now at `0006_gate1_compilation_contracts`, and Render deploy
+`dep-d9pa9f6417fc73dfhcvg` is live. Fresh staging and production guests
+completed Turnstile/session/bootstrap/navigation, basic Northstar/Acme
+inventory checks, and bounded ownership/reference probes. The complete guest
+build/run/report/download path, detailed Acme review/build flow, adversarial
+cross-user isolation, limits, expiry/cleanup, reset denial, and waitlist
+persistence still require connected verification. The earlier
+permanent-user Northstar staging lifecycle remains historical evidence rather
+than proof of the new release's complete workflow.
 
 For approved, machine-decidable rules, the covered policy adapter can
 deterministically allow, block, or request approval before a covered tool call
@@ -359,26 +358,26 @@ See [docs/evidence-boundary.md](docs/evidence-boundary.md).
 
 | Area | Status | Meaning |
 |---|---|---|
-| Public landing and guest entry | Deployed on staging and production; guest E2E pending | `/` and `/demo` return `200`; the current scenario and brand are served; the real Turnstile frame reaches `waiting`. Token redemption and anonymous bootstrap were not completed by the challenged automated browser. |
+| Public landing and guest entry | Gate 1 deployed on staging and production; guest E2E pending | Fresh guest bootstrap passed on staging at `02:53:56Z` and production at `02:59:13Z`; basic two-domain navigation/inventory and bounded isolation passed on both. Full workflow verification remains pending. |
 | Permanent-account auth and session refresh | Authenticated staging path verified with limits | Email magic link works for authorized project-team addresses. Manual OTP and GitHub remain disabled. |
-| Same-origin API proxy | Deployed; authenticated staging path previously verified | The current release returns `401` for unauthenticated `/api/v1/me`. Streaming, bearer forwarding, Origin/CSRF enforcement, origin-secret injection, and report downloads previously passed through Cloudflare to Render with a permanent account; reverify with an anonymous JWT. |
-| FastAPI JWT, origin authentication, and tenancy | Guest-capable API deployed and ready; anonymous path pending | Render deploy `dep-d9p481tbedkc73e3677g` completed, `/readyz` returns `200`, and the service accepts correctly signed anonymous JWTs with `role=authenticated` while retaining issuer/audience/signature checks and workspace isolation. A redeemed hosted anonymous token has not yet exercised that path. |
+| Same-origin API proxy | Deployed; guest bootstrap verified on both Workers | Fresh staging and production guest requests crossed the Worker proxy to Render. Streaming downloads and complete mutation paths still need release-specific verification. |
+| FastAPI JWT, origin authentication, and tenancy | Gate 1 API deployed; bounded guest isolation verified | Render deploy `dep-d9pa9f6417fc73dfhcvg` at `2329a1e` is live with Alembic `0006`; fresh staging/production bootstrap and bounded ownership/reference probes passed. Complete resource-lifecycle verification remains pending. |
 | Guest limits and retention | Implemented in source; hosted lifecycle verification pending | 30 successful writes, six live operations, no reset, seven-day access TTL, and 30-day cleanup at startup/every 24 hours with a dry-run CLI and fail-open alerts. |
 | Edge/API request controls | Worker bundle deployed; complete hosted verification pending | Per-user 120 general/90 polling/30 heavy per-location thresholds, 64 KiB mutation bodies at both hops, and an 85-second response-header deadline. HTTP-to-HTTPS and the unauthenticated API boundary pass; the remaining Worker/API controls still need exercise. |
 | Waitlist | Implemented in source; hosted submission verification pending | Normalized unique consent email behind the authenticated guest/permanent API; consent survives guest cleanup. |
-| PostgreSQL migrations and operation lifecycle | Guest migration applied; anonymous lifecycle pending | Render startup logs record Alembic `0004 → 0005_guest_access_waitlist`, followed by successful application startup and readiness. The hosted Data API/grant boundary previously passed; the connected guest data lifecycle still needs end-to-end verification. |
-| Cloudflare + Render + Supabase integration | Exact bundle deployed; guest E2E pending | Commit `147448a` is on staging version `3788c6b0-291c-43a9-bef3-b48aaa4a0498` and production version `935c3c39-f63e-4041-804b-ef40431d50fc`. The permanent-user lifecycle previously passed on staging; complete guest token redemption and workflow remain unverified. |
+| PostgreSQL migrations and operation lifecycle | Gate 1 migration applied; operation lifecycle pending release verification | Hosted Alembic is at `0006_gate1_compilation_contracts`. A protected pre-migration `0005` archive exists, but restore has not been drilled. |
+| Cloudflare + Render + Supabase integration | Gate 1 release deployed; bootstrap/navigation verified | Commit `2329a1e` is on staging version `7a049fd2-5053-4334-bea1-92d7f1099235` and production version `091618a0-3582-48f3-9b53-8d2733387ed8`; Render is `dep-d9pa9f6417fc73dfhcvg`. Complete guest build/run/report/download and detailed Acme workflow verification remain open. |
 
 See [docs/deployment.md](docs/deployment.md) for the exact runbook.
 
 ## Current limitations
 
-- Commit `147448a` is deployed on both named staging and canonical production.
-  Public routes, current content, HTTPS redirect, the unauthenticated API
-  boundary, and Turnstile rendering are verified. Automated testing did not
-  redeem a Turnstile token, so anonymous sign-in, bootstrap, and the complete
-  guest workflow remain hosted-verification gaps. The permanent-user lifecycle
-  was previously verified on staging.
+- Release commit `2329a1e` is deployed on both named staging and canonical
+  production. Fresh guest bootstrap, basic Northstar/Acme navigation and
+  inventory, and bounded ownership/reference isolation passed on both. Those
+  narrow gates do not verify complete build/run/report/download, quotas,
+  cleanup, or production reliability. Prior Worker versions remain rollback
+  targets.
 - Email magic-link delivery currently uses Supabase's default SMTP and is
   limited to authorized project-team addresses. Custom SMTP is required before
   general sign-up; manual email OTP and GitHub OAuth are currently disabled.
@@ -399,8 +398,8 @@ See [docs/deployment.md](docs/deployment.md) for the exact runbook.
   remains only as relational identity; run, trace, and report presentation uses
   the stored result snapshot.
 - The settled backend suite reproduces equivalent build roots byte-for-byte.
-  GitHub Actions run `30967934453` passed quality, PostgreSQL integration, and
-  secret scanning on the pushed Gate 1 documentation checkpoint. Bundles
+  GitHub Actions run `30970432139` passed on release commit `2329a1e`, including
+  the API-container runtime-data smoke. Bundles
   remain unsigned database records rather than signed objects in an
   append-only release store.
 - Tenant authorization is enforced in FastAPI query scopes; Postgres RLS is not

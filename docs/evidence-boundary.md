@@ -25,7 +25,10 @@ Use this compilation-evidence boundary verbatim:
 - deterministic, content-digested prompt/skill/knowledge/guard/test artifacts;
 - a blocked covered proposal leaving no execution event and no changed state;
 - repeatable scripted Northstar/Acme fixture outcomes once the relevant suite
-  has passed on the claimed repository state.
+  has passed on the claimed repository state; and
+- the current Gate 1 release's presence on named staging and production Workers,
+  plus fresh guest bootstrap, basic two-domain navigation/inventory, and bounded
+  isolation on both, when kept separate from unverified hosted workflow claims.
 
 ## What may not be inferred
 
@@ -34,5 +37,6 @@ understanding of arbitrary policies, causal proof, semantic equivalence,
 production reliability, live-customer performance,
 protection outside a covered adapter, or that a smaller prompt necessarily
 improves quality or cost. Do not report declarative rule/source/boundary linkage
-as observed evaluator coverage. A local or permanent-user staging result does
-not prove the anonymous hosted lifecycle.
+as observed evaluator coverage. Deployment and a successful
+bootstrap/navigation/inventory smoke do not prove the complete hosted guest
+review/build/run/report/download, quota, retention, or cleanup lifecycle.

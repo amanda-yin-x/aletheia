@@ -2,15 +2,15 @@
   "schema_version": "1.0",
   "document": {
     "name": "Aletheia capability and verification inventory",
-    "version": "2026-08-04-gate1-local-verified",
+    "version": "2026-08-04-gate1-hosted-preview",
     "repository": "https://github.com/amanda-yin-x/aletheia",
     "canonical_site": "https://aletheia.aletheia-web.workers.dev",
     "source_commit": "2292a5f7089d061c9dc8b977852ee04d182373bc",
-    "reconciled_repository_head": "4354479884ed142e028dc4ea18aaedb627ab33c3",
-    "last_green_ci_run": "30967934453",
-    "deployed_source_commit": "147448a",
+    "reconciled_repository_head": "2329a1e39c00bf6313965bc06454f9bd49119816",
+    "last_green_ci_run": "30970432139",
+    "deployed_source_commit": "2329a1e39c00bf6313965bc06454f9bd49119816",
     "inspected_repository_base": "91055f6043edfd7f0cb171eac0bd04c611f2d509",
-    "gate1_deployment_boundary": "Gate 1 evidence describes verified implementation commit 2292a5f7089d061c9dc8b977852ee04d182373bc. The public staging and canonical Workers remain the separately identified deployed 147448a bundle; no Gate 1 deployment is claimed.",
+    "gate1_deployment_boundary": "Gate 1 evidence describes verified implementation commit 2292a5f7089d061c9dc8b977852ee04d182373bc, packaged and deployed through release commit 2329a1e39c00bf6313965bc06454f9bd49119816. Release presence plus bounded guest bootstrap and isolation evidence do not establish hosted build, run, report, or download operation.",
     "gate1_verification_report": "docs/gate-1-verification-report.md",
     "gate1_verified_builds": {
       "northstar-retail": {
@@ -25,11 +25,13 @@
       }
     },
     "deployed_worker_versions": {
-      "staging": "3788c6b0-291c-43a9-bef3-b48aaa4a0498",
-      "canonical_production": "935c3c39-f63e-4041-804b-ef40431d50fc"
+      "staging": "7a049fd2-5053-4334-bea1-92d7f1099235",
+      "canonical_production": "091618a0-3582-48f3-9b53-8d2733387ed8"
     },
-    "hosted_verification_boundary": "Deployed source commit 147448a is on the staging and canonical Cloudflare Workers. Public landing and /demo routes, HTTPS redirection, unauthenticated API rejection, current branding/scenario content, and Turnstile challenge rendering were observed. Automated browsers were challenged, so successful CAPTCHA token redemption and the complete anonymous Northstar workflow are not claimed.",
-    "evidence_boundary": "Verified local Gate 1 implementation commit 2292a5f7089d061c9dc8b977852ee04d182373bc covers deterministic Northstar and Acme fixture data, reviewed rules/placements, source-aware builds, scripted trajectories, and calls routed through the fixture policy adapter. Exact provenance and structural preservation do not establish behavioral fidelity, live-model quality, customer safety, compliance, production reliability, or market validation. Gate 1 is not deployed; public Workers remain on 147448a."
+    "render_deploy": "dep-d9pa9f6417fc73dfhcvg",
+    "hosted_alembic_head": "0006_gate1_compilation_contracts",
+    "hosted_verification_boundary": "Release commit 2329a1e39c00bf6313965bc06454f9bd49119816 is deployed to staging and canonical Cloudflare Workers with Render deploy dep-d9pa9f6417fc73dfhcvg and hosted Alembic head 0006_gate1_compilation_contracts. Fresh staging and production guests completed Turnstile redemption, anonymous session creation, bootstrap, protected navigation, exact Northstar and Acme project inventory checks, and bounded database ownership/reference isolation probes. Hosted build, run, report, download, quotas, retention, waitlist, adversarial isolation, and production-assurance checks remain open.",
+    "evidence_boundary": "Verified local Gate 1 implementation commit 2292a5f7089d061c9dc8b977852ee04d182373bc covers deterministic Northstar and Acme fixture data, reviewed rules/placements, source-aware builds, scripted trajectories, and calls routed through the fixture policy adapter. Exact provenance and structural preservation do not establish behavioral fidelity, live-model quality, customer safety, compliance, production reliability, or market validation. Gate 1 is deployed through release 2329a1e39c00bf6313965bc06454f9bd49119816, but only the explicitly recorded hosted entry, inventory, and bounded isolation observations are verified."
   },
   "status_vocabulary": {
     "operating": "A connected path works in the stated environment and is more than a class, endpoint, or deployment seam.",
@@ -42,7 +44,7 @@
   "overall_status": {
     "local_product": {
       "status": "fixture",
-      "reason": "Gate 0 and Gate 1 are complete in the verified local deterministic fixture scope. Gate 1 passed 148 API tests with 1 skipped, 40 focused Gate 1/contract tests, database/frontend/packaging checks, focused two-domain E2E 1/1, and full Playwright 6/6. Hosted/deployed status is separate."
+      "reason": "Gate 0 and Gate 1 are complete in the verified local deterministic fixture scope. Gate 1 passed 148 API tests with 1 skipped, 40 focused Gate 1/contract tests, database/frontend/packaging checks, focused two-domain E2E 1/1, and full Playwright 6/6. Hosted behavioral verification remains a separate evidence track from release deployment."
     },
     "evaluation_mode": {
       "status": "fixture",
@@ -50,7 +52,7 @@
     },
     "hosted_product": {
       "status": "unverified",
-      "reason": "Commit 147448a is deployed to the staging and canonical Cloudflare Workers, and the public landing, /demo gate, unauthenticated API boundary, HTTPS redirect, current content, and real Turnstile challenge rendering were observed. The permanent-user Northstar workflow previously passed on staging. CAPTCHA token redemption and the complete anonymous hosted workflow remain unverified."
+      "reason": "Release 2329a1e39c00bf6313965bc06454f9bd49119816 is deployed to staging and canonical Cloudflare Workers. Fresh guests in both environments passed Turnstile, session creation, bootstrap, protected navigation, two-project inventory, and bounded ownership/reference isolation probes. The permanent-user Northstar workflow previously passed on staging, but the current guest release has not completed hosted build, run, report, download, quota, retention, waitlist, or adversarial assurance checks."
     },
     "production_readiness": {
       "status": "absent",
@@ -59,7 +61,7 @@
     "feature_gates": {
       "gate_0_local": "complete_in_settled_northstar_fixture_scope",
       "gate_0h_hosted": "in_progress",
-      "gate_1_source_aware_compiler": "complete_in_verified_local_two_domain_fixture_scope",
+      "gate_1_source_aware_compiler": "complete_in_verified_local_two_domain_fixture_scope_and_deployed_to_hosted_preview",
       "gates_2_through_8": "absent"
     }
   },
@@ -98,16 +100,16 @@
       "environment": "local web plus staging and canonical Cloudflare public routes",
       "scope": "Explains the policy-CI workflow, refund failure scenario, source boundary, and product path without reading private API data.",
       "evidence": ["apps/web/app/page.tsx", "apps/web/components/marketing-landing.tsx", "apps/web/tests/e2e/demo.spec.ts"],
-      "limitations": ["Commit 147448a is live on the canonical hostname, but the public-route check does not prove the authenticated anonymous workflow.", "No analytics, legal, privacy, or service-status pages are implemented."]
+      "limitations": ["Release 2329a1e is live on the canonical hostname, and fresh staging and production guests passed entry and bootstrap checks; this does not prove the complete hosted workspace workflow.", "No analytics, legal, privacy, or service-status pages are implemented."]
     },
     {
       "id": "web.workspace",
       "name": "Signed-session review, build, run, and report UI",
       "status": "fixture",
-      "environment": "local Northstar and Acme fixtures; permanent-user Northstar staging path",
-      "scope": "Provides source, authority/rule review, placement, build, test, run, trace, and report routes. The local fixture UI switches between Northstar and Acme; the separately deployed permanent-user path is Northstar-only.",
+      "environment": "local Northstar and Acme fixtures; release 2329a1e staging and canonical preview; historical permanent-user Northstar staging path",
+      "scope": "Provides source, authority/rule review, placement, build, test, run, trace, and report routes. The local fixture UI switches between Northstar and Acme; the current hosted preview bootstraps both seeded projects, while the complete current-release workspace workflow remains unverified.",
       "evidence": ["apps/web/app/projects/", "apps/web/app/runs/", "apps/web/app/scenario-results/", "apps/web/app/reports/"],
-      "limitations": ["The permanent-user hosted Northstar workflow passed; the public guest entry and limits remain to verify there.", "Acme is verified only as local synthetic fixture data and is not deployed."]
+      "limitations": ["The permanent-user hosted Northstar workflow passed historically, and fresh current-release guests reached protected navigation with isolated two-project inventories.", "No hosted Gate 1 guest build, run, report, or download completed; the detailed Acme source, placement, build, and execution workflow remains local evidence."]
     },
     {
       "id": "auth.local",
@@ -130,47 +132,47 @@
     {
       "id": "auth.turnstile",
       "name": "Turnstile protection for anonymous and email authentication",
-      "status": "unverified",
-      "environment": "staging and canonical public entry; token redemption unverified",
+      "status": "operating",
+      "environment": "release 2329a1e staging and canonical public entry",
       "scope": "Forwards a single-use CAPTCHA token to Supabase anonymous/email auth and destroys/remounts the widget after each attempt. Supabase verifies challenge success; Aletheia action values are client labels. The widget allowlist contains only canonical/staging hosts; local use relies on local auth or Cloudflare's test key.",
       "evidence": ["apps/web/components/turnstile-widget.tsx", "apps/web/tests/login.test.tsx", "apps/web/tests/turnstile-widget.test.tsx", "apps/web/tests/guest-demo.test.tsx"],
-      "limitations": ["The real script and challenge frame render and the widget reaches waiting state on the deployed release; automated browser challenges prevented a claim of successful anonymous CAPTCHA redemption.", "Native Supabase CAPTCHA does not enforce Turnstile action or hostname response fields."]
+      "limitations": ["Fresh staging and production guests successfully redeemed real Turnstile challenges and obtained anonymous sessions; replay rejection and broader abuse behavior were not exercised in this release check.", "Native Supabase CAPTCHA does not enforce Turnstile action or hostname response fields."]
     },
     {
       "id": "auth.guest",
       "name": "Turnstile-protected anonymous guest entry",
-      "status": "unverified",
-      "environment": "staging and canonical Worker; end-to-end unverified",
-      "scope": "Keeps /demo public, obtains a signed Supabase anonymous session with role=authenticated, and bootstraps an isolated personal Northstar workspace without email or password.",
+      "status": "operating",
+      "environment": "release 2329a1e staging and canonical Workers; bounded entry path verified",
+      "scope": "Keeps /demo public, obtains a signed Supabase anonymous session with role=authenticated, and bootstraps an isolated personal workspace with Northstar and Acme fixture projects without email or password.",
       "evidence": ["apps/web/app/demo/page.tsx", "apps/web/components/demo-entry.tsx", "apps/web/tests/guest-demo.test.tsx", "apps/api/app/auth.py"],
-      "limitations": ["The public guest entry is deployed and its Turnstile challenge reaches waiting state, but anonymous token redemption, session issuance, bootstrap, and the complete hosted workflow have not been verified.", "It exposes only the seeded evaluation workspace, not uploads or arbitrary project creation."]
+      "limitations": ["Fresh staging and production guests passed token redemption, session issuance, bootstrap, protected navigation, two-project inventory, and bounded ownership/reference isolation checks; no hosted build, run, report, or download completed.", "It exposes only seeded evaluation projects, not uploads or arbitrary project creation; quotas, retention, waitlist, and adversarial lifecycle checks remain open."]
     },
     {
       "id": "web.same_origin_proxy",
       "name": "Same-origin API proxy and browser mutation boundary",
-      "status": "unverified",
-      "environment": "Cloudflare-to-Render target",
+      "status": "operating",
+      "environment": "release 2329a1e Cloudflare staging/canonical Workers to Render deploy dep-d9pa9f6417fc73dfhcvg",
       "scope": "Checks session, path, Origin, Fetch Metadata, and double-submit CSRF; strips spoofable credentials; injects bearer and origin credentials; streams responses; configures per-subject 120 general/90 poll/30 heavy per-location thresholds, a 64 KiB mutation cap, and 85 seconds to receive upstream response headers.",
       "evidence": ["apps/web/app/api/v1/[...path]/route.ts", "apps/web/lib/edge-rate-limit.ts", "apps/web/lib/security.ts", "apps/web/tests/security.test.ts", "apps/web/tests/api-proxy-handler.test.ts", "apps/web/tests/edge-rate-limit.test.ts", "apps/web/tests/api-client.test.ts"],
-      "limitations": ["The permanent-user Cloudflare-to-Render path passed on staging; the anonymous JWT path and new edge controls must be reverified.", "Cloudflare rate counters are permissive and eventually consistent per location, not exact global quotas; the 85-second bound ends at response headers and does not time the streamed body.", "Independent security testing remains pending."]
+      "limitations": ["The anonymous proxy path passed session bootstrap, protected navigation, inventory, and bounded ownership/reference checks on staging and production; complete mutation, polling, streaming-download, CSRF, and adversarial release checks remain open.", "Cloudflare rate counters are permissive and eventually consistent per location, not exact global quotas; the 85-second bound ends at response headers and does not time the streamed body.", "Independent security testing remains pending."]
     },
     {
       "id": "api.hosted_authentication",
       "name": "FastAPI Supabase JWT and origin authentication",
-      "status": "unverified",
-      "environment": "Render target",
+      "status": "operating",
+      "environment": "Render deploy dep-d9pa9f6417fc73dfhcvg",
       "scope": "Defaults to fail-closed production settings, applies pre-routing origin-secret and bearer-presence checks, rejects hosted document uploads before multipart parsing, streams and caps hosted mutation bodies at 64 KiB, and requires a signed role=authenticated JWT with constrained algorithms, key ID, issuer, audience, expiry, and subject; signed anonymous identities enter the bounded guest path.",
       "evidence": ["apps/api/app/auth.py", "apps/api/app/config.py", "apps/api/app/main.py", "apps/api/tests/test_hosted_backend.py"],
-      "limitations": ["External JWT/origin enforcement passed for permanent users on staging; anonymous JWT acceptance remains to verify there.", "JWKS rotation, outage, and cache behavior have not been exercised."]
+      "limitations": ["Signed anonymous JWT acceptance and origin-protected bootstrap/inventory requests passed through both Workers; invalid/expired-token, JWKS rotation, outage, cache, and broader adversarial behavior have not been exercised on this release."]
     },
     {
       "id": "tenancy.application",
       "name": "Application-enforced workspace tenancy",
-      "status": "unverified",
-      "environment": "local tests and hosted target",
+      "status": "operating",
+      "environment": "local tests plus release 2329a1e staging and canonical hosted targets",
       "scope": "Implements accounts, personal workspace bootstrap, owner/admin/editor/viewer roles, and membership-scoped project and child-resource lookups.",
       "evidence": ["apps/api/app/tenancy.py", "apps/api/app/api/routes.py", "apps/api/tests/test_hosted_backend.py"],
-      "limitations": ["Permanent-user hosted two-user isolation passed; guest-to-guest and guest-to-permanent isolation remain to verify.", "There is no invitation, membership-administration, group, or service-account workflow."]
+      "limitations": ["Permanent-user hosted two-user isolation passed historically; fresh current-release guests also passed bounded database ownership/reference isolation probes. Complete adversarial cross-resource mutation, polling, export, reset, and guest-to-permanent isolation remain open.", "There is no invitation, membership-administration, group, or service-account workflow."]
     },
     {
       "id": "tenancy.database",
@@ -185,19 +187,19 @@
       "id": "guest.governance",
       "name": "Guest limits, expiry, and cleanup",
       "status": "unverified",
-      "environment": "release 147448a; hosted enforcement unverified",
+      "environment": "release 2329a1e; bounded hosted guest entry verified",
       "scope": "Caps guests at 30 successful writes and six live operations, denies reset, expires access after seven days, and cleans anonymous identities after 30 days at startup/every 24 hours. Hosted age is anchored to auth.users.created_at, and auth-only anonymous identities that never bootstrapped the app are included.",
       "evidence": ["apps/api/app/tenancy.py", "apps/api/app/operations.py", "apps/api/app/services/guest_cleanup.py", "apps/api/app/cli.py", "apps/api/migrations/versions/0005_guest_access_waitlist.py", "apps/api/tests/test_hosted_backend.py"],
-      "limitations": ["The limits and cleanup behavior have not been exercised against hosted Postgres.", "Startup and periodic cleanup are fail-open by design and therefore require alert monitoring."]
+      "limitations": ["Fresh guests bootstrapped against hosted Postgres, but write/operation quotas, reset denial, expiry, retention, and cleanup behavior were not exercised.", "Startup and periodic cleanup are fail-open by design and therefore require alert monitoring."]
     },
     {
       "id": "product.waitlist",
       "name": "Authenticated waitlist consent",
       "status": "unverified",
-      "environment": "release 147448a; hosted persistence unverified",
+      "environment": "release 2329a1e; hosted persistence unverified",
       "scope": "Accepts normalized unique email consent behind a guest or permanent authenticated API and preserves the consent while clearing its user link during guest cleanup.",
       "evidence": ["apps/api/app/api/routes.py", "apps/api/app/models.py", "apps/web/components/waitlist-form.tsx", "apps/web/tests/waitlist.test.tsx"],
-      "limitations": ["The client path is included in the deployed release, but hosted consent submission and persistence have not been verified.", "Joining the waitlist does not convert an anonymous identity into a permanent account."]
+      "limitations": ["The client path is included in release 2329a1e, but hosted consent submission and persistence have not been verified.", "Joining the waitlist does not convert an anonymous identity into a permanent account."]
     },
     {
       "id": "sources.provenance_viewer",
@@ -206,7 +208,7 @@
       "environment": "verified local Northstar and Acme fixtures",
       "scope": "Stores raw-byte and normalized-text hashes, parser/normalizer identity and version, source versions, authority owner/status/effective/supersession/scope metadata, line counts, source references, and exact highlighted spans for bundled sources.",
       "evidence": ["apps/api/app/models.py", "apps/api/app/services/compilation/provenance.py", "apps/web/app/projects/[projectId]/sources/page.tsx", "data/demo/northstar-retail/", "data/demo/acme-appointments/"],
-      "limitations": ["Both domain packs are fictional evaluation data.", "Local verification does not imply that Gate 1 is deployed or operates on customer data."]
+      "limitations": ["Both domain packs are fictional evaluation data.", "Gate 1 is deployed, but detailed hosted source/provenance inspection has not been verified and no customer-data operation is claimed."]
     },
     {
       "id": "sources.local_ingestion",
@@ -269,7 +271,7 @@
       "environment": "verified local Northstar and Acme fixtures",
       "scope": "Persists versioned tenant-scoped decisions for prompt_kernel, skill, knowledge, pre_tool_policy, test, human_review, or unsupported; updates use optimistic concurrency and retain prior versions.",
       "evidence": ["apps/api/app/models.py", "apps/api/app/api/routes.py", "apps/api/app/schemas.py", "apps/api/migrations/versions/0006_gate1_compilation_contracts.py", "apps/api/tests/test_gate1_persistence_contracts.py", "apps/web/features/conflict-resolution-form.tsx"],
-      "limitations": ["This is fixture-scoped review, not a deployed collaborative approval system."]
+      "limitations": ["The fixture-scoped implementation is deployed, but its detailed hosted placement workflow was not exercised and it is not a collaborative approval system."]
     },
     {
       "id": "compiler.source_aware_bundle",
@@ -278,7 +280,7 @@
       "environment": "verified local Northstar and Acme fixtures",
       "scope": "Uses a pinned fail-closed profile and explicit placements to emit a prompt kernel, scoped SKILL.md, knowledge, pre-tool policy, tests, unsupported ledger, routing/preservation/metric reports, exact source map, pinned inputs, and canonical manifest across two synthetic domains.",
       "evidence": ["apps/api/app/services/compiler.py", "apps/api/app/services/compilation/", "data/compiler-profiles/source-aware-v1.json", "data/demo/northstar-retail/", "data/demo/acme-appointments/", "apps/api/schemas/CompilerProfile.schema.json", "apps/api/schemas/BuildManifest.schema.json"],
-      "limitations": ["The complete local two-domain checkpoint passed; no hosted/deployed compiler claim is made.", "Arbitrary extraction, general conflict analysis, semantic equivalence, and live integrations are not implemented.", "Artifacts are database JSON rather than signed append-only release objects."]
+      "limitations": ["The complete local two-domain checkpoint passed and the compiler is present in release 2329a1e; no current-release hosted build completed, so hosted compiler operation is not claimed.", "Arbitrary extraction, general conflict analysis, semantic equivalence, and live integrations are not implemented.", "Artifacts are database JSON rather than signed append-only release objects."]
     },
     {
       "id": "compiler.exact_provenance_and_metrics",
@@ -296,7 +298,7 @@
       "environment": "verified local fixture",
       "scope": "Provides a synthetic second-domain SKILL.md, current policy, stale SOP, prompt/style/knowledge references, strict tools, state, placements, and deterministic cases for the generic compiler path.",
       "evidence": ["data/demo/acme-appointments/", "apps/api/app/services/appointment_seed.py"],
-      "limitations": ["This is not a live scheduler or complete appointment policy.", "Maximum reschedule count and cooldown remain pending/test-only; undefined daylight hours is unsupported.", "The shared local compiler/runner/browser path passed; no hosted Acme path exists."]
+      "limitations": ["This is not a live scheduler or complete appointment policy.", "Maximum reschedule count and cooldown remain pending/test-only; undefined daylight hours is unsupported.", "The shared local compiler/runner/browser path passed, and the hosted Acme project inventory is present; detailed hosted source, placement, build, and execution checks remain open."]
     },
     {
       "id": "runtime.build_pinning",
@@ -404,25 +406,25 @@
       "environment": "hosted Supabase plus isolated local PostgreSQL 14 and PostgreSQL 17 CI",
       "scope": "Includes PostgreSQL-compatible models, migrations, URL normalization, advisory migration locking, bounded pooling, conditional anon/authenticated table-privilege revocation, and a PostgreSQL lifecycle CI job.",
       "evidence": ["apps/api/migrations/", "apps/api/tests/test_migrations_integration.py", ".github/workflows/ci.yml"],
-      "limitations": ["Render startup logs record the hosted 0004 to 0005_guest_access_waitlist migration and successful readiness, and the database previously passed Data API/current/default grant denial; current source migration 0006_gate1_compilation_contracts is verified only in local/CI databases and is not deployed.", "The connected anonymous data lifecycle is not yet verified.", "No backup/restore drill is claimed.", "Render Free has no pre-deploy migration command."]
+      "limitations": ["Render deploy dep-d9pa9f6417fc73dfhcvg applied hosted migration 0006_gate1_compilation_contracts and reached readiness; the database previously passed Data API/current/default grant denial.", "Fresh guests passed bootstrap, inventory, and bounded ownership/reference checks, but the complete anonymous data lifecycle is not verified.", "No backup/restore drill is claimed.", "Render Free has no pre-deploy migration command."]
     },
     {
       "id": "deployment.cloudflare",
       "name": "Cloudflare OpenNext deployment",
       "status": "operating",
-      "environment": "staging and canonical Cloudflare Workers at commit 147448a",
+      "environment": "staging and canonical Cloudflare Workers at release 2329a1e",
       "scope": "Defines the Next.js/OpenNext Worker entry point, static assets, explicit production and named staging bindings, disabled deployment preview URLs, observability sampling, source maps, and deploy commands.",
       "evidence": ["apps/web/wrangler.jsonc", "apps/web/open-next.config.ts", "apps/web/package.json"],
-      "limitations": ["Public routes and Turnstile challenge rendering passed, but successful anonymous token redemption and the complete hosted workflow did not.", "Workers Free CPU and bundle limits must be measured with real traffic."]
+      "limitations": ["Fresh staging and production guests passed Turnstile, session, bootstrap, navigation, two-project inventory, and bounded isolation checks; the complete hosted workspace workflow did not.", "Workers Free CPU and bundle limits must be measured with real traffic."]
     },
     {
       "id": "deployment.render",
       "name": "Render FastAPI deployment",
       "status": "operating",
-      "environment": "Render Free deploy dep-d9p481tbedkc73e3677g; anonymous release path unverified",
+      "environment": "Render Free deploy dep-d9pa9f6417fc73dfhcvg; bounded anonymous release path verified",
       "scope": "Defines a Free Docker web service, readiness probe, fail-closed production variables, inline operations, a 64 KiB API mutation cap, guest limits, and fail-open cleanup at startup/every 24 hours, including auth-only anonymous identities. The Free Blueprint omits maxShutdownDelaySeconds and uses the 30-second platform default.",
       "evidence": ["render.yaml", "apps/api/Dockerfile"],
-      "limitations": ["Deploy dep-d9p481tbedkc73e3677g completed, ran 0005_guest_access_waitlist, and returns ready; the service previously passed the permanent-user staging workflow, but the anonymous lifecycle is not yet verified.", "No availability SLO, rollback drill, or durable hosted worker is claimed."]
+      "limitations": ["Deploy dep-d9pa9f6417fc73dfhcvg completed, ran 0006_gate1_compilation_contracts, returns ready, and served bounded staging/production guest bootstrap and isolation probes; hosted build, run, report, download, quota, retention, and waitlist behavior remain unverified.", "No availability SLO, rollback drill, or durable hosted worker is claimed."]
     },
     {
       "id": "deployment.supabase",
@@ -431,7 +433,7 @@
       "environment": "provisioned Supabase project",
       "scope": "Documents required Auth callbacks, providers, SMTP, CAPTCHA, JWT verification, runtime/migration URLs, and database isolation gates.",
       "evidence": [".env.example", "apps/web/.dev.vars.example", "docs/deployment.md"],
-      "limitations": ["Anonymous sign-in and Turnstile are configured, but the guest application path is not hosted-verified.", "Default SMTP is project-team-only; GitHub OAuth is disabled; RLS or an equivalent private-schema boundary is absent."]
+      "limitations": ["Anonymous sign-in, Turnstile, session creation, bootstrap, two-project inventory, and bounded isolation passed on fresh staging and production guests; the complete guest lifecycle remains unverified.", "Default SMTP is project-team-only; GitHub OAuth is disabled; RLS or an equivalent private-schema boundary is absent."]
     },
     {
       "id": "benchmark.tau_sync",
@@ -458,7 +460,7 @@
       "environment": "GitHub Actions target",
       "scope": "Runs Python audit/lint/types/tests, SQLite migration drift, generated contracts, web lint/types/tests, OpenNext build, production/staging Wrangler dry-runs, Playwright, PostgreSQL lifecycle and role-privilege integration, and secret scanning.",
       "evidence": [".github/workflows/ci.yml", "Makefile"],
-      "limitations": ["Run 30967934453 passed quality, PostgreSQL integration, and secret scanning on documentation checkpoint 4354479884ed142e028dc4ea18aaedb627ab33c3 containing verified implementation commit 2292a5f7089d061c9dc8b977852ee04d182373bc. Repository checks do not verify hosted Cloudflare, Render, or Supabase behavior."]
+      "limitations": ["Run 30970432139 passed on release commit 2329a1e39c00bf6313965bc06454f9bd49119816, including the production API-container smoke for the pinned compiler profile and both fixture packs. Repository checks do not verify hosted Cloudflare, Render, or Supabase behavior."]
     },
     {
       "id": "ci.customer_release_check",
@@ -538,7 +540,7 @@
       "id": "gate1_source_aware_local",
       "status": "fixture",
       "scope": "Verified local Gate 1 source-aware compiler, persistence/contracts, Acme corpus, inspection surfaces, packaging, and browser workflow",
-      "result": "Final pinned local checkpoint evidence: default API suite 148 passed and 1 skipped; focused regenerated-contract/Gate 1 suite 40 passed; Ruff and mypy passed; SQLite Alembic upgrade/drift passed through 0006; fresh real-PostgreSQL migration integration passed 1 with 4 deselected and removed its temporary database; frontend ESLint and strict typecheck passed; all 87 Vitest tests across 23 files passed; production Next.js build passed with dynamic /projects/[projectId]/routing; OpenNext passed at compatibility date 2026-08-04; Wrangler 4.118.0 type generation, root/staging deploy dry-runs, and startup check passed; dry-runs packaged 53 assets and 8026.44 KiB / 1666.83 KiB gzip, and local active startup measured 40.4 ms; focused two-domain E2E passed 1/1 in 34.6 seconds; full fresh-isolated Playwright passed 6/6 in 1.1 minutes; pip-audit and production pnpm audit --audit-level high reported no known vulnerabilities; git diff check passed. Dry-run measurements are not deployment or production-performance evidence; public Workers remain on deployed 147448a and behavioral_fidelity is not_measured."
+      "result": "Final pinned local checkpoint evidence: default API suite 148 passed and 1 skipped; focused regenerated-contract/Gate 1 suite 40 passed; Ruff and mypy passed; SQLite Alembic upgrade/drift passed through 0006; fresh real-PostgreSQL migration integration passed 1 with 4 deselected and removed its temporary database; frontend ESLint and strict typecheck passed; all 87 Vitest tests across 23 files passed; production Next.js build passed with dynamic /projects/[projectId]/routing; OpenNext passed at compatibility date 2026-08-04; Wrangler 4.118.0 type generation, root/staging deploy dry-runs, and startup check passed; dry-runs packaged 53 assets and 8026.44 KiB / 1666.83 KiB gzip, and local active startup measured 40.4 ms; focused two-domain E2E passed 1/1 in 34.6 seconds; full fresh-isolated Playwright passed 6/6 in 1.1 minutes; pip-audit and production pnpm audit --audit-level high reported no known vulnerabilities; git diff check passed. Dry-run measurements are not production-performance evidence; release 2329a1e is deployed, and behavioral_fidelity is not_measured."
     },
     {
       "id": "evidence_core_targeted",
@@ -556,7 +558,7 @@
       "id": "final_combined_ci",
       "status": "operating",
       "scope": "Aggregated GitHub Actions workflow on the final Gate 1 documentation checkpoint",
-      "result": "GitHub Actions run 30967934453 passed quality, PostgreSQL integration, and secret scanning on documentation checkpoint 4354479884ed142e028dc4ea18aaedb627ab33c3 containing verified implementation commit 2292a5f7089d061c9dc8b977852ee04d182373bc."
+      "result": "GitHub Actions run 30970432139 passed on release commit 2329a1e39c00bf6313965bc06454f9bd49119816, including the production API-container smoke for the pinned compiler profile and both fixture packs."
     },
     {
       "id": "clean_browser_e2e",
@@ -568,7 +570,7 @@
       "id": "postgres_integration",
       "status": "operating",
       "scope": "Local empty PostgreSQL 14 migration, privilege, and operation lifecycle",
-      "result": "The real local marker passed: migration through head, current/default privilege denial for anon/authenticated roles, bootstrap, queued build/run worker processing, polling, and downgrade cleanup. PostgreSQL 17 CI passed. The target Supabase database passed Data API/grant denial, and Render startup logs record hosted migration through 0005_guest_access_waitlist; connected guest data behavior remains pending."
+      "result": "The real local marker passed: migration through head, current/default privilege denial for anon/authenticated roles, bootstrap, queued build/run worker processing, polling, and downgrade cleanup. PostgreSQL 17 CI passed. The target Supabase database passed Data API/grant denial, Render deploy dep-d9pa9f6417fc73dfhcvg applied hosted migration 0006_gate1_compilation_contracts, and fresh staging and production guests passed bootstrap, inventory, and bounded ownership/reference checks. Complete hosted operation and lifecycle behavior remains pending."
     },
     {
       "id": "hosted_end_to_end",
@@ -579,20 +581,20 @@
     {
       "id": "guest_candidate_local",
       "status": "operating",
-      "scope": "Release 147448a local guest implementation",
+      "scope": "Historical release 147448a local guest implementation",
       "result": "All 71 web Vitest tests pass across 18 files. All 116 backend tests pass across two local runs: 115 default and one real-PostgreSQL integration test, including the two-session Project-to-child snapshot-lock fence. Hosted verification remains separate."
     },
     {
       "id": "public_worker_release",
       "status": "operating",
-      "scope": "Commit-pinned staging and canonical Cloudflare public entry",
-      "result": "Commit 147448a is deployed as staging Worker version 3788c6b0-291c-43a9-bef3-b48aaa4a0498 and canonical production version 935c3c39-f63e-4041-804b-ef40431d50fc. Both / and /demo returned 200, unauthenticated /api/v1/me returned 401, HTTP redirected to HTTPS with 308, the current composite refund scenario and ALETHEIA brand were served, stale API-boundary copy was absent, and the real Turnstile script/challenge frame rendered with waiting status. This gate does not include token redemption."
+      "scope": "Release-pinned staging and canonical Cloudflare entry",
+      "result": "Release 2329a1e39c00bf6313965bc06454f9bd49119816 is deployed as staging Worker version 7a049fd2-5053-4334-bea1-92d7f1099235 and canonical production version 091618a0-3582-48f3-9b53-8d2733387ed8. Fresh guests in both environments completed Turnstile redemption, anonymous session creation, bootstrap, protected navigation, exact Northstar and Acme project inventory checks, and bounded database ownership/reference isolation probes."
     },
     {
       "id": "guest_hosted_end_to_end",
       "status": "unverified",
       "scope": "Guest Cloudflare to Render to Supabase staging and canonical paths",
-      "result": "The public guest release is deployed and its real Turnstile challenge reaches waiting state, but automated browsers were challenged before token redemption. Anonymous sign-in/JWT handling, tenant isolation, guest limits/reset denial, seven-day expiry, auth-created-at plus auth-only cleanup, waitlist persistence, per-location edge policies, two-hop 64 KiB limits, the 85-second response-header deadline, and the full Northstar workflow remain verification gates."
+      "result": "Fresh staging and production guests passed real Turnstile redemption, anonymous sign-in/JWT handling, bootstrap, protected navigation, exact two-project inventory checks, and bounded ownership/reference isolation probes. No hosted Gate 1 guest build, run, report, or download completed; quotas/reset denial, expiry/retention/cleanup, waitlist persistence, adversarial isolation, edge-policy behavior, two-hop body limits, response-header deadlines, and production assurance remain verification gates."
     },
     {
       "id": "production_assurance",
@@ -603,7 +605,7 @@
   ],
   "highest_priority_gaps": [
     "Review the completed local Gate 1 evidence before authorizing Gate 2; keep hosted Gate 0H verification as a separate track.",
-    "Verify the deployed release with a completed anonymous Turnstile redemption, signed-JWT isolation, guest limits/expiry/cleanup/reset denial, waitlist persistence, and the complete Northstar workflow before describing the canonical preview as end-to-end operating.",
+    "Complete hosted Gate 1 guest build, run, report, and download checks plus quota/reset, expiry/cleanup, waitlist, edge-control, and adversarial isolation verification before describing the canonical preview as end-to-end operating.",
     "Add database-enforced tenant isolation or a verified private-schema and least-privilege grant boundary before broader customer data or teams.",
     "Keep arbitrary extraction, solver analysis, temporal monitors, mutation testing, live models, upstream tau execution, and customer runtime integrations in Gates 2-8 until Gate 1 evidence is reviewed.",
     "Add typed fact catalogs, multi-currency/time semantics, a real local-model loop, customer CI command, and guarded runtime SDK only after fixture evidence contracts are stable.",
