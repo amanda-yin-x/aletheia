@@ -2,7 +2,7 @@
 
 **Version:** 3.0  
 **Reconciliation date:** 2026-08-04  
-**Repository base inspected:** `91055f6043edfd7f0cb171eac0bd04c611f2d509` plus the current Gate 1 working tree  
+**Repository base inspected:** `91055f6043edfd7f0cb171eac0bd04c611f2d509`; verified Gate 1 implementation: `d10af278f785be76a8232589b4d0264792147a17`  
 **Predecessor:** `aletheia_refined_codex_execution_handoff_v2 (1).md`, retained unchanged as historical input  
 **Predecessor SHA-256:** `325e6c980eeee5b11457e1ebe7475aef04d734962345fc84a83e81ba46c63948`
 

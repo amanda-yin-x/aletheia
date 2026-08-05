@@ -4,6 +4,7 @@
 **Verdict:** complete in the verified local two-domain deterministic fixture scope  
 **Verification date:** 2026-08-04  
 **Inspected base:** `91055f6043edfd7f0cb171eac0bd04c611f2d509`  
+**Verified implementation commit:** `d10af278f785be76a8232589b4d0264792147a17`  
 **Deployment boundary:** not deployed; public Workers remain on `147448a`
 
 ## 1. What this verdict means
@@ -18,17 +19,18 @@ database, packaging, and browser checkpoint passes.
 The verdict is deliberately narrow:
 
 - it applies to deterministic synthetic fixtures, not customer documents;
-- it applies to the final verified working tree, not to base commit `91055f6`
-  alone;
-- the working tree was not yet committed when verified, so a later commit must
-  preserve this exact state and rerun release checks if it changes;
+- it applies to implementation commit `d10af278f785be76a8232589b4d0264792147a17`,
+  not to base commit `91055f6` alone;
+- the tracked working tree was clean immediately after that implementation
+  commit; the three preserved historical `(1).md` inputs remained deliberately
+  untracked and byte-for-byte unchanged;
 - no Gate 1 bundle was promoted to Cloudflare, Render, or Supabase;
 - Gate 0H anonymous hosted verification remains a separate in-progress track;
 - behavioral fidelity remains `not_measured`.
 
 ## 2. Ending-state map
 
-The verified working tree adds or materially changes these Gate 1 areas:
+The verified implementation commit adds or materially changes these Gate 1 areas:
 
 | Area | Principal repository paths |
 |---|---|
@@ -291,7 +293,8 @@ matches the source-map span count.
 The immediate next step is a product/evidence checkpoint, not automatic scope
 expansion:
 
-1. commit and, if desired, separately deploy this exact verified Gate 1 state;
+1. retain `d10af278f785be76a8232589b4d0264792147a17` as the exact local
+   implementation checkpoint and deploy it only as a separate, verified release;
 2. keep Gate 0H anonymous hosted verification separate and do not infer it from
    local Gate 1;
 3. gather design-partner evidence on whether authority/placement/source-map

@@ -2,7 +2,7 @@
 
 **Version:** 2.0  
 **Reconciliation date:** 2026-08-04  
-**Repository inspected:** local working tree based on `91055f6043edfd7f0cb171eac0bd04c611f2d509`  
+**Repository inspected:** local Gate 1 implementation `d10af278f785be76a8232589b4d0264792147a17`, based on `91055f6043edfd7f0cb171eac0bd04c611f2d509`  
 **Predecessor:** `aletheia_independent_review_and_product_decision (1).md`, version 1.0, retained unchanged as historical input  
 **Predecessor SHA-256:** `60b2cb7445f24965a485aadcbda54dfca15b38a971c418d7fe4a1a5c07ac6e53`
 

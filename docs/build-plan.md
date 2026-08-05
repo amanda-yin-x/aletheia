@@ -1,7 +1,7 @@
 # Build plan and gates
 
 **Reconciled:** 2026-08-04  
-**Inspected base:** `91055f6043edfd7f0cb171eac0bd04c611f2d509` plus the current Gate 1 working tree
+**Inspected base:** `91055f6043edfd7f0cb171eac0bd04c611f2d509`; verified Gate 1 implementation: `d10af278f785be76a8232589b4d0264792147a17`
 
 ## Status at a glance
 
@@ -63,7 +63,7 @@ The verified local implementation introduces:
 8. an Acme appointments corpus using the same compiler contracts as Northstar;
 9. source/rule placement review and build-inspection surfaces.
 
-Confirmed on the current local working tree: default API `139 passed, 1
+Confirmed on the verified local implementation commit: default API `139 passed, 1
 skipped`; focused regenerated-contract/Gate 1 suite `31 passed`; Ruff, mypy,
 SQLite Alembic upgrade/drift through `0006`, and fresh PostgreSQL migration
 integration `1 passed, 4 deselected`; frontend ESLint/typecheck, all 84 Vitest

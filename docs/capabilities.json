@@ -5,10 +5,10 @@
     "version": "2026-08-04-gate1-local-verified",
     "repository": "https://github.com/amanda-yin-x/aletheia",
     "canonical_site": "https://aletheia.aletheia-web.workers.dev",
-    "source_commit": "147448a",
+    "source_commit": "d10af278f785be76a8232589b4d0264792147a17",
     "deployed_source_commit": "147448a",
     "inspected_repository_base": "91055f6043edfd7f0cb171eac0bd04c611f2d509",
-    "gate1_deployment_boundary": "Gate 1 evidence describes the current local working tree. The public staging and canonical Workers remain the separately identified deployed 147448a bundle; no Gate 1 deployment is claimed.",
+    "gate1_deployment_boundary": "Gate 1 evidence describes verified implementation commit d10af278f785be76a8232589b4d0264792147a17. The public staging and canonical Workers remain the separately identified deployed 147448a bundle; no Gate 1 deployment is claimed.",
     "gate1_verification_report": "docs/gate-1-verification-report.md",
     "gate1_verified_builds": {
       "northstar-retail": {
@@ -26,8 +26,8 @@
       "staging": "3788c6b0-291c-43a9-bef3-b48aaa4a0498",
       "canonical_production": "935c3c39-f63e-4041-804b-ef40431d50fc"
     },
-    "hosted_verification_boundary": "The exact source commit is deployed to the staging and canonical Cloudflare Workers. Public landing and /demo routes, HTTPS redirection, unauthenticated API rejection, current branding/scenario content, and Turnstile challenge rendering were observed. Automated browsers were challenged, so successful CAPTCHA token redemption and the complete anonymous Northstar workflow are not claimed.",
-    "evidence_boundary": "The verified local Gate 1 working tree covers deterministic Northstar and Acme fixture data, reviewed rules/placements, source-aware builds, scripted trajectories, and calls routed through the fixture policy adapter. Exact provenance and structural preservation do not establish behavioral fidelity, live-model quality, customer safety, compliance, production reliability, or market validation. Gate 1 is not deployed; public Workers remain on 147448a."
+    "hosted_verification_boundary": "Deployed source commit 147448a is on the staging and canonical Cloudflare Workers. Public landing and /demo routes, HTTPS redirection, unauthenticated API rejection, current branding/scenario content, and Turnstile challenge rendering were observed. Automated browsers were challenged, so successful CAPTCHA token redemption and the complete anonymous Northstar workflow are not claimed.",
+    "evidence_boundary": "Verified local Gate 1 implementation commit d10af278f785be76a8232589b4d0264792147a17 covers deterministic Northstar and Acme fixture data, reviewed rules/placements, source-aware builds, scripted trajectories, and calls routed through the fixture policy adapter. Exact provenance and structural preservation do not establish behavioral fidelity, live-model quality, customer safety, compliance, production reliability, or market validation. Gate 1 is not deployed; public Workers remain on 147448a."
   },
   "status_vocabulary": {
     "operating": "A connected path works in the stated environment and is more than a class, endpoint, or deployment seam.",

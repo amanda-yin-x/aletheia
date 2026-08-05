@@ -159,7 +159,7 @@ The review intentionally includes direct competitors, mature adjacent platforms,
 The external evidence supports six decisions:
 
 1. **Keep the project, change the centre.** Runtime guardrails are crowded; source-aware policy change review and CI is the stronger remaining wedge.
-2. **Accept the bounded Gate 1 result.** The working tree contains a second domain and a generic source-aware compiler whose local two-domain, packaging, and browser checkpoint passed; hosted deployment and real model/customer integrations remain later work.
+2. **Accept the bounded Gate 1 result.** Commit `d10af278f785be76a8232589b4d0264792147a17` contains a second domain and a generic source-aware compiler whose local two-domain, packaging, and browser checkpoint passed; hosted deployment and real model/customer integrations remain later work.
 3. **Keep hard decisions deterministic and bounded.** The current path uses schemas, exact source verification, human review, placement decisions, tests, and runtime code. LLM proposals, solvers, and generic monitors remain future gates.
 4. **Use benchmarks carefully.** Retail-17 is an intentionally selected smoke suite; a proper external result requires the upstream full split, exact version/configuration, and separately reported applicability.
 5. **Right-size the architecture.** The current modular monolith, SQLite/Postgres, provider seams, SQL jobs, and CLI are enough for Gate 1 proof. A customer runtime SDK, signed distribution, broader shared tenancy, and enterprise controls remain later work.

@@ -37,7 +37,7 @@ Feature gates describe product behavior. The later P0–P3 roadmap describes
 production maturity. A production task does not silently complete a feature
 gate, and a local feature does not silently pass a hosted gate.
 
-The Gate 1 row describes the local working tree. It is not part of the deployed
+The Gate 1 row describes local implementation commit `d10af278f785be76a8232589b4d0264792147a17`. It is not part of the deployed
 public `147448a` Worker bundle unless a later release is explicitly verified and
 promoted.
 

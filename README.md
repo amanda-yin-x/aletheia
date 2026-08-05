@@ -303,7 +303,7 @@ added. `pip-audit` and the production high-severity `pnpm audit` reported no
 known vulnerabilities.
 
 The counts below describe the settled pre-Gate-1/public-guest release and must
-not be read as verification of the current Gate 1 working tree.
+not be read as verification of Gate 1 implementation commit `d10af278`.
 
 The hosted changes have automated coverage for JWT validation,
 tenant scoping, operation idempotency and lease recovery, migrations, CSRF and
