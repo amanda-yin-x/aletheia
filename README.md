@@ -327,10 +327,11 @@ path. A real two-session PostgreSQL test also proves that snapshot-consuming
 operations and child-row mutations take locks in the same `Project → child`
 order, so a mutation cannot cross the captured-input fence.
 
-The settled backend, web, build, Worker dry-run, and clean five-flow browser
-checks all passed locally. The repository's quality, secret-scan, and
-PostgreSQL 17 jobs also passed in [GitHub Actions run
-#30867243068](https://github.com/amanda-yin-x/aletheia/actions/runs/30867243068).
+The verified Gate 1 backend, web, build, Worker dry-run, and clean six-flow
+browser checks all passed locally. The repository's quality, secret-scan, and
+PostgreSQL integration jobs also passed in [GitHub Actions run
+#30963519448](https://github.com/amanda-yin-x/aletheia/actions/runs/30963519448)
+on documentation checkpoint `25b42ff` and implementation parent `d10af27`.
 The target Supabase project is migrated through Alembic head; its Data API is
 disabled, `anon`/`authenticated` have no application-table privileges, and the
 future-table default denial was verified transactionally. The Render service

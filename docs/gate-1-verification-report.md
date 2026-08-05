@@ -88,6 +88,7 @@ source-anchor claim. Test-generated span markers and other generated framing are
 | Dry-run package observation | 53 assets; 8,019.91 KiB / 1,665.20 KiB gzip |
 | Local startup observation | Active startup 34.0 ms |
 | Dependency audits | `pip-audit` and production `pnpm audit --audit-level high`: no known vulnerabilities reported |
+| GitHub Actions | Run [30963519448](https://github.com/amanda-yin-x/aletheia/actions/runs/30963519448) passed quality, secret scan, and PostgreSQL integration on `25b42ffd08bdc9566478653d5765c3be11ba141f` |
 | Patch hygiene | `git diff --check` passed |
 
 The final browser command was:

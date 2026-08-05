@@ -456,7 +456,7 @@
       "environment": "GitHub Actions target",
       "scope": "Runs Python audit/lint/types/tests, SQLite migration drift, generated contracts, web lint/types/tests, OpenNext build, production/staging Wrangler dry-runs, Playwright, PostgreSQL lifecycle and role-privilege integration, and secret scanning.",
       "evidence": [".github/workflows/ci.yml", "Makefile"],
-      "limitations": ["Run 30867243068 passed on implementation commit 5d45a776407955f86227e1890900d9857196a007; this verifies repository checks, not hosted Cloudflare, Render, or Supabase behavior."]
+      "limitations": ["Run 30963519448 passed on Gate 1 documentation checkpoint 25b42ffd08bdc9566478653d5765c3be11ba141f, whose implementation parent is d10af278f785be76a8232589b4d0264792147a17; this verifies repository checks, not hosted Cloudflare, Render, or Supabase behavior."]
     },
     {
       "id": "ci.customer_release_check",
@@ -554,13 +554,13 @@
       "id": "final_combined_ci",
       "status": "operating",
       "scope": "Aggregated GitHub Actions workflow on the settled commit",
-      "result": "GitHub Actions run 30867243068 passed quality, secret-scan, and PostgreSQL 17 integration on implementation commit 5d45a776407955f86227e1890900d9857196a007."
+      "result": "GitHub Actions run 30963519448 passed quality, secret-scan, and PostgreSQL integration on Gate 1 documentation checkpoint 25b42ffd08bdc9566478653d5765c3be11ba141f, whose verified implementation parent is d10af278f785be76a8232589b4d0264792147a17."
     },
     {
       "id": "clean_browser_e2e",
       "status": "operating",
       "scope": "Dedicated migrated and seeded E2E SQLite database",
-      "result": "Five Chromium flows passed: landing/workspace bootstrap, reduced motion and navigation, narrow-width overflow checks, explicit conflict review and compile, and run/trace/report/export."
+      "result": "Six Chromium flows passed: landing/workspace bootstrap, reduced motion and navigation, narrow-width overflow checks, explicit Northstar conflict review/compile, run/trace/report/export, and the shared Acme placement/build/provenance path with two-way domain isolation."
     },
     {
       "id": "postgres_integration",
