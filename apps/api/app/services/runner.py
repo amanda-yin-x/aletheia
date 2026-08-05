@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from copy import deepcopy
+from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
 from uuid import uuid4
@@ -42,18 +43,13 @@ from app.services.policy import evaluate_policy
 
 ARMS = ["baseline_unenforced", "compiled_unenforced", "compiled_enforced"]
 RUNNER_VERSION = "0.3.0"
-EXECUTABLE_TOOLS = frozenset(
-    {
-        "issue_refund",
-        "request_supervisor_approval",
-        "escalate_case",
-        "get_order",
-        "get_customer",
-        "book_callback",
-        "cancel_item",
-    }
-)
 DRAFT_2020_12_URI = "https://json-schema.org/draft/2020-12/schema"
+
+
+@dataclass(frozen=True)
+class FixtureToolContract:
+    validator: Draft202012Validator
+    mutating: bool
 
 
 def _event(
@@ -74,7 +70,11 @@ def _event(
 
 
 def _execute(
-    name: str, arguments: dict[str, Any], state: dict[str, Any]
+    name: str,
+    arguments: dict[str, Any],
+    state: dict[str, Any],
+    *,
+    mutating: bool,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     before = deepcopy(state)
     if name == "issue_refund":
@@ -105,8 +105,17 @@ def _execute(
     elif name == "cancel_item":
         state.setdefault("cancelled_items", []).append(arguments["item_id"])
         result = {"status": "cancelled"}
-    else:  # The registry and adapter check must make this unreachable.
-        raise ValueError(f"No deterministic adapter for {name}")
+    elif not mutating:
+        result = {"status": "fixture_recorded", "data_scope": "evaluation"}
+    else:
+        # Domain packs never execute customer code or external tools. Unknown
+        # fixture mutations are represented by one generic, deterministic
+        # recorder so a second domain uses the same runner without semantic
+        # branches or real-world side effects.
+        state.setdefault("fixture_mutations", []).append(
+            {"tool": name, "arguments": deepcopy(arguments)}
+        )
+        result = {"status": "fixture_recorded", "tool": name}
     diff = {
         key: {"before": before.get(key), "after": value}
         for key, value in state.items()
@@ -117,7 +126,7 @@ def _execute(
 
 def _registry_contracts(
     registry: dict[str, Any],
-) -> dict[str, Draft202012Validator]:
+) -> dict[str, FixtureToolContract]:
     rows = registry.get("tools")
     if (
         registry.get("schema_version") != "0.2"
@@ -129,7 +138,7 @@ def _registry_contracts(
             "The build-pinned tool registry is malformed.",
             status_code=409,
         )
-    contracts: dict[str, Draft202012Validator] = {}
+    contracts: dict[str, FixtureToolContract] = {}
     for row in rows:
         if (
             not isinstance(row, dict)
@@ -164,31 +173,29 @@ def _registry_contracts(
                 "The build-pinned tool registry contains an invalid JSON Schema.",
                 status_code=409,
             ) from error
-        contracts[name] = Draft202012Validator(input_schema)
+        contracts[name] = FixtureToolContract(
+            validator=Draft202012Validator(input_schema),
+            mutating=row["mutating"],
+        )
     return contracts
 
 
 def _validation_error(
     name: Any,
     arguments: Any,
-    contracts: dict[str, Draft202012Validator],
+    contracts: dict[str, FixtureToolContract],
 ) -> dict[str, Any] | None:
     if not isinstance(name, str) or not name:
         return {"code": "malformed_tool_name", "message": "Tool name must be text."}
     if name not in contracts:
         return {"code": "unknown_tool", "message": "Tool is not in the pinned registry."}
-    if name not in EXECUTABLE_TOOLS:
-        return {
-            "code": "unsupported_tool_adapter",
-            "message": "No deterministic adapter is pinned for this tool.",
-        }
     if not isinstance(arguments, dict):
         return {
             "code": "malformed_tool_arguments",
             "message": "Tool arguments must be an object.",
         }
     errors = sorted(
-        contracts[name].iter_errors(arguments),
+        contracts[name].validator.iter_errors(arguments),
         key=lambda error: (
             {"required": 0, "type": 1, "additionalProperties": 2}.get(
                 str(error.validator), 3
@@ -443,7 +450,12 @@ def run_scenario(
             )
             policy_block_count += 1
             continue
-        result, diff = _execute(name, arguments, state)
+        result, diff = _execute(
+            name,
+            arguments,
+            state,
+            mutating=contracts[name].mutating,
+        )
         _event(
             events,
             "tool_executed",
@@ -724,11 +736,11 @@ def _aggregate(
             if non_executable_cases
             else 1.0
         ),
-        "rule_coverage": _coverage_dimension(accepted_rules, tested_rules),
-        "source_coverage": _coverage_dimension(
+        "declared_rule_linkage": _coverage_dimension(accepted_rules, tested_rules),
+        "declared_source_linkage": _coverage_dimension(
             normative_sources, covered_sources
         ),
-        "boundary_coverage": _coverage_dimension(
+        "declared_boundary_linkage": _coverage_dimension(
             boundary_rules, boundary_covered
         ),
         "critical_unclassified_rules": critical_unclassified,

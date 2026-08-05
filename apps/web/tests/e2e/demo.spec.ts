@@ -1,7 +1,14 @@
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
 
-const API = "http://127.0.0.1:8000";
+const API = `http://127.0.0.1:${process.env.PLAYWRIGHT_API_PORT || "8000"}`;
 const UPDATE_DOC_SCREENSHOTS = process.env.UPDATE_DOC_SCREENSHOTS === "1";
+
+interface ProjectRecord {
+  id: string;
+  slug: string;
+  name: string;
+  domain: string;
+}
 
 async function captureDocumentationScreenshot(page: Page, name: string) {
   if (!UPDATE_DOC_SCREENSHOTS) return;
@@ -30,6 +37,39 @@ async function resolveAndApprove(request: APIRequestContext) {
   const approval = await request.post(`${API}/api/v1/rules/${threshold.id}/approve`, { data: { expected_revision: threshold.revision } });
   expect(approval.ok()).toBeTruthy();
   return project;
+}
+
+async function projectList(request: APIRequestContext): Promise<ProjectRecord[]> {
+  const response = await request.get(`${API}/api/v1/projects`);
+  expect(response.ok()).toBeTruthy();
+  return response.json() as Promise<ProjectRecord[]>;
+}
+
+async function resolveProjectConflicts(request: APIRequestContext, projectId: string) {
+  const rulesResponse = await request.get(`${API}/api/v1/projects/${projectId}/rules`);
+  const findingsResponse = await request.get(`${API}/api/v1/projects/${projectId}/findings`);
+  expect(rulesResponse.ok()).toBeTruthy();
+  expect(findingsResponse.ok()).toBeTruthy();
+  const rules = await rulesResponse.json() as Array<{ id: string; stable_key: string }>;
+  const findings = await findingsResponse.json() as Array<{ id: string; severity: string; resolution_state: string; related_rule_ids: string[] }>;
+  for (const finding of findings.filter((item) => item.severity === "critical" && item.resolution_state === "open")) {
+    const related = rules.filter((rule) => finding.related_rule_ids.includes(rule.id));
+    const winner = related.find((rule) => !rule.stable_key.includes("legacy"));
+    const loser = related.find((rule) => rule.stable_key.includes("legacy"));
+    expect(winner, "a current authority rule is required").toBeTruthy();
+    expect(loser, "a legacy authority rule is required").toBeTruthy();
+    const response = await request.patch(`${API}/api/v1/findings/${finding.id}`, {
+      data: {
+        resolution_state: "resolved",
+        expected_resolution_state: "open",
+        winner_rule_id: winner!.id,
+        loser_rule_id: loser!.id,
+        authority: "Current project policy is authoritative.",
+        resolution_note: "Current authority selected in the two-domain browser review.",
+      },
+    });
+    expect(response.ok()).toBeTruthy();
+  }
 }
 
 test("landing opens the workspace and shows the composite refund failure", async ({ page, request }) => {
@@ -129,8 +169,10 @@ test("review resolves conflicts, approves the threshold, and builds a measured c
   await page.getByRole("button", { name: "Close rule details" }).click();
   await page.getByRole("link", { name: "Build" }).click();
   await page.getByRole("button", { name: "Build candidate" }).click();
-  await expect(page.getByText("Original / prompt kernel")).toBeVisible();
-  await expect(page.getByText("char_4_estimate")).toBeVisible();
+  await expect(page.getByRole("navigation", { name: "Compiled bundle tree" })).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByRole("heading", { name: "Compilation metrics" })).toBeVisible();
+  await expect(page.getByText("char_div_4 · 1.0.0")).toBeVisible();
+  await expect(page.getByText("Behavioral fidelity: Not measured")).toBeVisible();
   await expect(page.getByText("Stored", { exact: true })).toBeVisible();
   await captureDocumentationScreenshot(page, "build-desktop");
 });
@@ -155,4 +197,67 @@ test("run comparison exposes the blocked $200.01 trace and exports evidence", as
   const download = page.getByRole("link", { name: "Download Markdown" });
   await expect(download).toHaveAttribute("href", /format=markdown/);
   await captureDocumentationScreenshot(page, "report-desktop");
+});
+
+test("two domains keep project routing and compiled evidence isolated", async ({ page, request }) => {
+  test.setTimeout(60_000);
+  const northstar = await resolveAndApprove(request);
+  const projects = await projectList(request);
+  const acme = projects.find((project) => project.slug === "acme-appointments");
+  expect(acme, "the Acme appointment project must be seeded").toBeTruthy();
+  expect(projects.some((project) => project.id === northstar.id)).toBeTruthy();
+  await resolveProjectConflicts(request, acme!.id);
+
+  await page.goto(`/projects/${northstar.id}/overview`);
+  const selector = page.getByRole("combobox", { name: "Project / domain" });
+  await expect(selector).toBeEnabled({ timeout: 15_000 });
+  await expect(selector).toHaveValue(northstar.id, { timeout: 15_000 });
+  await expect(selector.locator("option")).toHaveCount(2);
+  await selector.selectOption(acme!.id);
+  await expect(page).toHaveURL(`/projects/${acme!.id}/overview`);
+  await expect(page.getByRole("heading", { name: "Acme Appointment Scheduling Agent" })).toBeVisible();
+
+  await page.getByRole("link", { name: "Placements" }).click();
+  await expect(page.getByRole("heading", { name: "Placements" })).toBeVisible();
+  const identityPlacement = page.locator("article.placement-card").filter({ hasText: "Verify identity before appointment change" });
+  await expect(identityPlacement).toContainText("Pre-tool guard");
+  await expect(identityPlacement).toContainText("Current");
+  const pendingPlacement = page.locator("article.placement-card").filter({ hasText: "Maximum completed reschedules" });
+  await expect(pendingPlacement).toContainText("Blocked");
+  await expect(pendingPlacement).toContainText("Human review");
+  const unsupportedPlacement = page.locator("article.placement-card").filter({ hasText: "Undefined daylight-hours preference" });
+  await expect(unsupportedPlacement).toContainText("Unsupported");
+  await page.getByRole("heading", { name: "Placements" }).scrollIntoViewIfNeeded();
+  await captureDocumentationScreenshot(page, "acme-routing-desktop");
+
+  await page.getByRole("link", { name: "Build" }).click();
+  await page.getByRole("button", { name: /Build (candidate|new snapshot)/ }).click();
+  await expect(page.getByRole("navigation", { name: "Compiled bundle tree" })).toBeVisible({ timeout: 20_000 });
+  await expect(page).toHaveURL(new RegExp(`/projects/${acme!.id}/builds/[^/]+$`));
+  await expect(page.getByRole("button", { name: "prompt-kernel.md" })).toHaveAttribute("aria-current", "true");
+  await expect(page.getByRole("heading", { name: "Compilation metrics" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Routing report" })).toBeVisible();
+  const routingPanel = page.locator("section.routing-report-panel");
+  await expect(routingPanel).not.toContainText("Routing report unavailable");
+  await expect(routingPanel).toContainText("Verify identity before appointment change");
+  await expect(page.getByRole("heading", { name: "Preservation report" })).toBeVisible();
+  await expect(page.getByText("Behavioral fidelity: Not measured")).toBeVisible();
+  const mappedRule = page.getByRole("button", { name: /rule\.appointment\.style@1/ }).first();
+  await mappedRule.click();
+  await expect(page.getByText("Exact source anchors")).toBeVisible();
+  await expect(page.getByRole("link", { name: /Open exact source/ }).first()).toHaveAttribute("href", new RegExp(`/projects/${acme!.id}/sources\\?document=.+#line-`));
+  await page.locator(".artifact-provenance").scrollIntoViewIfNeeded();
+  await captureDocumentationScreenshot(page, "acme-build-desktop");
+
+  const buildSelector = page.getByRole("combobox", { name: "Project / domain" });
+  await expect(buildSelector).toHaveValue(acme!.id, { timeout: 15_000 });
+  await buildSelector.selectOption(northstar.id);
+  await expect(page).toHaveURL(`/projects/${northstar.id}/overview`);
+  await expect(page.getByRole("combobox", { name: "Project / domain" })).toHaveValue(northstar.id, { timeout: 15_000 });
+  await expect(page.getByRole("heading", { name: "Northstar Retail Refund Agent" })).toBeVisible();
+  await page.getByRole("link", { name: "Placements" }).click();
+  await expect(page).toHaveURL(`/projects/${northstar.id}/routing`);
+  await expect(page.getByRole("heading", { name: "Placements" })).toBeVisible();
+  await expect(page.getByText("Approval above $200", { exact: true })).toBeVisible();
+  await expect(page.getByText("Verify identity before appointment change", { exact: true })).toHaveCount(0);
 });

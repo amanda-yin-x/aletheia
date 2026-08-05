@@ -48,9 +48,9 @@ def release_gate_ready(
         and coverage.get("explicit_assertion_coverage") == 1
         and coverage.get("compiler_assertion_coverage") == 1
         and coverage.get("positive_negative_boundary") is True
-        and coverage.get("rule_coverage", {}).get("ratio") == 1
-        and coverage.get("source_coverage", {}).get("ratio") == 1
-        and coverage.get("boundary_coverage", {}).get("ratio") == 1
+        and coverage.get("declared_rule_linkage", {}).get("ratio") == 1
+        and coverage.get("declared_source_linkage", {}).get("ratio") == 1
+        and coverage.get("declared_boundary_linkage", {}).get("ratio") == 1
         and coverage.get("critical_unclassified_rules") == []
         and guarded.get("task_success_rate") == 1
         and guarded.get("executed_violation_rate") == 0

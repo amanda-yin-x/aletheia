@@ -14,13 +14,23 @@ const project = {
   created_at: "2026-08-03T00:00:00Z",
 };
 
+const northstarProject = {
+  ...project,
+  id: "northstar-project",
+  slug: "northstar-retail",
+  name: "Northstar Retail Agent",
+  domain: "retail",
+};
+
 const mocks = vi.hoisted(() => ({
   pathname: "/projects/appointment-project/overview",
   api: vi.fn(),
+  push: vi.fn(),
 }));
 
 vi.mock("next/navigation", () => ({
   usePathname: () => mocks.pathname,
+  useRouter: () => ({ push: mocks.push }),
 }));
 
 vi.mock("@/lib/api", async (importOriginal) => {
@@ -31,7 +41,8 @@ vi.mock("@/lib/api", async (importOriginal) => {
 beforeEach(() => {
   window.history.replaceState(null, "", "/");
   mocks.pathname = "/projects/appointment-project/overview";
-  mocks.api.mockReset().mockResolvedValue(project);
+  mocks.push.mockReset();
+  mocks.api.mockReset().mockImplementation(async (path: string) => path === "/api/v1/projects" ? [project] : project);
 });
 
 afterEach(cleanup);
@@ -57,9 +68,53 @@ describe("shared project shell", () => {
       "href",
       "/projects/appointment-project/rules",
     );
+    expect(screen.getByRole("link", { name: "Placements" })).toHaveAttribute(
+      "href",
+      "/projects/appointment-project/routing",
+    );
     expect(screen.getByRole("navigation", { name: "Project sections" })).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "Project / domain" })).toHaveValue(project.id);
     expect(screen.queryByText(/Northstar/i)).not.toBeInTheDocument();
     expect(screen.queryByText(/refund/i)).not.toBeInTheDocument();
+  });
+
+  it("switches domains through the tenant-scoped project list", async () => {
+    mocks.api.mockImplementation(async (path: string) => path === "/api/v1/projects" ? [project, northstarProject] : project);
+    renderShell();
+    const selector = await screen.findByRole("combobox", { name: "Project / domain" });
+
+    await waitFor(() => expect(selector).toHaveAccessibleDescription("2 projects available."));
+    fireEvent.change(selector, { target: { value: northstarProject.id } });
+
+    expect(mocks.push).toHaveBeenCalledWith("/projects/northstar-project/overview");
+  });
+
+  it("shows an explicit empty project-list state", async () => {
+    mocks.api.mockImplementation(async (path: string) => path === "/api/v1/projects" ? [] : project);
+    renderShell();
+
+    const selector = await screen.findByRole("combobox", { name: "Project / domain" });
+    await waitFor(() => expect(selector).toHaveDisplayValue("No projects available"));
+    expect(selector).toBeDisabled();
+    expect(selector).toHaveAccessibleDescription("This workspace has no available projects.");
+  });
+
+  it("surfaces a project-list failure separately and retries it", async () => {
+    let listAttempts = 0;
+    mocks.api.mockImplementation(async (path: string) => {
+      if (path !== "/api/v1/projects") return project;
+      listAttempts += 1;
+      if (listAttempts === 1) throw new Error("Project list unavailable.");
+      return [project];
+    });
+    renderShell();
+
+    const retry = await screen.findByRole("button", { name: "Retry project list" });
+    expect(screen.getByRole("combobox", { name: "Project / domain" })).toBeDisabled();
+    fireEvent.click(retry);
+
+    await waitFor(() => expect(screen.getByRole("combobox", { name: "Project / domain" })).toBeEnabled());
+    expect(screen.getByRole("combobox", { name: "Project / domain" })).toHaveValue(project.id);
   });
 
   it("exposes exactly one current destination on Overview", async () => {
@@ -83,7 +138,13 @@ describe("shared project shell", () => {
   });
 
   it("surfaces a project query failure and lets the user retry", async () => {
-    mocks.api.mockRejectedValueOnce(new Error("The project API is unavailable."));
+    let detailAttempts = 0;
+    mocks.api.mockImplementation(async (path: string) => {
+      if (path === "/api/v1/projects") return [project];
+      detailAttempts += 1;
+      if (detailAttempts === 1) throw new Error("The project API is unavailable.");
+      return project;
+    });
     renderShell();
 
     const alert = await screen.findByRole("alert", { name: "Project details error" });

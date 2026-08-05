@@ -13,6 +13,7 @@ from app.models import (
     Document,
     Finding,
     Job,
+    PlacementDecision,
     Project,
     Report,
     Rule,
@@ -25,6 +26,32 @@ from app.services.canonical import bytes_hash, token_estimate
 from app.tenancy import ensure_local_workspace
 
 DEMO_DIR = get_settings().data_root / "demo" / "northstar-retail"
+
+COMPILER_PROFILE = {
+    "name": "source-aware",
+    "version": "1.0.0",
+    "path": "compiler-profiles/source-aware-v1.json",
+}
+
+NORTHSTAR_COMPILATION_CONFIG = {
+    "schema_version": "1.0",
+    "bundle_slug": "refund-operations",
+    "agent_label": "Northstar Retail support agent",
+    "skill_title": "Refund operations",
+    "knowledge_title": "Retail policy reference",
+    "suite_name": "Aletheia-authored refund boundary suite",
+    "suite_version": 3,
+    "inputs": {
+        "baseline_prompt": {"name": "baseline-system-prompt.md", "version": 1},
+        "tool_schema": {"name": "tools.json", "version": 1},
+        "evaluation_data": {"name": "orders.json", "version": 1},
+    },
+    "expected_context": [
+        "prompt-kernel.md",
+        "skills/refund-operations/SKILL.md",
+        "knowledge/refund-operations.md",
+    ],
+}
 
 
 def _read(name: str) -> str:
@@ -92,6 +119,8 @@ def _rule(
         target_tools=tools,
         exceptions=[],
         reviewer_note=note,
+        provenance_kind="source_anchored",
+        provenance_metadata={},
     )
 
 
@@ -250,6 +279,115 @@ def test_specs() -> list[dict[str, Any]]:
     ]
 
 
+NORTHSTAR_PLACEMENTS: dict[str, dict[str, Any]] = {
+    "rule.refund.window": {
+        "destinations": ["skill", "pre_tool_policy", "test"],
+        "disposition": "routed",
+        "rationale": "Reviewed eligibility boundary belongs in scoped instructions, the pre-tool policy, and regression cases.",
+    },
+    "rule.refund.approval_threshold": {
+        "destinations": ["skill", "pre_tool_policy", "test"],
+        "disposition": "routed",
+        "rationale": "The exact approval threshold is preserved across scoped instructions, guard data, and boundary tests.",
+    },
+    "rule.identity.before_order": {
+        "destinations": ["skill", "pre_tool_policy", "test"],
+        "disposition": "routed",
+        "rationale": "Identity is a reviewed prerequisite for covered order access.",
+    },
+    "rule.refund.destination": {
+        "destinations": ["skill", "pre_tool_policy", "test"],
+        "disposition": "routed",
+        "rationale": "The payment-destination constraint is machine-decidable at the covered tool boundary.",
+    },
+    "rule.refund.no_duplicate": {
+        "destinations": ["skill", "pre_tool_policy", "test"],
+        "disposition": "routed",
+        "rationale": "The duplicate-mutation constraint is checked before execution and retained in regression cases.",
+    },
+    "rule.refund.confirmation": {
+        "destinations": ["skill", "pre_tool_policy", "test"],
+        "disposition": "routed",
+        "rationale": "Explicit confirmation is a pre-tool prerequisite with negative-path tests.",
+    },
+    "rule.refund.returnability": {
+        "destinations": ["skill", "pre_tool_policy", "test"],
+        "disposition": "routed",
+        "rationale": "The reviewed returnability fact blocks the standard mutation path.",
+    },
+    "rule.legacy.window": {
+        "destinations": ["human_review"],
+        "disposition": "blocked",
+        "rationale": "Retained guidance conflicts with the current authority and cannot be compiled before review.",
+    },
+    "rule.legacy.auto_250": {
+        "destinations": ["human_review"],
+        "disposition": "blocked",
+        "rationale": "Retained automatic-refund guidance conflicts with the current approval boundary.",
+    },
+    "rule.callback.daylight": {
+        "destinations": ["unsupported"],
+        "disposition": "unsupported",
+        "rationale": "Daylight hours has no numeric boundary and the required timezone fact is not guaranteed.",
+    },
+    "rule.style.concise": {
+        "destinations": ["prompt_kernel", "test"],
+        "disposition": "routed",
+        "rationale": "Reviewed tone guidance remains always loaded and has a compiler assertion.",
+    },
+}
+
+
+async def _ensure_northstar_gate1_records(
+    session: AsyncSession, project: Project
+) -> None:
+    project.compiler_profile = COMPILER_PROFILE
+    project.compilation_config = NORTHSTAR_COMPILATION_CONFIG
+    rules = list(
+        (
+            await session.scalars(
+                select(Rule).where(
+                    Rule.project_id == project.id,
+                    Rule.status != "superseded",
+                )
+            )
+        ).all()
+    )
+    existing_rule_ids = set(
+        (
+            await session.scalars(
+                select(PlacementDecision.rule_id).where(
+                    PlacementDecision.project_id == project.id
+                )
+            )
+        ).all()
+    )
+    for rule in rules:
+        if rule.id in existing_rule_ids:
+            continue
+        config = NORTHSTAR_PLACEMENTS.get(rule.stable_key)
+        if config is None:
+            raise ValueError(f"No reviewed placement for {rule.stable_key}")
+        session.add(
+            PlacementDecision(
+                project_id=project.id,
+                rule_id=rule.id,
+                version=1,
+                profile_name="source-aware",
+                profile_version="1.0.0",
+                destinations=config["destinations"],
+                scope_slug="refund-operations",
+                rendering=rule.normative_text,
+                transform_kind="verbatim",
+                disposition=config["disposition"],
+                rationale=config["rationale"],
+                review_status="approved",
+                reviewer="Aletheia fixture author",
+            )
+        )
+    await session.commit()
+
+
 async def seed_demo(
     session: AsyncSession, *, workspace_id: str | None = None, reset: bool = False
 ) -> Project:
@@ -261,6 +399,7 @@ async def seed_demo(
         )
     )
     if existing and not reset:
+        await _ensure_northstar_gate1_records(session, existing)
         return existing
     if reset:
         if existing:
@@ -286,6 +425,8 @@ async def seed_demo(
         "Source-linked policy compilation and deterministic refund release tests."
     )
     project.mode = "demo"
+    project.compiler_profile = COMPILER_PROFILE
+    project.compilation_config = NORTHSTAR_COMPILATION_CONFIG
     if existing is None:
         session.add(project)
     try:
@@ -310,6 +451,14 @@ async def seed_demo(
         ("tools.json", "tool_schema", "application/json"),
         ("orders.json", "evaluation_data", "application/json"),
     ]
+    authority = {
+        "baseline-system-prompt.md": ("Agent Platform", "reference", "Baseline prompt v1"),
+        "refund-policy-v3.md": ("Policy Operations", "current", "Refund Policy v3"),
+        "refund-sop-legacy.md": ("Support Operations", "superseded", "Desk SOP v1.4"),
+        "support-style.md": ("Customer Experience", "current", "Support Style v1"),
+        "tools.json": ("Agent Platform", "current", "Tool Registry v1"),
+        "orders.json": ("Evaluation Fixture", "reference", "Synthetic state v1"),
+    }
     documents: dict[str, Document] = {}
     for name, kind, mime in files:
         text = _read(name)
@@ -333,6 +482,11 @@ async def seed_demo(
                 "normalizer": "aletheia_text",
                 "normalizer_version": "1.0.0",
             },
+            authority_owner=authority[name][0],
+            authority_status=authority[name][1],
+            version_label=authority[name][2],
+            jurisdictions=[],
+            authority_scopes=["retail-support"],
         )
         session.add(document)
         documents[name] = document
@@ -340,6 +494,7 @@ async def seed_demo(
 
     policy = documents["refund-policy-v3.md"]
     legacy = documents["refund-sop-legacy.md"]
+    policy.supersedes_document_id = legacy.id
     style = documents["support-style.md"]
     rules = [
         _rule(project.id, policy, "rule.refund.window", "30-day return window", "Items are eligible for a refund through 30 calendar days after delivery.", category="hard_constraint", effect="deny", severity="high", status="approved", enforcement="guard", decidability="machine_decidable", condition=all_of(predicate("tool.name", "eq", "issue_refund"), predicate("state.days_since_delivery", "gt", 30)), tools=["issue_refund"]),
@@ -368,4 +523,5 @@ async def seed_demo(
     for spec in test_specs():
         session.add(TestCase(project_id=project.id, stable_key=spec["id"], title=spec["title"], provenance="Aletheia-authored", spec=spec, review_status="approved"))
     await session.commit()
+    await _ensure_northstar_gate1_records(session, project)
     return project

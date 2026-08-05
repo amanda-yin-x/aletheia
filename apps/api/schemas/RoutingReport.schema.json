@@ -1,0 +1,541 @@
+{
+  "$defs": {
+    "PlacementRecord": {
+      "additionalProperties": false,
+      "description": "Immutable placement snapshot embedded in a compiled build.",
+      "properties": {
+        "destinations": {
+          "items": {
+            "enum": [
+              "prompt_kernel",
+              "skill",
+              "knowledge",
+              "pre_tool_policy",
+              "test",
+              "human_review",
+              "unsupported"
+            ],
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Destinations",
+          "type": "array"
+        },
+        "disposition": {
+          "enum": [
+            "routed",
+            "blocked",
+            "unsupported",
+            "retired"
+          ],
+          "title": "Disposition",
+          "type": "string"
+        },
+        "placement_key": {
+          "minLength": 1,
+          "title": "Placement Key",
+          "type": "string"
+        },
+        "profile_name": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Profile Name",
+          "type": "string"
+        },
+        "profile_version": {
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$",
+          "title": "Profile Version",
+          "type": "string"
+        },
+        "rationale": {
+          "maxLength": 5000,
+          "minLength": 1,
+          "title": "Rationale",
+          "type": "string"
+        },
+        "rendering": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rendering"
+        },
+        "review_status": {
+          "enum": [
+            "approved",
+            "needs_review"
+          ],
+          "title": "Review Status",
+          "type": "string"
+        },
+        "reviewer": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Reviewer",
+          "type": "string"
+        },
+        "rule_key": {
+          "minLength": 1,
+          "title": "Rule Key",
+          "type": "string"
+        },
+        "rule_revision": {
+          "minimum": 1,
+          "title": "Rule Revision",
+          "type": "integer"
+        },
+        "rule_stable_key": {
+          "minLength": 1,
+          "title": "Rule Stable Key",
+          "type": "string"
+        },
+        "scope_slug": {
+          "anyOf": [
+            {
+              "maxLength": 120,
+              "minLength": 1,
+              "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Scope Slug"
+        },
+        "transform_kind": {
+          "enum": [
+            "verbatim",
+            "reviewed_normalization",
+            "reviewer_authored_guidance",
+            "compiler_scaffold"
+          ],
+          "title": "Transform Kind",
+          "type": "string"
+        },
+        "version": {
+          "minimum": 1,
+          "title": "Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "placement_key",
+        "rule_key",
+        "rule_stable_key",
+        "rule_revision",
+        "version",
+        "profile_name",
+        "profile_version",
+        "destinations",
+        "transform_kind",
+        "disposition",
+        "rationale",
+        "review_status",
+        "reviewer"
+      ],
+      "title": "PlacementRecord",
+      "type": "object"
+    },
+    "RoutingReportCounts": {
+      "additionalProperties": false,
+      "properties": {
+        "active": {
+          "minimum": 0,
+          "title": "Active",
+          "type": "integer"
+        },
+        "blocked": {
+          "minimum": 0,
+          "title": "Blocked",
+          "type": "integer"
+        },
+        "routed": {
+          "minimum": 0,
+          "title": "Routed",
+          "type": "integer"
+        },
+        "unsupported": {
+          "minimum": 0,
+          "title": "Unsupported",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "active",
+        "routed",
+        "blocked",
+        "unsupported"
+      ],
+      "title": "RoutingReportCounts",
+      "type": "object"
+    },
+    "RoutingReportEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "category": {
+          "enum": [
+            "style",
+            "workflow",
+            "knowledge",
+            "runtime_fact",
+            "hard_constraint",
+            "handoff",
+            "quality"
+          ],
+          "title": "Category",
+          "type": "string"
+        },
+        "destinations": {
+          "items": {
+            "enum": [
+              "prompt_kernel",
+              "skill",
+              "knowledge",
+              "pre_tool_policy",
+              "test",
+              "human_review",
+              "unsupported"
+            ],
+            "type": "string"
+          },
+          "title": "Destinations",
+          "type": "array"
+        },
+        "disposition": {
+          "enum": [
+            "routed",
+            "blocked",
+            "unsupported",
+            "retired"
+          ],
+          "title": "Disposition",
+          "type": "string"
+        },
+        "placement": {
+          "$ref": "#/$defs/PlacementRecord"
+        },
+        "provenance_kind": {
+          "enum": [
+            "source_anchored",
+            "reviewer_authored_guidance"
+          ],
+          "title": "Provenance Kind",
+          "type": "string"
+        },
+        "provenance_metadata": {
+          "$ref": "#/$defs/RuleProvenanceMetadata"
+        },
+        "rationale": {
+          "title": "Rationale",
+          "type": "string"
+        },
+        "rule_key": {
+          "title": "Rule Key",
+          "type": "string"
+        },
+        "rule_revision": {
+          "minimum": 1,
+          "title": "Rule Revision",
+          "type": "integer"
+        },
+        "rule_stable_key": {
+          "title": "Rule Stable Key",
+          "type": "string"
+        },
+        "rule_status": {
+          "enum": [
+            "candidate",
+            "needs_review",
+            "approved",
+            "rejected",
+            "superseded"
+          ],
+          "title": "Rule Status",
+          "type": "string"
+        },
+        "severity": {
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "critical"
+          ],
+          "title": "Severity",
+          "type": "string"
+        },
+        "source_anchors": {
+          "items": {
+            "$ref": "#/$defs/SourceAnchor"
+          },
+          "title": "Source Anchors",
+          "type": "array"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "verified_source_anchors": {
+          "minimum": 0,
+          "title": "Verified Source Anchors",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "rule_key",
+        "rule_stable_key",
+        "rule_revision",
+        "title",
+        "rule_status",
+        "severity",
+        "category",
+        "provenance_kind",
+        "verified_source_anchors",
+        "source_anchors",
+        "placement",
+        "destinations",
+        "disposition",
+        "rationale"
+      ],
+      "title": "RoutingReportEntry",
+      "type": "object"
+    },
+    "RoutingReportProfile": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Sha256",
+          "type": "string"
+        },
+        "version": {
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$",
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version",
+        "sha256"
+      ],
+      "title": "RoutingReportProfile",
+      "type": "object"
+    },
+    "RuleProvenanceMetadata": {
+      "additionalProperties": false,
+      "properties": {
+        "rationale": {
+          "anyOf": [
+            {
+              "maxLength": 5000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rationale"
+        },
+        "reviewed_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reviewed At"
+        },
+        "reviewer": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reviewer"
+        }
+      },
+      "title": "RuleProvenanceMetadata",
+      "type": "object"
+    },
+    "SourceAnchor": {
+      "additionalProperties": false,
+      "description": "Immutable normalized-text anchor used by Gate 1 generated spans.",
+      "properties": {
+        "authority_owner": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Authority Owner",
+          "type": "string"
+        },
+        "authority_status": {
+          "enum": [
+            "current",
+            "superseded",
+            "draft",
+            "reference"
+          ],
+          "title": "Authority Status",
+          "type": "string"
+        },
+        "document_key": {
+          "maxLength": 400,
+          "minLength": 1,
+          "title": "Document Key",
+          "type": "string"
+        },
+        "document_name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Document Name",
+          "type": "string"
+        },
+        "document_version": {
+          "minimum": 1,
+          "title": "Document Version",
+          "type": "integer"
+        },
+        "line_end": {
+          "minimum": 1,
+          "title": "Line End",
+          "type": "integer"
+        },
+        "line_start": {
+          "minimum": 1,
+          "title": "Line Start",
+          "type": "integer"
+        },
+        "normalized_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Normalized Sha256",
+          "type": "string"
+        },
+        "normalizer": {
+          "title": "Normalizer",
+          "type": "string"
+        },
+        "normalizer_version": {
+          "title": "Normalizer Version",
+          "type": "string"
+        },
+        "original_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Original Sha256",
+          "type": "string"
+        },
+        "parser": {
+          "title": "Parser",
+          "type": "string"
+        },
+        "parser_version": {
+          "title": "Parser Version",
+          "type": "string"
+        },
+        "quote": {
+          "minLength": 1,
+          "title": "Quote",
+          "type": "string"
+        },
+        "quote_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Quote Sha256",
+          "type": "string"
+        },
+        "source_anchor_id": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Source Anchor Id",
+          "type": "string"
+        },
+        "utf8_byte_end": {
+          "minimum": 0,
+          "title": "Utf8 Byte End",
+          "type": "integer"
+        },
+        "utf8_byte_start": {
+          "minimum": 0,
+          "title": "Utf8 Byte Start",
+          "type": "integer"
+        },
+        "version_label": {
+          "maxLength": 80,
+          "minLength": 1,
+          "title": "Version Label",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_anchor_id",
+        "document_key",
+        "document_name",
+        "document_version",
+        "version_label",
+        "authority_owner",
+        "authority_status",
+        "original_sha256",
+        "normalized_sha256",
+        "line_start",
+        "line_end",
+        "utf8_byte_start",
+        "utf8_byte_end",
+        "quote",
+        "quote_sha256",
+        "parser",
+        "parser_version",
+        "normalizer",
+        "normalizer_version"
+      ],
+      "title": "SourceAnchor",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "counts": {
+      "$ref": "#/$defs/RoutingReportCounts"
+    },
+    "entries": {
+      "items": {
+        "$ref": "#/$defs/RoutingReportEntry"
+      },
+      "title": "Entries",
+      "type": "array"
+    },
+    "profile": {
+      "$ref": "#/$defs/RoutingReportProfile"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "profile",
+    "entries",
+    "counts"
+  ],
+  "title": "RoutingReport",
+  "type": "object"
+}

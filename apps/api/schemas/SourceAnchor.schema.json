@@ -1,0 +1,129 @@
+{
+  "additionalProperties": false,
+  "description": "Immutable normalized-text anchor used by Gate 1 generated spans.",
+  "properties": {
+    "authority_owner": {
+      "maxLength": 200,
+      "minLength": 1,
+      "title": "Authority Owner",
+      "type": "string"
+    },
+    "authority_status": {
+      "enum": [
+        "current",
+        "superseded",
+        "draft",
+        "reference"
+      ],
+      "title": "Authority Status",
+      "type": "string"
+    },
+    "document_key": {
+      "maxLength": 400,
+      "minLength": 1,
+      "title": "Document Key",
+      "type": "string"
+    },
+    "document_name": {
+      "maxLength": 255,
+      "minLength": 1,
+      "title": "Document Name",
+      "type": "string"
+    },
+    "document_version": {
+      "minimum": 1,
+      "title": "Document Version",
+      "type": "integer"
+    },
+    "line_end": {
+      "minimum": 1,
+      "title": "Line End",
+      "type": "integer"
+    },
+    "line_start": {
+      "minimum": 1,
+      "title": "Line Start",
+      "type": "integer"
+    },
+    "normalized_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Normalized Sha256",
+      "type": "string"
+    },
+    "normalizer": {
+      "title": "Normalizer",
+      "type": "string"
+    },
+    "normalizer_version": {
+      "title": "Normalizer Version",
+      "type": "string"
+    },
+    "original_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Original Sha256",
+      "type": "string"
+    },
+    "parser": {
+      "title": "Parser",
+      "type": "string"
+    },
+    "parser_version": {
+      "title": "Parser Version",
+      "type": "string"
+    },
+    "quote": {
+      "minLength": 1,
+      "title": "Quote",
+      "type": "string"
+    },
+    "quote_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Quote Sha256",
+      "type": "string"
+    },
+    "source_anchor_id": {
+      "pattern": "^[0-9a-f]{64}$",
+      "title": "Source Anchor Id",
+      "type": "string"
+    },
+    "utf8_byte_end": {
+      "minimum": 0,
+      "title": "Utf8 Byte End",
+      "type": "integer"
+    },
+    "utf8_byte_start": {
+      "minimum": 0,
+      "title": "Utf8 Byte Start",
+      "type": "integer"
+    },
+    "version_label": {
+      "maxLength": 80,
+      "minLength": 1,
+      "title": "Version Label",
+      "type": "string"
+    }
+  },
+  "required": [
+    "source_anchor_id",
+    "document_key",
+    "document_name",
+    "document_version",
+    "version_label",
+    "authority_owner",
+    "authority_status",
+    "original_sha256",
+    "normalized_sha256",
+    "line_start",
+    "line_end",
+    "utf8_byte_start",
+    "utf8_byte_end",
+    "quote",
+    "quote_sha256",
+    "parser",
+    "parser_version",
+    "normalizer",
+    "normalizer_version"
+  ],
+  "title": "SourceAnchor",
+  "type": "object"
+}

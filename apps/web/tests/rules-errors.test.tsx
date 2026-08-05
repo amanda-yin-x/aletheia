@@ -50,6 +50,7 @@ describe("rule mutation feedback", () => {
       if (path.endsWith("/rules") && !init?.method) return [rule];
       if (path.endsWith("/findings")) return [];
       if (path.endsWith("/test-cases")) return [];
+      if (path.endsWith("/documents")) return [];
       if (path === "/api/v1/rules/rule-1" && init?.method === "PATCH") {
         throw new Error("Condition service unavailable.");
       }

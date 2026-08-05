@@ -1,0 +1,149 @@
+{
+  "$defs": {
+    "CompilerScopeProfile": {
+      "additionalProperties": false,
+      "properties": {
+        "knowledge_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Knowledge Path"
+        },
+        "load_policy": {
+          "default": "on_demand",
+          "enum": [
+            "always",
+            "on_demand",
+            "never"
+          ],
+          "title": "Load Policy",
+          "type": "string"
+        },
+        "skill_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Skill Path"
+        },
+        "slug": {
+          "maxLength": 120,
+          "minLength": 1,
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+          "title": "Slug",
+          "type": "string"
+        },
+        "title": {
+          "maxLength": 240,
+          "minLength": 1,
+          "title": "Title",
+          "type": "string"
+        }
+      },
+      "required": [
+        "slug",
+        "title"
+      ],
+      "title": "CompilerScopeProfile",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Versioned, domain-neutral rendering profile pinned by a project.",
+  "properties": {
+    "agent_name": {
+      "anyOf": [
+        {
+          "maxLength": 240,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Agent Name"
+    },
+    "agent_role": {
+      "anyOf": [
+        {
+          "maxLength": 2000,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Agent Role"
+    },
+    "name": {
+      "maxLength": 120,
+      "minLength": 1,
+      "title": "Name",
+      "type": "string"
+    },
+    "path": {
+      "maxLength": 500,
+      "minLength": 1,
+      "title": "Path",
+      "type": "string"
+    },
+    "response_contract": {
+      "anyOf": [
+        {
+          "maxLength": 5000,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Response Contract"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "scopes": {
+      "items": {
+        "$ref": "#/$defs/CompilerScopeProfile"
+      },
+      "title": "Scopes",
+      "type": "array"
+    },
+    "source_document_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Source Document Ids",
+      "type": "array"
+    },
+    "version": {
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$",
+      "title": "Version",
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "version",
+    "path"
+  ],
+  "title": "CompilerProfile",
+  "type": "object"
+}

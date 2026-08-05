@@ -5,6 +5,7 @@ from uuid import uuid4
 from sqlalchemy import (
     JSON,
     Boolean,
+    CheckConstraint,
     DateTime,
     Float,
     ForeignKey,
@@ -28,6 +29,14 @@ def utcnow() -> datetime:
     return datetime.now(UTC)
 
 
+def default_compiler_profile() -> dict[str, str]:
+    return {
+        "name": "source-aware",
+        "version": "1.0.0",
+        "path": "compiler-profiles/source-aware-v1.json",
+    }
+
+
 class Project(Base):
     __tablename__ = "projects"
     __table_args__ = (UniqueConstraint("workspace_id", "slug", name="uq_projects_workspace_slug"),)
@@ -40,6 +49,10 @@ class Project(Base):
     domain: Mapped[str] = mapped_column(String(80))
     description: Mapped[str] = mapped_column(Text)
     mode: Mapped[str] = mapped_column(String(40), default="demo")
+    compiler_profile: Mapped[dict[str, Any]] = mapped_column(
+        JSON, default=default_compiler_profile
+    )
+    compilation_config: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
@@ -102,7 +115,13 @@ class WorkspaceMembership(Base):
 
 class Document(Base):
     __tablename__ = "documents"
-    __table_args__ = (UniqueConstraint("project_id", "name", "version"),)
+    __table_args__ = (
+        UniqueConstraint("project_id", "name", "version"),
+        CheckConstraint(
+            "authority_status IN ('current', 'superseded', 'draft', 'reference')",
+            name="ck_documents_authority_status",
+        ),
+    )
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
     project_id: Mapped[str] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"), index=True)
     kind: Mapped[str] = mapped_column(String(50))
@@ -115,12 +134,29 @@ class Document(Base):
     line_count: Mapped[int] = mapped_column(Integer)
     token_estimate: Mapped[int] = mapped_column(Integer)
     origin: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    authority_owner: Mapped[str] = mapped_column(String(200), default="unspecified")
+    authority_status: Mapped[str] = mapped_column(String(20), default="reference")
+    effective_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    supersedes_document_id: Mapped[str | None] = mapped_column(
+        ForeignKey("documents.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    jurisdictions: Mapped[list[str]] = mapped_column(JSON, default=list)
+    authority_scopes: Mapped[list[str]] = mapped_column(JSON, default=list)
+    version_label: Mapped[str] = mapped_column(String(80), default="")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
 class Rule(Base):
     __tablename__ = "rules"
-    __table_args__ = (UniqueConstraint("project_id", "stable_key", "revision"),)
+    __table_args__ = (
+        UniqueConstraint("project_id", "stable_key", "revision"),
+        CheckConstraint(
+            "provenance_kind IN ('source_anchored', 'reviewer_authored_guidance')",
+            name="ck_rules_provenance_kind",
+        ),
+    )
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
     project_id: Mapped[str] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"), index=True)
     stable_key: Mapped[str] = mapped_column(String(140), index=True)
@@ -141,6 +177,10 @@ class Rule(Base):
     target_tools: Mapped[list[str]] = mapped_column(JSON, default=list)
     exceptions: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
     reviewer_note: Mapped[str] = mapped_column(Text, default="")
+    provenance_kind: Mapped[str] = mapped_column(
+        String(40), default="source_anchored"
+    )
+    provenance_metadata: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
@@ -175,6 +215,96 @@ class Build(Base):
     source_map: Mapped[dict[str, Any]] = mapped_column(JSON)
     stats: Mapped[dict[str, Any]] = mapped_column(JSON)
     content_hash: Mapped[str] = mapped_column(String(64))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class PlacementDecision(Base):
+    __tablename__ = "placement_decisions"
+    __table_args__ = (
+        UniqueConstraint("rule_id", "version", name="uq_placement_decisions_rule_version"),
+        CheckConstraint("version >= 1", name="ck_placement_decisions_version"),
+        CheckConstraint(
+            "transform_kind IN ('verbatim', 'reviewed_normalization', "
+            "'reviewer_authored_guidance', 'compiler_scaffold')",
+            name="ck_placement_decisions_transform_kind",
+        ),
+        CheckConstraint(
+            "disposition IN ('routed', 'blocked', 'unsupported', 'retired')",
+            name="ck_placement_decisions_disposition",
+        ),
+        CheckConstraint(
+            "review_status IN ('approved', 'needs_review')",
+            name="ck_placement_decisions_review_status",
+        ),
+    )
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    project_id: Mapped[str] = mapped_column(
+        ForeignKey("projects.id", ondelete="CASCADE"), index=True
+    )
+    rule_id: Mapped[str] = mapped_column(
+        ForeignKey("rules.id", ondelete="CASCADE"), index=True
+    )
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    profile_name: Mapped[str] = mapped_column(String(120))
+    profile_version: Mapped[str] = mapped_column(String(40))
+    destinations: Mapped[list[str]] = mapped_column(JSON, default=list)
+    scope_slug: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    rendering: Mapped[str | None] = mapped_column(Text, nullable=True)
+    transform_kind: Mapped[str] = mapped_column(String(40))
+    disposition: Mapped[str] = mapped_column(String(20))
+    rationale: Mapped[str] = mapped_column(Text)
+    review_status: Mapped[str] = mapped_column(String(20), default="needs_review")
+    reviewer: Mapped[str] = mapped_column(String(200), default="unreviewed")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class GeneratedSpan(Base):
+    __tablename__ = "generated_spans"
+    __table_args__ = (
+        Index("ix_generated_spans_build_artifact", "build_id", "artifact_path"),
+        CheckConstraint("line_start >= 1", name="ck_generated_spans_line_start"),
+        CheckConstraint("line_end >= line_start", name="ck_generated_spans_line_order"),
+        CheckConstraint("utf8_byte_start >= 0", name="ck_generated_spans_byte_start"),
+        CheckConstraint(
+            "utf8_byte_end >= utf8_byte_start",
+            name="ck_generated_spans_byte_order",
+        ),
+        CheckConstraint(
+            "transform_kind IN ('verbatim', 'reviewed_normalization', "
+            "'reviewer_authored_guidance', 'compiler_scaffold')",
+            name="ck_generated_spans_transform_kind",
+        ),
+        CheckConstraint(
+            "length(artifact_sha256) = 64",
+            name="ck_generated_spans_artifact_sha256_length",
+        ),
+        CheckConstraint(
+            "length(text_sha256) = 64",
+            name="ck_generated_spans_text_sha256_length",
+        ),
+    )
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    build_id: Mapped[str] = mapped_column(
+        ForeignKey("builds.id", ondelete="CASCADE"), index=True
+    )
+    rule_id: Mapped[str | None] = mapped_column(
+        ForeignKey("rules.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    placement_decision_id: Mapped[str | None] = mapped_column(
+        ForeignKey("placement_decisions.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    artifact_path: Mapped[str] = mapped_column(String(500))
+    artifact_sha256: Mapped[str] = mapped_column(String(64))
+    line_start: Mapped[int] = mapped_column(Integer)
+    line_end: Mapped[int] = mapped_column(Integer)
+    utf8_byte_start: Mapped[int] = mapped_column(Integer)
+    utf8_byte_end: Mapped[int] = mapped_column(Integer)
+    transform_kind: Mapped[str] = mapped_column(String(40))
+    text_sha256: Mapped[str] = mapped_column(String(64))
+    source_refs: Mapped[list[dict[str, Any]]] = mapped_column(JSON, default=list)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 

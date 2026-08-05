@@ -84,9 +84,9 @@ export function releaseCoverageReady(coverage: Record<string, unknown>, expected
     && coverage.explicit_assertion_coverage === 1
     && coverage.compiler_assertion_coverage === 1
     && coverage.positive_negative_boundary === true
-    && fullCoverage("rule_coverage")
-    && fullCoverage("source_coverage")
-    && fullCoverage("boundary_coverage")
+    && fullCoverage("declared_rule_linkage")
+    && fullCoverage("declared_source_linkage")
+    && fullCoverage("declared_boundary_linkage")
     && Array.isArray(coverage.critical_unclassified_rules)
     && coverage.critical_unclassified_rules.length === 0;
 }

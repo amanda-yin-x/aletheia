@@ -6,11 +6,12 @@ from typing import Any
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models import Finding, Rule
+from app.models import Finding, PlacementDecision, Project, Rule
 from app.services.errors import ServiceError
 
 SEMANTIC_FIELDS = frozenset(
     {
+        "title",
         "normative_text",
         "condition",
         "effect",
@@ -44,6 +45,12 @@ async def revise_rule(
     changes: dict[str, Any],
     status: str | None = None,
 ) -> Rule:
+    seed = await session.get(Rule, rule_id)
+    if seed is None:
+        raise ServiceError("rule_not_found", "Rule not found.", status_code=404)
+    await session.scalar(
+        select(Project).where(Project.id == seed.project_id).with_for_update()
+    )
     current = await latest_rule(session, rule_id)
     if current.revision != expected_revision:
         raise ServiceError(
@@ -78,6 +85,8 @@ async def revise_rule(
         "target_tools": current.target_tools,
         "exceptions": current.exceptions,
         "reviewer_note": current.reviewer_note,
+        "provenance_kind": current.provenance_kind,
+        "provenance_metadata": current.provenance_metadata,
         "updated_at": datetime.now(UTC),
     }
     for key, value in changes.items():
@@ -86,6 +95,58 @@ async def revise_rule(
     current.status = "superseded"
     revised = Rule(**fields)
     session.add(revised)
+    await session.flush()
+    current_placement = await session.scalar(
+        select(PlacementDecision)
+        .where(PlacementDecision.rule_id == current.id)
+        .order_by(PlacementDecision.version.desc())
+    )
+    if current_placement is not None:
+        next_disposition = current_placement.disposition
+        next_review_status = current_placement.review_status
+        if semantic_change:
+            next_disposition = "blocked"
+            next_review_status = "needs_review"
+        elif status == "approved":
+            next_review_status = "approved"
+            if current_placement.destinations == ["unsupported"]:
+                next_disposition = "unsupported"
+            elif current_placement.destinations == ["human_review"]:
+                next_disposition = "blocked"
+            else:
+                next_disposition = "routed"
+        elif status == "rejected":
+            next_disposition = "retired"
+            next_review_status = "approved"
+        next_rendering = (
+            str(fields["normative_text"])
+            if semantic_change and fields["normative_text"] != current.normative_text
+            else current_placement.rendering
+        )
+        next_transform = current_placement.transform_kind
+        if next_rendering != current.normative_text:
+            next_transform = "reviewed_normalization"
+        session.add(
+            PlacementDecision(
+                project_id=current.project_id,
+                rule_id=revised.id,
+                version=1,
+                profile_name=current_placement.profile_name,
+                profile_version=current_placement.profile_version,
+                destinations=current_placement.destinations,
+                scope_slug=current_placement.scope_slug,
+                rendering=next_rendering,
+                transform_kind=next_transform,
+                disposition=next_disposition,
+                rationale=(
+                    "Placement copied from the prior revision; semantic changes require renewed review."
+                    if semantic_change
+                    else current_placement.rationale
+                ),
+                review_status=next_review_status,
+                reviewer=current_placement.reviewer,
+            )
+        )
     await session.commit()
     await session.refresh(revised)
     return revised
@@ -103,6 +164,14 @@ async def resolve_finding(
     authority: str | None = None,
     actor: str = "system",
 ) -> Finding:
+    seed_finding = await session.get(Finding, finding_id)
+    if seed_finding is None:
+        raise ServiceError("finding_not_found", "Finding not found.", status_code=404)
+    await session.scalar(
+        select(Project)
+        .where(Project.id == seed_finding.project_id)
+        .with_for_update()
+    )
     finding = await session.scalar(
         select(Finding).where(Finding.id == finding_id).with_for_update()
     )

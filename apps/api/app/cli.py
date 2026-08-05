@@ -9,6 +9,7 @@ from sqlalchemy import select
 
 from app.db import SessionLocal
 from app.models import Project, Report, Run
+from app.services.appointment_seed import seed_appointment_demo
 from app.services.compiler import compile_project
 from app.services.errors import ServiceError
 from app.services.reporting import create_report
@@ -18,7 +19,7 @@ from app.tenancy import LOCAL_WORKSPACE_ID
 
 cli = typer.Typer(help="Aletheia Policy CI — compile policies and test releases.", no_args_is_help=True)
 db_cli = typer.Typer(help="Migrate the application database with Alembic.")
-demo_cli = typer.Typer(help="Manage the deterministic Northstar workspace.")
+demo_cli = typer.Typer(help="Manage the deterministic two-domain evaluation workspace.")
 benchmark_cli = typer.Typer(help="Manage the optional pinned Retail-17 import adapter.")
 cli.add_typer(db_cli, name="db")
 cli.add_typer(demo_cli, name="demo")
@@ -83,13 +84,33 @@ def db_cleanup_guests(
 
 @demo_cli.command("seed")
 def demo_seed(reset: bool = typer.Option(False, "--reset", help="Replace the existing evaluation workspace."), json_output: bool = typer.Option(False, "--json")) -> None:
-    """Seed the Northstar Retail evaluation workspace."""
-    async def run() -> Project:
+    """Seed the two deterministic evaluation projects."""
+    async def run() -> tuple[Project, Project]:
         async with SessionLocal() as session:
-            return await seed_demo(session, reset=reset)
-    project = asyncio.run(run())
-    output = {"project_id": project.id, "slug": project.slug, "mode": project.mode}
-    typer.echo(json.dumps(output, sort_keys=True) if json_output else f"Seeded {project.name} ({project.id})")
+            northstar = await seed_demo(session, reset=reset)
+            appointments = await seed_appointment_demo(
+                session,
+                workspace_id=northstar.workspace_id,
+            )
+            return northstar, appointments
+    projects = asyncio.run(run())
+    output = {
+        "projects": [
+            {
+                "project_id": project.id,
+                "slug": project.slug,
+                "mode": project.mode,
+            }
+            for project in projects
+        ]
+    }
+    if json_output:
+        typer.echo(json.dumps(output, sort_keys=True))
+        return
+    typer.echo(
+        "Seeded "
+        + ", ".join(f"{project.name} ({project.id})" for project in projects)
+    )
 
 
 @cli.command("analyze")

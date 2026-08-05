@@ -130,9 +130,6 @@
           "title": "Arms",
           "type": "integer"
         },
-        "boundary_coverage": {
-          "$ref": "#/$defs/CoverageDimension"
-        },
         "compiler_assertion_case_count": {
           "minimum": 0,
           "title": "Compiler Assertion Case Count",
@@ -150,6 +147,15 @@
           },
           "title": "Critical Unclassified Rules",
           "type": "array"
+        },
+        "declared_boundary_linkage": {
+          "$ref": "#/$defs/CoverageDimension"
+        },
+        "declared_rule_linkage": {
+          "$ref": "#/$defs/CoverageDimension"
+        },
+        "declared_source_linkage": {
+          "$ref": "#/$defs/CoverageDimension"
         },
         "executable_case_count": {
           "minimum": 0,
@@ -170,12 +176,6 @@
         "positive_negative_boundary": {
           "title": "Positive Negative Boundary",
           "type": "boolean"
-        },
-        "rule_coverage": {
-          "$ref": "#/$defs/CoverageDimension"
-        },
-        "source_coverage": {
-          "$ref": "#/$defs/CoverageDimension"
         },
         "tag_counts": {
           "additionalProperties": {
@@ -200,9 +200,9 @@
         "explicit_assertion_case_count",
         "explicit_assertion_coverage",
         "compiler_assertion_coverage",
-        "rule_coverage",
-        "source_coverage",
-        "boundary_coverage",
+        "declared_rule_linkage",
+        "declared_source_linkage",
+        "declared_boundary_linkage",
         "critical_unclassified_rules"
       ],
       "title": "CoverageMetrics",

@@ -60,6 +60,41 @@
       "title": "ManifestCompiler",
       "type": "object"
     },
+    "ManifestCompilerProfile": {
+      "additionalProperties": false,
+      "properties": {
+        "digest": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Digest",
+          "type": "string"
+        },
+        "name": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "path": {
+          "maxLength": 500,
+          "minLength": 1,
+          "title": "Path",
+          "type": "string"
+        },
+        "version": {
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$",
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version",
+        "path",
+        "digest"
+      ],
+      "title": "ManifestCompilerProfile",
+      "type": "object"
+    },
     "ManifestFactInput": {
       "additionalProperties": false,
       "properties": {
@@ -184,6 +219,154 @@
       "title": "ManifestFindings",
       "type": "object"
     },
+    "ManifestPlacementInput": {
+      "additionalProperties": false,
+      "properties": {
+        "destinations": {
+          "items": {
+            "enum": [
+              "prompt_kernel",
+              "skill",
+              "knowledge",
+              "pre_tool_policy",
+              "test",
+              "human_review",
+              "unsupported"
+            ],
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Destinations",
+          "type": "array"
+        },
+        "digest": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Digest",
+          "type": "string"
+        },
+        "disposition": {
+          "enum": [
+            "routed",
+            "blocked",
+            "unsupported",
+            "retired"
+          ],
+          "title": "Disposition",
+          "type": "string"
+        },
+        "placement_key": {
+          "minLength": 1,
+          "title": "Placement Key",
+          "type": "string"
+        },
+        "profile_name": {
+          "maxLength": 120,
+          "minLength": 1,
+          "title": "Profile Name",
+          "type": "string"
+        },
+        "profile_version": {
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$",
+          "title": "Profile Version",
+          "type": "string"
+        },
+        "rationale": {
+          "maxLength": 5000,
+          "minLength": 1,
+          "title": "Rationale",
+          "type": "string"
+        },
+        "rendering": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rendering"
+        },
+        "review_status": {
+          "enum": [
+            "approved",
+            "needs_review"
+          ],
+          "title": "Review Status",
+          "type": "string"
+        },
+        "reviewer": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Reviewer",
+          "type": "string"
+        },
+        "rule_key": {
+          "minLength": 1,
+          "title": "Rule Key",
+          "type": "string"
+        },
+        "rule_revision": {
+          "minimum": 1,
+          "title": "Rule Revision",
+          "type": "integer"
+        },
+        "rule_stable_key": {
+          "minLength": 1,
+          "title": "Rule Stable Key",
+          "type": "string"
+        },
+        "scope_slug": {
+          "anyOf": [
+            {
+              "maxLength": 120,
+              "minLength": 1,
+              "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Scope Slug"
+        },
+        "transform_kind": {
+          "enum": [
+            "verbatim",
+            "reviewed_normalization",
+            "reviewer_authored_guidance",
+            "compiler_scaffold"
+          ],
+          "title": "Transform Kind",
+          "type": "string"
+        },
+        "version": {
+          "minimum": 1,
+          "title": "Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "placement_key",
+        "rule_key",
+        "rule_stable_key",
+        "rule_revision",
+        "version",
+        "profile_name",
+        "profile_version",
+        "destinations",
+        "transform_kind",
+        "disposition",
+        "rationale",
+        "review_status",
+        "reviewer",
+        "digest"
+      ],
+      "title": "ManifestPlacementInput",
+      "type": "object"
+    },
     "ManifestRuleInput": {
       "additionalProperties": false,
       "properties": {
@@ -214,6 +397,18 @@
           ],
           "title": "Enforcement",
           "type": "string"
+        },
+        "provenance_kind": {
+          "default": "source_anchored",
+          "enum": [
+            "source_anchored",
+            "reviewer_authored_guidance"
+          ],
+          "title": "Provenance Kind",
+          "type": "string"
+        },
+        "provenance_metadata": {
+          "$ref": "#/$defs/RuleProvenanceMetadata"
         },
         "revision": {
           "minimum": 1,
@@ -409,18 +604,94 @@
       ],
       "title": "ManifestTestInput",
       "type": "object"
+    },
+    "RuleProvenanceMetadata": {
+      "additionalProperties": false,
+      "properties": {
+        "rationale": {
+          "anyOf": [
+            {
+              "maxLength": 5000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rationale"
+        },
+        "reviewed_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reviewed At"
+        },
+        "reviewer": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reviewer"
+        }
+      },
+      "title": "RuleProvenanceMetadata",
+      "type": "object"
     }
   },
   "additionalProperties": false,
   "properties": {
+    "compilation_config_digest": {
+      "anyOf": [
+        {
+          "pattern": "^[0-9a-f]{64}$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Compilation Config Digest"
+    },
     "compiler": {
       "$ref": "#/$defs/ManifestCompiler"
+    },
+    "compiler_profile": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/ManifestCompilerProfile"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
     },
     "facts": {
       "$ref": "#/$defs/ManifestFactInput"
     },
     "findings": {
       "$ref": "#/$defs/ManifestFindings"
+    },
+    "placements": {
+      "items": {
+        "$ref": "#/$defs/ManifestPlacementInput"
+      },
+      "title": "Placements",
+      "type": "array"
     },
     "rules": {
       "items": {
@@ -433,8 +704,11 @@
       "$ref": "#/$defs/ManifestRuntime"
     },
     "schema_version": {
-      "const": "0.3",
       "default": "0.3",
+      "enum": [
+        "0.3",
+        "1.0"
+      ],
       "title": "Schema Version",
       "type": "string"
     },

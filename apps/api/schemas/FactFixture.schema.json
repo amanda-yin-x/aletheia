@@ -1,5 +1,254 @@
 {
   "$defs": {
+    "AppointmentEventFixture": {
+      "additionalProperties": false,
+      "properties": {
+        "appointment_id": {
+          "minLength": 1,
+          "title": "Appointment Id",
+          "type": "string"
+        },
+        "event_id": {
+          "minLength": 1,
+          "title": "Event Id",
+          "type": "string"
+        },
+        "event_type": {
+          "minLength": 1,
+          "title": "Event Type",
+          "type": "string"
+        },
+        "occurred_at": {
+          "title": "Occurred At",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 1,
+          "title": "Sequence",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "event_id",
+        "appointment_id",
+        "event_type",
+        "sequence",
+        "occurred_at"
+      ],
+      "title": "AppointmentEventFixture",
+      "type": "object"
+    },
+    "AppointmentFixture": {
+      "additionalProperties": false,
+      "properties": {
+        "cancellation_fee": {
+          "$ref": "#/$defs/Money"
+        },
+        "clinic_id": {
+          "minLength": 1,
+          "title": "Clinic Id",
+          "type": "string"
+        },
+        "customer_id": {
+          "minLength": 1,
+          "title": "Customer Id",
+          "type": "string"
+        },
+        "customer_timezone": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Customer Timezone"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "last_rescheduled_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Last Rescheduled At"
+        },
+        "reschedule_count": {
+          "minimum": 0,
+          "title": "Reschedule Count",
+          "type": "integer"
+        },
+        "reschedule_fee": {
+          "$ref": "#/$defs/Money"
+        },
+        "service_code": {
+          "minLength": 1,
+          "title": "Service Code",
+          "type": "string"
+        },
+        "starts_at": {
+          "title": "Starts At",
+          "type": "string"
+        },
+        "status": {
+          "minLength": 1,
+          "title": "Status",
+          "type": "string"
+        },
+        "version": {
+          "minimum": 1,
+          "title": "Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "id",
+        "version",
+        "customer_id",
+        "clinic_id",
+        "service_code",
+        "starts_at",
+        "customer_timezone",
+        "status",
+        "reschedule_count",
+        "last_rescheduled_at",
+        "reschedule_fee",
+        "cancellation_fee"
+      ],
+      "title": "AppointmentFixture",
+      "type": "object"
+    },
+    "AvailabilityFixture": {
+      "additionalProperties": false,
+      "properties": {
+        "available": {
+          "title": "Available",
+          "type": "boolean"
+        },
+        "clinic_id": {
+          "minLength": 1,
+          "title": "Clinic Id",
+          "type": "string"
+        },
+        "clinic_timezone": {
+          "title": "Clinic Timezone",
+          "type": "string"
+        },
+        "service_code": {
+          "minLength": 1,
+          "title": "Service Code",
+          "type": "string"
+        },
+        "slot_id": {
+          "minLength": 1,
+          "title": "Slot Id",
+          "type": "string"
+        },
+        "starts_at": {
+          "title": "Starts At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "slot_id",
+        "clinic_id",
+        "service_code",
+        "starts_at",
+        "clinic_timezone",
+        "available"
+      ],
+      "title": "AvailabilityFixture",
+      "type": "object"
+    },
+    "ConfirmationFixture": {
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "minLength": 1,
+          "title": "Action",
+          "type": "string"
+        },
+        "appointment_id": {
+          "minLength": 1,
+          "title": "Appointment Id",
+          "type": "string"
+        },
+        "created_at": {
+          "title": "Created At",
+          "type": "string"
+        },
+        "customer_id": {
+          "minLength": 1,
+          "title": "Customer Id",
+          "type": "string"
+        },
+        "customer_timezone": {
+          "title": "Customer Timezone",
+          "type": "string"
+        },
+        "expires_at": {
+          "title": "Expires At",
+          "type": "string"
+        },
+        "fee": {
+          "$ref": "#/$defs/Money"
+        },
+        "id": {
+          "minLength": 1,
+          "title": "Id",
+          "type": "string"
+        },
+        "policy_version": {
+          "title": "Policy Version",
+          "type": "string"
+        },
+        "proposed_start_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Proposed Start At"
+        },
+        "used_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Used At"
+        }
+      },
+      "required": [
+        "id",
+        "customer_id",
+        "appointment_id",
+        "action",
+        "proposed_start_at",
+        "customer_timezone",
+        "fee",
+        "policy_version",
+        "created_at",
+        "expires_at",
+        "used_at"
+      ],
+      "title": "ConfirmationFixture",
+      "type": "object"
+    },
     "CustomerFixture": {
       "additionalProperties": false,
       "properties": {
@@ -7,6 +256,19 @@
           "minLength": 1,
           "title": "Id",
           "type": "string"
+        },
+        "identity": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Identity"
         },
         "name": {
           "minLength": 1,
@@ -111,6 +373,34 @@
   },
   "additionalProperties": false,
   "properties": {
+    "appointment_events": {
+      "items": {
+        "$ref": "#/$defs/AppointmentEventFixture"
+      },
+      "title": "Appointment Events",
+      "type": "array"
+    },
+    "appointments": {
+      "items": {
+        "$ref": "#/$defs/AppointmentFixture"
+      },
+      "title": "Appointments",
+      "type": "array"
+    },
+    "availability": {
+      "items": {
+        "$ref": "#/$defs/AvailabilityFixture"
+      },
+      "title": "Availability",
+      "type": "array"
+    },
+    "confirmations": {
+      "items": {
+        "$ref": "#/$defs/ConfirmationFixture"
+      },
+      "title": "Confirmations",
+      "type": "array"
+    },
     "contains_customer_records": {
       "const": false,
       "title": "Contains Customer Records",
@@ -140,8 +430,11 @@
       "type": "array"
     },
     "schema_version": {
-      "const": "0.2",
       "default": "0.2",
+      "enum": [
+        "0.2",
+        "1.0"
+      ],
       "title": "Schema Version",
       "type": "string"
     }
@@ -150,8 +443,7 @@
     "data_scope",
     "contains_customer_records",
     "evaluation_timestamp",
-    "customers",
-    "orders"
+    "customers"
   ],
   "title": "FactFixture",
   "type": "object"

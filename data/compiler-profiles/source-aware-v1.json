@@ -1,0 +1,55 @@
+{
+  "schema_version": "1.0",
+  "name": "source-aware",
+  "version": "1.0.0",
+  "description": "Deterministic routing of reviewed instruction clauses into a scoped, source-linked bundle.",
+  "allowed_destinations": [
+    "prompt_kernel",
+    "skill",
+    "knowledge",
+    "pre_tool_policy",
+    "test",
+    "human_review",
+    "unsupported"
+  ],
+  "allowed_transform_kinds": [
+    "verbatim",
+    "reviewed_normalization",
+    "reviewer_authored_guidance",
+    "compiler_scaffold"
+  ],
+  "category_routes": {
+    "style": ["prompt_kernel"],
+    "workflow": ["skill"],
+    "knowledge": ["knowledge"],
+    "runtime_fact": ["human_review"],
+    "hard_constraint": ["skill"],
+    "handoff": ["skill"],
+    "quality": ["skill"]
+  },
+  "enforcement_routes": {
+    "prompt": ["prompt_kernel"],
+    "guard": ["pre_tool_policy"],
+    "test_only": ["test"],
+    "human_review": ["human_review"]
+  },
+  "status_dispositions": {
+    "candidate": "blocked",
+    "needs_review": "blocked",
+    "approved": "routed",
+    "rejected": "retired",
+    "superseded": "retired"
+  },
+  "unsupported_decidability": ["human"],
+  "require_test_for_severities": ["high", "critical"],
+  "require_guard_for_approved_hard_constraints": true,
+  "serialization": {
+    "json": "canonical UTF-8 JSON with sorted keys and one trailing LF",
+    "text": "UTF-8 with LF newlines and one trailing LF",
+    "hash": "sha256"
+  },
+  "token_estimator": {
+    "name": "char_div_4",
+    "version": "1.0.0"
+  }
+}

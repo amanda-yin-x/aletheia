@@ -24,15 +24,36 @@ These are the canonical statuses used by `docs/capabilities.json`. Focused test
 results are supplementary evidence; they do not create a second status
 vocabulary or make hosted/deployment gates pass.
 
+### Feature-gate status
+
+| Feature gate | Canonical status | Boundary |
+|---|---|---|
+| Gate 0 — local deterministic foundation | **Operating/Fixture complete in its settled Northstar scope** | The no-key source-review/build/run/trace/report regression floor. |
+| Gate 0H — hosted preview/hardening | **Unverified/in progress** | Permanent-user staging passed; anonymous Turnstile redemption and complete guest E2E remain open. |
+| Gate 1 — source-aware policy refactoring/compiler | **Fixture complete in verified local two-domain scope** | API/database/frontend/packaging/browser checks include the two-domain/fresh-process path. Not deployed. |
+| Gates 2–8 | **Absent** | Provider interfaces, tau data sync, schemas, or planned commands are not operating implementations. |
+
+Feature gates describe product behavior. The later P0–P3 roadmap describes
+production maturity. A production task does not silently complete a feature
+gate, and a local feature does not silently pass a hosted gate.
+
+The Gate 1 row describes the local working tree. It is not part of the deployed
+public `147448a` Worker bundle unless a later release is explicitly verified and
+promoted.
+
 ## 2. Executive assessment
 
-Aletheia is now two substantial pieces joined in one repository:
+Aletheia is now three substantial pieces joined in one repository:
 
 1. A polished, deterministic policy-CI workflow for the Northstar Retail
    refund domain.
 2. An implemented hosted control-plane path using Supabase Auth, a Cloudflare
    same-origin web boundary, authenticated FastAPI tenancy, PostgreSQL
    migrations, and durable operation contracts.
+3. A verified local Gate 1 source-aware compilation implementation with a pinned generic
+   compiler profile, explicit placement decisions, exact generated-span
+   provenance, structural preservation/context metrics, and a second synthetic
+   Acme appointments corpus.
 
 The deterministic product slice can:
 
@@ -40,20 +61,27 @@ The deterministic product slice can:
 - represent source-linked, versioned policy rules;
 - surface known conflicts and ambiguity for human review;
 - block compilation while critical findings remain unresolved;
-- compile approved rules into prompt, workflow, knowledge, tool-policy, test,
-  source-map, and manifest artifacts;
+- compile approved rules into a prompt kernel, scoped `SKILL.md`, knowledge,
+  tool-policy, regression, unsupported-material, source-map, metrics, pinned
+  input, and manifest artifacts;
 - pin the runtime domain/lifecycle and validate proposed tools against complete
   Draft 2020-12 schemas before evaluation or execution;
 - evaluate bounded scope, requirements, correlated approvals, exceptions, and
   exact USD minor-unit thresholds with fail-closed unknowns;
 - execute the bundled fixture suite across baseline, compiled, and guarded arms;
-- compute rule, normative-source, and guarded-boundary coverage and reject
-  unclassified critical rules at the release gate;
+- compute declared rule/source/boundary linkage and reject unclassified
+  critical rules at the release gate;
 - distinguish tool proposal, policy decision, execution, result, and state
   mutation in traces;
 - demonstrate that the covered `$200.01` refund is routed for approval before
   state mutation;
 - export a limitation-aware Markdown/JSON evidence report.
+
+The verified local Gate 1 implementation additionally records document authority metadata,
+source-anchored versus reviewer-authored rule provenance, append-only placement
+versions, and exact source-to-generated-span links. These are deterministic
+structural conformance mechanisms. `behavioral_fidelity` is explicitly
+`not_measured`.
 
 The current guest implementation includes the following intended path and
 controls:
@@ -146,8 +174,9 @@ Browser ────────────────────────
 FastAPI / Typer CLI / worker
               │
               └─ shared domain services
-                    ├─ source + rule review
-                    ├─ deterministic compiler
+                    ├─ source authority + rule/placement review
+                    ├─ pinned generic compiler profile
+                    ├─ exact generated spans + structural metrics
                     ├─ fixture policy interpreter
                     ├─ labelled-arm runner
                     └─ evidence reporting
@@ -370,6 +399,8 @@ Working today:
 - name, MIME type, version, line count, token estimate, parser/normalizer name
   and version, locator strategy, and origin metadata;
 - exact line-span and quote verification;
+- authority owner/status, effective/supersession, and scope metadata in the
+  verified local Gate 1 persistence/contracts;
 - plain-text/Markdown/JSON/YAML and text-based PDF parsing with size limits in
   local non-demo mode;
 - source viewer with linked rules/findings.
@@ -385,17 +416,36 @@ Not implemented:
 - production upload UI and object storage;
 - malware scanning, DLP, PII classification, OCR/scanned-PDF or DOCX extraction, URLs,
   crawling, SaaS connectors, sync jobs, deduplication, or deletion/retention;
-- general source trust, effective-date, jurisdiction, and ownership model.
+- generalized trust/jurisdiction workflows or automated authority inference.
 
 ### 4.6 Rule review and findings
 
-**Status:** Fixture; no general analyzer
+**Status:** Verified local Gate 1 fixture review/placement/provenance; no general
+analyzer
 
 The UI/API support source-linked rules, exact evidence, bounded condition edits,
 approve/reject, finding resolution notes, and a critical finding build gate.
 The seed contains source-linked fixture assertions for 30/60-day and `$200`/`$250`
 conflicts plus duplicate,
 ambiguity, and missing-fact examples.
+
+The Gate 1 implementation distinguishes exact source-anchored rule revisions from
+reviewer-authored guidance. The latter requires a named reviewer, rationale,
+and offset-aware `reviewed_at`.
+It also persists append-only placement decisions for prompt kernel, skill,
+knowledge, pre-tool policy, test, human review, and unsupported destinations;
+tenant-scoped list and optimistic-update API contracts are present. Browser E2E
+verification passed in the final local suite.
+
+The verified local frontend adds a project/domain switcher and a project-scoped
+Placements route. It shows every non-superseded rule, latest placement version,
+disposition, transform, destinations, reviewer/rationale, source authority, and
+explicit missing/blocked/unsupported/human-review states. Updates send the
+expected version and turn a `409` into an explicit refresh path. This surface is
+implemented. ESLint, `tsc --noEmit`, 14 focused tests across four files, the
+full 84-test/22-file Vitest suite, and a production Next.js build passed. The
+focused two-domain E2E passed 1/1 and the complete fresh-isolated browser suite
+passed 6/6.
 
 Not implemented:
 
@@ -407,42 +457,75 @@ Not implemented:
 
 ### 4.7 Deterministic compiler
 
-**Status:** Fixture
+**Status:** Complete in verified local two-domain fixture scope; not deployed
 
-Compilation currently produces:
+The compiler is now profile-driven rather than a Northstar-only template seam.
+Its pinned `source-aware` profile validates destinations, transform classes,
+category/enforcement routing, and dispositions. Missing or unknown values,
+invalid source anchors, incomplete active dispositions, and applicable
+protected-literal loss fail closed.
+
+The compiler produces:
 
 - `prompt-kernel.md`;
-- `workflows/refunds.md`;
-- `knowledge/refund-reference.md`;
+- `skills/<scope>/SKILL.md`;
+- `knowledge/<scope>.md`;
 - `policies/tool-policy.json`;
 - `tests/regression.yaml`;
-- pinned tool and fact fixtures;
-- pinned source, rule, and finding inputs;
-- `source-map.json`;
-- `manifest.json`;
-- bundle `README.md`.
+- `pending/unsupported-rules.json`;
+- `routing-report.json`;
+- `preservation-report.json`;
+- `compilation-metrics.json`;
+- `source-map.json` with exact generated spans;
+- pinned compiler profile, placement decisions, source metadata, rules,
+  findings, tools, and facts;
+- `manifest.json` and bundle `README.md`.
 
-The manifest records exact source hashes and versions, rule revisions, test
-digests, compiler/runtime versions, pinned tool/fact digests, findings,
-serialization rules, artifact hashes, and limitations. Its exact canonical
-bytes are the build root; it hashes every other emitted artifact and documents
-why it excludes itself. Focused tests reproduce equivalent roots byte-for-byte.
-Build submission also captures an input fingerprint and fails if mutable inputs
-change before the operation executes.
+Exact source anchors verify quote, line range, UTF-8 byte range, raw and
+normalized hashes, parser, and normalizer. Rule-derived generated spans link
+the exact build/artifact range to the rule revision, placement version, and
+source anchor. Reviewer-authored guidance remains attributable and cannot
+masquerade as a source quote; test-generated span markers are explicitly
+`compiler_scaffold` and not source-derived.
 
-`InputManifest`, `BuildManifest`, `TestCaseSpec`, policy, dataset, trace, and
-evidence-report models now validate the emitted build/evidence schema v0.3
-structures before they are stored or consumed. The exporter produces their
-JSON Schemas for the CI drift check.
+The manifest records exact pinned inputs, compiler/runtime versions, artifact
+hashes, serialization rules, and limitations. Its canonical bytes form the
+build root and hash every other emitted artifact. Build submission captures an
+input fingerprint and rejects stale mutable inputs before execution. The
+generated JSON Schemas and OpenAPI remain drift-checked contracts.
 
-Correctness gaps:
+Metrics separately report baseline always-loaded, compiled kernel, skills,
+knowledge, machine-enforced, expected task-context, and total-bundle sizes;
+routing/source linkage; severity-weighted preservation; high/critical
+guard-and-test placement; pending counts; and protected literals. Both
+preservation and metric contracts state `behavioral_fidelity: not_measured`.
 
-- prompt/workflow/knowledge templates contain Northstar-specific prose;
-- source maps identify contributing rules but do not map every output span to an
-  exact source anchor;
-- artifacts are JSON columns, not append-only content-addressed objects;
-- content hashes prove identity, not publisher authenticity; bundles are not
-  signed or transparency-logged;
+Northstar retail and Acme appointments use the same schemas/compiler path. The
+Acme pack contains a substantial source `SKILL.md`, current policy, stale SOP,
+prompt/style/knowledge references, strict tools, synthetic state, and
+deterministic cases. This tests domain neutrality but is not a live scheduling
+integration.
+
+The verified build-detail surface loads the requested build inspection rather than
+silently substituting another build. It shows the full bundle tree, exact
+artifact hashes/downloads, numbered generated-span links to pinned source
+lines, labeled compiler-scaffold/no-anchor states, the estimator and context
+metric table, routing report, preservation report, and the explicit
+“Behavioral fidelity: Not measured” boundary. The complete browser checkpoint
+passed.
+
+Reviewer-authored spans are rendered as an intentional **no source-anchor
+claim**, not as a missing source-derived anchor, and show reviewer, rationale,
+and timestamp attribution from routing-report provenance metadata.
+
+Remaining boundaries:
+
+- arbitrary/model-driven extraction and general conflict analysis are absent;
+- deterministic structural preservation is not semantic equivalence or
+  model-behavior proof;
+- maximum reschedule count/cooldown in Acme remain pending/test-only, and
+  undefined “daylight hours” is explicitly unsupported;
+- artifacts are database JSON columns, not signed append-only release objects;
 - no environment promotion, activation, canary, rollback, compatibility, or
   runtime distribution protocol exists.
 
@@ -459,7 +542,7 @@ The build-pinned Aletheia-authored refund cases run across:
 Each case starts from deep-copied state. Traces separate proposal, policy
 evaluation, block/approval, execution, result, and state change. Metrics include
 task success, attempted/executed violations, false blocks, exact assertion
-coverage, computed rule/source/boundary coverage, unclassified critical rules,
+coverage, declared rule/source/boundary linkage, unclassified critical rules,
 and final state hashes. Tokens and cost correctly remain unavailable in fixture
 mode.
 
@@ -614,6 +697,45 @@ No live quality, latency, token, cost, safety, or benchmark claim is supported.
 
 ## 5. Verification snapshot
 
+### Gate 1 local completion checkpoint
+
+Gate 1 is complete in the verified local two-domain fixture scope. The API/Gate
+1 suites cover the two-domain/fresh-process compiler path, exact provenance,
+contracts, migrations, and frontend unit/build behavior; packaging and browser
+checks also pass. This does not change hosted or deployed status.
+
+Final local Gate 1 evidence:
+
+- the default API suite passed 139 tests with one skipped;
+- the focused regenerated-contract/Gate 1 suite passed 31 tests;
+- Ruff and mypy passed;
+- SQLite Alembic upgrade/drift passed through migration `0006`;
+- a fresh real-PostgreSQL migration integration passed one test with four
+  deselected, then removed its temporary database;
+- frontend ESLint and strict type checking passed;
+- all 84 Vitest tests across 22 files passed;
+- the production Next.js build passed and includes the dynamic
+  `/projects/[projectId]/routing` route;
+- OpenNext at compatibility date `2026-08-04`, Wrangler `4.118.0` type
+  generation, root/staging deploy dry-runs, and `wrangler check startup` passed;
+- the dry-runs packaged 53 assets and an 8,019.91 KiB bundle (1,665.20 KiB
+  gzip), while local active startup measured 34.0 ms;
+- focused two-domain Playwright passed 1/1 in 15.2 seconds;
+- the complete Playwright suite passed 6/6 in 1.3 minutes using fresh isolated
+  API/web ports and Next output;
+- `pip-audit` and production `pnpm audit --audit-level high` reported no known
+  vulnerabilities; and
+- `git diff --check` is clean.
+
+The dry-run size and startup observations do not prove hosted Gate 1 deployment,
+production performance, or behavioral fidelity.
+The public Workers remain on the separately recorded `147448a` bundle.
+The verified Northstar and Acme build roots, 19-artifact trees, representative
+source span, context metrics, demo steps, and exact claim boundary are recorded
+in [the Gate 1 verification report](gate-1-verification-report.md).
+The older counts below are retained as historical regression evidence and must
+not be represented as the final Gate 1 count.
+
 ### Locally verified for the current web implementation
 
 - ESLint passed.
@@ -645,7 +767,7 @@ No live quality, latency, token, cost, safety, or benchmark claim is supported.
 - pinned runtime domain/lifecycle scope, requirements, correlated approvals,
   exceptions, and fail-closed outcomes;
 - explicit assertions for previously vacuous fixture cases;
-- computed rule/source/boundary coverage and critical-unclassified gates;
+- declared rule/source/boundary linkage and critical-unclassified gates;
 - aligned build/evidence schema v0.3 contracts, report provenance hashes, and self-verifying
   digest;
 - worker lease heartbeat;
@@ -771,7 +893,14 @@ The UI's “Waking your workspace…” state and bounded retry are honest recov
 UX, not an availability guarantee. See [deployment.md](deployment.md) for
 current official platform links and the exact limits.
 
-## 7. Priority roadmap to a production-capable system
+## 7. Production-maturity roadmap (separate from feature gates)
+
+Gate 1 has passed its local checkpoint. Stop for product/evidence review before
+authorizing Gate 2. Bounded solver, temporal, mutation, model, live runner, tau
+execution, SDK, and enterprise work remain Gates 2–8.
+
+The P0–P3 levels below concern operational maturity. They are not aliases for
+those product feature gates.
 
 ### P0 — Complete verification and harden the deployed guest preview
 
@@ -862,10 +991,12 @@ bundle, dataset, environment, time range, sample size, and confidence interval.
 
 ## 8. Recommended product boundary
 
-Keep Aletheia centred on reviewed business policy, deterministic pre-tool
-decisions, and release evidence. Do not broaden into generic prompt management,
-unbounded user-authored policy code, or passive observability before the release
-integrity and enforcement boundaries are reliable.
+Keep Aletheia centred on source-aware refactoring of reviewed agent
+instructions: a smaller always-loaded prompt kernel, scoped skills/knowledge,
+deterministic pre-tool decisions, tests, explicit pending material, and exact
+build evidence. Do not broaden into generic prompt management, unbounded
+user-authored policy code, or passive observability before the compilation,
+release-integrity, and enforcement boundaries are reliable.
 
 The most credible sequence remains:
 
@@ -894,7 +1025,8 @@ complete first production system requires:
 - a bounded, measured pilot whose claims match its evidence.
 
 Until those conditions are met, the accurate description is: **a deterministic
-fixture policy-CI workflow with broad settled local/CI evidence, a
-permanent-user hosted path verified on staging, and the current public-guest web
-release deployed to staging and canonical production but still awaiting
-Turnstile token redemption and complete connected guest verification.**
+Northstar fixture workflow with broad settled local/CI evidence; a source-aware
+verified local two-domain Gate 1 compilation workflow that is not deployed; a
+permanent-user hosted path verified on staging; and a public guest release
+deployed to staging/canonical production but still awaiting Turnstile token
+redemption and complete connected guest verification.**

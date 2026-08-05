@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from typing import Any
 
 from fastapi import APIRouter, Depends, File, Form, Header, Query, Response, UploadFile
@@ -14,7 +15,9 @@ from app.models import (
     Build,
     Document,
     Finding,
+    GeneratedSpan,
     Job,
+    PlacementDecision,
     Project,
     Report,
     Rule,
@@ -33,12 +36,18 @@ from app.operations import (
     operation_out,
 )
 from app.schemas import (
+    BuildArtifactInspection,
+    BuildInspectionOut,
     BuildOut,
     DocumentOut,
     FindingOut,
     FindingPatch,
+    GeneratedSpanOut,
     MeOut,
     OperationOut,
+    PlacementDecisionContract,
+    PlacementDecisionOut,
+    PlacementDecisionPatch,
     ProjectCreate,
     ProjectOut,
     ReportOut,
@@ -48,6 +57,7 @@ from app.schemas import (
     RunCreate,
     RunOut,
     ScenarioResultOut,
+    SourceMapArtifact,
     TestCaseOut,
     TestCasePatch,
     WaitlistCreate,
@@ -56,8 +66,10 @@ from app.schemas import (
     WorkspaceBootstrapOut,
     WorkspaceOut,
 )
+from app.services.appointment_seed import seed_appointment_demo
 from app.services.canonical import (
     artifact_bytes,
+    artifact_hash,
     bytes_hash,
     canonical_json_bytes,
     content_hash,
@@ -77,6 +89,7 @@ from app.tenancy import (
     scoped_document,
     scoped_finding,
     scoped_job,
+    scoped_placement_decision,
     scoped_project,
     scoped_report,
     scoped_result,
@@ -293,6 +306,7 @@ async def bootstrap_workspace(
             if recovered:
                 workspace, membership = recovered
                 project = await seed_demo(session, workspace_id=workspace.id)
+                await seed_appointment_demo(session, workspace_id=workspace.id)
                 return WorkspaceBootstrapOut(
                     workspace=_workspace_out(workspace, membership.role),
                     project=ProjectOut.model_validate(project),
@@ -312,6 +326,7 @@ async def bootstrap_workspace(
         await session.commit()
         await session.refresh(workspace)
     project = await seed_demo(session, workspace_id=workspace.id)
+    await seed_appointment_demo(session, workspace_id=workspace.id)
     return WorkspaceBootstrapOut(
         workspace=_workspace_out(workspace, membership.role),
         project=ProjectOut.model_validate(project),
@@ -342,7 +357,9 @@ async def reset_personal_workspace(
         # Use the same tenant-aware row lock as project reset and all other
         # project mutations, so reset cannot delete an in-flight operation.
         await scoped_project(session, identity, northstar.id, write=True)
-    return await seed_demo(session, workspace_id=workspace_id, reset=True)
+    reset = await seed_demo(session, workspace_id=workspace_id, reset=True)
+    await seed_appointment_demo(session, workspace_id=workspace_id)
+    return reset
 
 
 @router.post("/projects/{project_id}/reset", response_model=ProjectOut)
@@ -642,6 +659,109 @@ async def get_rule(
     return await scoped_rule(session, identity, rule_id)
 
 
+@router.get(
+    "/projects/{project_id}/placement-decisions",
+    response_model=list[PlacementDecisionOut],
+)
+async def list_placement_decisions(
+    project_id: str,
+    identity: AuthIdentity = Depends(require_identity),
+    session: AsyncSession = Depends(get_session),
+) -> list[PlacementDecision]:
+    await scoped_project(session, identity, project_id)
+    return list(
+        (
+            await session.scalars(
+                select(PlacementDecision)
+                .where(PlacementDecision.project_id == project_id)
+                .order_by(PlacementDecision.rule_id, PlacementDecision.version)
+            )
+        ).all()
+    )
+
+
+@router.patch(
+    "/placement-decisions/{placement_decision_id}",
+    response_model=PlacementDecisionOut,
+)
+async def patch_placement_decision(
+    placement_decision_id: str,
+    payload: PlacementDecisionPatch,
+    identity: AuthIdentity = Depends(require_identity),
+    session: AsyncSession = Depends(get_session),
+) -> PlacementDecision:
+    decision = await scoped_placement_decision(
+        session, identity, placement_decision_id, write=True
+    )
+    latest = await session.scalar(
+        select(PlacementDecision)
+        .where(PlacementDecision.rule_id == decision.rule_id)
+        .order_by(PlacementDecision.version.desc(), PlacementDecision.id.desc())
+        .limit(1)
+    )
+    if (
+        decision.version != payload.expected_version
+        or latest is None
+        or latest.id != decision.id
+    ):
+        raise ServiceError(
+            "placement_version_conflict",
+            "This placement changed after you opened it. Refresh before reviewing it again.",
+            details={
+                "expected_version": payload.expected_version,
+                "current_version": latest.version if latest is not None else decision.version,
+                "placement_decision_id": decision.id,
+            },
+            status_code=409,
+        )
+    changes = payload.model_dump(exclude={"expected_version"}, exclude_none=True)
+    candidate = {
+        "project_id": decision.project_id,
+        "rule_id": decision.rule_id,
+        "version": decision.version + 1,
+        "profile_name": decision.profile_name,
+        "profile_version": decision.profile_version,
+        "destinations": decision.destinations,
+        "scope_slug": decision.scope_slug,
+        "rendering": decision.rendering,
+        "transform_kind": decision.transform_kind,
+        "disposition": decision.disposition,
+        "rationale": decision.rationale,
+        "review_status": decision.review_status,
+        "reviewer": decision.reviewer,
+        **changes,
+    }
+    validated = PlacementDecisionContract.model_validate(candidate)
+    await consume_guest_mutation(session, identity)
+    revised = PlacementDecision(
+        **validated.model_dump(exclude={"schema_version"}),
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
+    )
+    session.add(revised)
+    try:
+        await session.commit()
+    except IntegrityError as error:
+        # The project lock serializes application writers on PostgreSQL. Keep
+        # the optimistic contract intact on lockless SQLite and if an
+        # out-of-band writer races the `(rule_id, version)` uniqueness guard.
+        conflicting_version = decision.version + 1
+        conflicting_decision_id = decision.id
+        await session.rollback()
+        raise ServiceError(
+            "placement_version_conflict",
+            "This placement changed after you opened it. Refresh before reviewing it again.",
+            details={
+                "expected_version": payload.expected_version,
+                "current_version": conflicting_version,
+                "placement_decision_id": conflicting_decision_id,
+            },
+            status_code=409,
+        ) from error
+    await session.refresh(revised)
+    return revised
+
+
 @router.patch("/rules/{rule_id}", response_model=RuleOut)
 async def patch_rule(
     rule_id: str,
@@ -788,6 +908,122 @@ async def get_build(
     session: AsyncSession = Depends(get_session),
 ) -> Build:
     return await scoped_build(session, identity, build_id)
+
+
+@router.get("/builds/{build_id}/inspection", response_model=BuildInspectionOut)
+async def inspect_build(
+    build_id: str,
+    identity: AuthIdentity = Depends(require_identity),
+    session: AsyncSession = Depends(get_session),
+) -> BuildInspectionOut:
+    build = await scoped_build(session, identity, build_id)
+    spans = list(
+        (
+            await session.scalars(
+                select(GeneratedSpan)
+                .where(GeneratedSpan.build_id == build.id)
+                .order_by(
+                    GeneratedSpan.artifact_path,
+                    GeneratedSpan.utf8_byte_start,
+                    GeneratedSpan.id,
+                )
+            )
+        ).all()
+    )
+    span_rule_ids = {span.rule_id for span in spans if span.rule_id is not None}
+    span_placement_ids = {
+        span.placement_decision_id
+        for span in spans
+        if span.placement_decision_id is not None
+    }
+    span_rules = {
+        rule.id: rule
+        for rule in (
+            await session.scalars(
+                select(Rule).where(
+                    Rule.id.in_(span_rule_ids),
+                    Rule.project_id == build.project_id,
+                )
+            )
+        ).all()
+    }
+    span_placements = {
+        placement.id: placement
+        for placement in (
+            await session.scalars(
+                select(PlacementDecision).where(
+                    PlacementDecision.id.in_(span_placement_ids),
+                    PlacementDecision.project_id == build.project_id,
+                )
+            )
+        ).all()
+    }
+    generated_spans = []
+    for span in spans:
+        rule = span_rules.get(span.rule_id) if span.rule_id else None
+        placement = (
+            span_placements.get(span.placement_decision_id)
+            if span.placement_decision_id
+            else None
+        )
+        generated_spans.append(
+            GeneratedSpanOut.model_validate(
+                {
+                    "id": span.id,
+                    "build_id": span.build_id,
+                    "artifact_path": span.artifact_path,
+                    "artifact_sha256": span.artifact_sha256,
+                    "rule_id": span.rule_id,
+                    "rule_stable_key": rule.stable_key if rule else None,
+                    "rule_revision": rule.revision if rule else None,
+                    "placement_decision_id": span.placement_decision_id,
+                    "placement_version": placement.version if placement else None,
+                    "line_start": span.line_start,
+                    "line_end": span.line_end,
+                    "utf8_byte_start": span.utf8_byte_start,
+                    "utf8_byte_end": span.utf8_byte_end,
+                    "transform_kind": span.transform_kind,
+                    "text_sha256": span.text_sha256,
+                    "source_refs": span.source_refs,
+                    "created_at": span.created_at,
+                }
+            )
+        )
+    if build.source_map.get("schema_version") == "1.0":
+        source_map: SourceMapArtifact | dict[str, list[str]] = (
+            SourceMapArtifact.model_validate(build.source_map)
+        )
+    elif all(
+        isinstance(path, str)
+        and isinstance(rule_keys, list)
+        and all(isinstance(rule_key, str) for rule_key in rule_keys)
+        for path, rule_keys in build.source_map.items()
+    ):
+        source_map = {
+            str(path): [str(rule_key) for rule_key in rule_keys]
+            for path, rule_keys in build.source_map.items()
+        }
+    else:
+        raise ServiceError(
+            "build_source_map_invalid",
+            "The stored build source map violates both supported contracts.",
+            status_code=409,
+        )
+    return BuildInspectionOut(
+        build_id=build.id,
+        project_id=build.project_id,
+        status=build.status,
+        input_hash=build.input_hash,
+        compiler_version=build.compiler_version,
+        content_hash=build.content_hash,
+        artifacts=[
+            BuildArtifactInspection(path=path, sha256=artifact_hash(value))
+            for path, value in sorted(build.artifacts.items())
+        ],
+        source_map=source_map,
+        stats=build.stats,
+        generated_spans=generated_spans,
+    )
 
 
 @router.get("/builds/{build_id}/artifacts/{artifact_path:path}")

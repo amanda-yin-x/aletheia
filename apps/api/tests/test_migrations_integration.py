@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import os
 import sqlite3
 from datetime import UTC, datetime, timedelta
@@ -57,7 +58,7 @@ def test_empty_database_migrations_do_not_seed_global_rows(
         command.upgrade(_alembic_config(), "head")
         with sqlite3.connect(database) as connection:
             assert connection.execute("SELECT version_num FROM alembic_version").fetchone() == (
-                "0005_guest_access_waitlist",
+                "0006_gate1_compilation_contracts",
             )
             assert connection.execute("SELECT count(*) FROM user_accounts").fetchone() == (0,)
             assert connection.execute("SELECT count(*) FROM waitlist_signups").fetchone() == (0,)
@@ -76,8 +77,127 @@ def test_migration_url_accepts_percent_encoded_values(
         command.upgrade(_alembic_config(), "head")
         with sqlite3.connect(database) as connection:
             assert connection.execute("SELECT version_num FROM alembic_version").fetchone() == (
-                "0005_guest_access_waitlist",
+                "0006_gate1_compilation_contracts",
             )
+    finally:
+        get_settings.cache_clear()
+
+
+def test_gate1_migration_backfills_typed_compilation_metadata(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    database = tmp_path / "gate1-backfill.db"
+    _use_sqlite_migration_url(monkeypatch, database)
+    try:
+        command.upgrade(_alembic_config(), "0005_guest_access_waitlist")
+        with sqlite3.connect(database) as connection:
+            connection.executescript(
+                """
+                INSERT INTO user_accounts (
+                    id, email, created_at, updated_at, is_anonymous,
+                    guest_operation_count, guest_mutation_count
+                ) VALUES ('user-1', 'owner@example.test', CURRENT_TIMESTAMP,
+                    CURRENT_TIMESTAMP, 0, 0, 0);
+                INSERT INTO workspaces (
+                    id, slug, name, created_by_user_id, created_at, updated_at
+                ) VALUES ('workspace-1', 'workspace-1', 'Workspace', 'user-1',
+                    CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+                INSERT INTO workspace_members (
+                    workspace_id, user_id, role, created_at, updated_at
+                ) VALUES ('workspace-1', 'user-1', 'owner', CURRENT_TIMESTAMP,
+                    CURRENT_TIMESTAMP);
+                INSERT INTO projects (
+                    id, workspace_id, slug, name, domain, description, mode,
+                    created_at, updated_at
+                ) VALUES ('project-1', 'workspace-1', 'northstar-retail',
+                    'Northstar', 'retail', '', 'demo', CURRENT_TIMESTAMP,
+                    CURRENT_TIMESTAMP);
+                INSERT INTO projects (
+                    id, workspace_id, slug, name, domain, description, mode,
+                    created_at, updated_at
+                ) VALUES ('project-2', 'workspace-1', 'another-project',
+                    'Another', 'general', '', 'demo', CURRENT_TIMESTAMP,
+                    CURRENT_TIMESTAMP);
+                INSERT INTO documents (
+                    id, project_id, kind, name, version, original_sha256,
+                    normalized_sha256, normalized_text, mime_type, line_count,
+                    token_estimate, origin, created_at
+                ) VALUES ('document-1', 'project-1', 'current_policy',
+                    'policy.md', 3,
+                    'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa',
+                    'bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
+                    'Current policy', 'text/markdown', 1, 4,
+                    '{"type":"aletheia_authored"}', CURRENT_TIMESTAMP);
+                INSERT INTO rules (
+                    id, project_id, stable_key, revision, title, normative_text,
+                    category, effect, severity, status, confidence, scope,
+                    condition, requires, enforcement, decidability, source_refs,
+                    target_tools, exceptions, reviewer_note, created_at, updated_at
+                ) VALUES ('rule-1', 'project-1', 'rule.example', 1, 'Example',
+                    'Do the reviewed thing.', 'workflow', 'observe_only', 'low',
+                    'approved', 1.0, '{}', '{}', '[]', 'prompt', 'human', '[]',
+                    '[]', '[]', '', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+                """
+            )
+
+        command.upgrade(_alembic_config(), "head")
+        with sqlite3.connect(database) as connection:
+            profile, config = connection.execute(
+                "SELECT compiler_profile, compilation_config FROM projects "
+                "WHERE id = 'project-1'"
+            ).fetchone()
+            assert json.loads(profile) == {
+                "name": "source-aware",
+                "version": "1.0.0",
+                "path": "compiler-profiles/source-aware-v1.json",
+            }
+            assert json.loads(config) == {
+                "schema_version": "1.0",
+                "bundle_slug": "refund-operations",
+                "agent_label": "Northstar Retail support agent",
+                "skill_title": "Refund operations",
+                "knowledge_title": "Retail policy reference",
+                "suite_name": "Aletheia-authored refund boundary suite",
+                "suite_version": 3,
+                "inputs": {
+                    "baseline_prompt": {
+                        "name": "baseline-system-prompt.md",
+                        "version": 1,
+                    },
+                    "tool_schema": {"name": "tools.json", "version": 1},
+                    "evaluation_data": {"name": "orders.json", "version": 1},
+                },
+                "expected_context": [
+                    "prompt-kernel.md",
+                    "skills/refund-operations/SKILL.md",
+                    "knowledge/refund-operations.md",
+                ],
+            }
+            assert json.loads(
+                connection.execute(
+                    "SELECT compilation_config FROM projects WHERE id = 'project-2'"
+                ).fetchone()[0]
+            ) == {}
+            assert connection.execute(
+                "SELECT authority_owner, authority_status, version_label "
+                "FROM documents WHERE id = 'document-1'"
+            ).fetchone() == ("Aletheia fixture", "current", "v3")
+            assert connection.execute(
+                "SELECT provenance_kind, provenance_metadata FROM rules "
+                "WHERE id = 'rule-1'"
+            ).fetchone() == ("source_anchored", "{}")
+            tables = {
+                row[0]
+                for row in connection.execute(
+                    "SELECT name FROM sqlite_master WHERE type = 'table'"
+                )
+            }
+            assert {"placement_decisions", "generated_spans"} <= tables
+            with pytest.raises(sqlite3.IntegrityError):
+                connection.execute(
+                    "UPDATE documents SET authority_status = 'invalid' "
+                    "WHERE id = 'document-1'"
+                )
     finally:
         get_settings.cache_clear()
 

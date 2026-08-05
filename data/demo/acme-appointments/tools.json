@@ -1,0 +1,310 @@
+{
+  "schema_version": "0.2",
+  "schema_dialect": "https://json-schema.org/draft/2020-12/schema",
+  "tools": [
+    {
+      "name": "get_customer",
+      "mutating": false,
+      "input_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "customer_id": {
+            "type": "string",
+            "pattern": "^C-[0-9]{3,8}$",
+            "maxLength": 10
+          }
+        },
+        "required": ["customer_id"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "verify_customer_identity",
+      "mutating": true,
+      "input_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "customer_id": {
+            "type": "string",
+            "pattern": "^C-[0-9]{3,8}$",
+            "maxLength": 10
+          },
+          "verification_method": {
+            "type": "string",
+            "pattern": "^(email_otp|sms_otp|support_pin)$",
+            "maxLength": 11
+          },
+          "verification_reference": {
+            "type": "string",
+            "pattern": "^VERIFY-[A-Z0-9]{6,24}$",
+            "maxLength": 31
+          }
+        },
+        "required": ["customer_id", "verification_method", "verification_reference"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_appointment",
+      "mutating": false,
+      "input_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "appointment_id": {
+            "type": "string",
+            "pattern": "^A-[0-9]{4,10}$",
+            "maxLength": 12
+          }
+        },
+        "required": ["appointment_id"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "list_available_slots",
+      "mutating": false,
+      "input_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "clinic_id": {
+            "type": "string",
+            "pattern": "^CLINIC-[A-Z]{3}-[0-9]{2}$",
+            "maxLength": 13
+          },
+          "service_code": {
+            "type": "string",
+            "pattern": "^(consultation|follow_up)$",
+            "maxLength": 12
+          },
+          "customer_timezone": {
+            "type": "string",
+            "pattern": "^[A-Za-z_]+(?:/[A-Za-z0-9_+-]+)+$",
+            "maxLength": 128
+          },
+          "local_date_from": {
+            "type": "string",
+            "format": "date"
+          },
+          "local_date_to": {
+            "type": "string",
+            "format": "date"
+          }
+        },
+        "required": ["clinic_id", "service_code", "customer_timezone", "local_date_from", "local_date_to"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "request_change_confirmation",
+      "mutating": true,
+      "input_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "customer_id": {
+            "type": "string",
+            "pattern": "^C-[0-9]{3,8}$",
+            "maxLength": 10
+          },
+          "appointment_id": {
+            "type": "string",
+            "pattern": "^A-[0-9]{4,10}$",
+            "maxLength": 12
+          },
+          "action": {
+            "type": "string",
+            "pattern": "^(reschedule|cancel)$",
+            "maxLength": 10
+          },
+          "proposed_start_at": {
+            "type": "string",
+            "pattern": "^(?:[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:Z|[+-][0-9]{2}:[0-9]{2})|not_applicable)$",
+            "maxLength": 32
+          },
+          "customer_timezone": {
+            "type": "string",
+            "pattern": "^[A-Za-z_]+(?:/[A-Za-z0-9_+-]+)+$",
+            "maxLength": 128
+          },
+          "fee": {
+            "type": "object",
+            "properties": {
+              "currency": {
+                "type": "string",
+                "pattern": "^[A-Z]{3}$"
+              },
+              "minor_units": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 99999999
+              }
+            },
+            "required": ["currency", "minor_units"],
+            "additionalProperties": false
+          },
+          "policy_version": {
+            "type": "string",
+            "const": "2.0"
+          }
+        },
+        "required": ["customer_id", "appointment_id", "action", "proposed_start_at", "customer_timezone", "fee", "policy_version"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "book_appointment",
+      "mutating": true,
+      "input_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "customer_id": {
+            "type": "string",
+            "pattern": "^C-[0-9]{3,8}$",
+            "maxLength": 10
+          },
+          "slot_id": {
+            "type": "string",
+            "pattern": "^SLOT-[A-Z0-9-]{6,32}$",
+            "maxLength": 37
+          },
+          "clinic_id": {
+            "type": "string",
+            "pattern": "^CLINIC-[A-Z]{3}-[0-9]{2}$",
+            "maxLength": 13
+          },
+          "service_code": {
+            "type": "string",
+            "pattern": "^(consultation|follow_up)$",
+            "maxLength": 12
+          },
+          "starts_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "customer_timezone": {
+            "type": "string",
+            "pattern": "^[A-Za-z_]+(?:/[A-Za-z0-9_+-]+)+$",
+            "maxLength": 128
+          }
+        },
+        "required": ["customer_id", "slot_id", "clinic_id", "service_code", "starts_at", "customer_timezone"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "reschedule_appointment",
+      "mutating": true,
+      "input_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "customer_id": {
+            "type": "string",
+            "pattern": "^C-[0-9]{3,8}$",
+            "maxLength": 10
+          },
+          "appointment_id": {
+            "type": "string",
+            "pattern": "^A-[0-9]{4,10}$",
+            "maxLength": 12
+          },
+          "expected_version": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "slot_id": {
+            "type": "string",
+            "pattern": "^SLOT-[A-Z0-9-]{6,32}$",
+            "maxLength": 37
+          },
+          "new_start_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "customer_timezone": {
+            "type": "string",
+            "pattern": "^[A-Za-z_]+(?:/[A-Za-z0-9_+-]+)+$",
+            "maxLength": 128
+          },
+          "confirmation_id": {
+            "type": "string",
+            "pattern": "^(?:CONFIRM-[A-Z0-9]{6,24}|not_required)$",
+            "maxLength": 32
+          }
+        },
+        "required": ["customer_id", "appointment_id", "expected_version", "slot_id", "new_start_at", "customer_timezone", "confirmation_id"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "cancel_appointment",
+      "mutating": true,
+      "input_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "customer_id": {
+            "type": "string",
+            "pattern": "^C-[0-9]{3,8}$",
+            "maxLength": 10
+          },
+          "appointment_id": {
+            "type": "string",
+            "pattern": "^A-[0-9]{4,10}$",
+            "maxLength": 12
+          },
+          "expected_version": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 2147483647
+          },
+          "confirmation_id": {
+            "type": "string",
+            "pattern": "^CONFIRM-[A-Z0-9]{6,24}$",
+            "maxLength": 32
+          }
+        },
+        "required": ["customer_id", "appointment_id", "expected_version", "confirmation_id"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "escalate_scheduling_case",
+      "mutating": true,
+      "input_schema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "customer_id": {
+            "type": "string",
+            "pattern": "^C-[0-9]{3,8}$",
+            "maxLength": 10
+          },
+          "appointment_id": {
+            "type": "string",
+            "pattern": "^(?:A-[0-9]{4,10}|not_applicable)$",
+            "maxLength": 14
+          },
+          "reason_code": {
+            "type": "string",
+            "pattern": "^(identity_unverified|timezone_missing|source_conflict|unsupported_daylight_clause|reschedule_history_review|no_compliant_slot|stale_appointment_state)$",
+            "maxLength": 32
+          },
+          "customer_summary": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          }
+        },
+        "required": ["customer_id", "appointment_id", "reason_code", "customer_summary"],
+        "additionalProperties": false
+      }
+    }
+  ]
+}

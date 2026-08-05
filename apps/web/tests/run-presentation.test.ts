@@ -47,13 +47,13 @@ describe("run presentation", () => {
       explicit_assertion_coverage: 1,
       compiler_assertion_coverage: 1,
       positive_negative_boundary: true,
-      rule_coverage: { ratio: 1 },
-      source_coverage: { ratio: 1 },
-      boundary_coverage: { ratio: 1 },
+      declared_rule_linkage: { ratio: 1 },
+      declared_source_linkage: { ratio: 1 },
+      declared_boundary_linkage: { ratio: 1 },
       critical_unclassified_rules: [],
     };
     expect(releaseCoverageReady(coverage, 24)).toBe(true);
-    expect(releaseCoverageReady({ ...coverage, boundary_coverage: { ratio: 0.75 } }, 24)).toBe(false);
+    expect(releaseCoverageReady({ ...coverage, declared_boundary_linkage: { ratio: 0.75 } }, 24)).toBe(false);
     expect(releaseCoverageReady({ ...coverage, critical_unclassified_rules: ["rule.critical"] }, 24)).toBe(false);
   });
 });

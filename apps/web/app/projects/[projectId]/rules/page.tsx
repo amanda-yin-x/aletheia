@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, label } from "@/lib/api";
-import type { Finding, Rule, TestCase } from "@/lib/types";
+import type { Document, Finding, Rule, TestCase } from "@/lib/types";
 import { conditionRows, updateConditionValue } from "@/lib/presentation";
 import { Badge, Button, ErrorState, PageLoading, PageTitle } from "@/components/ui";
 import { ConflictResolutionForm, type ConflictResolutionDecision } from "@/features/conflict-resolution-form";
@@ -19,6 +19,7 @@ export default function RulesPage() {
   const rules = useQuery({ queryKey: ["rules", projectId], queryFn: () => api<Rule[]>(`/api/v1/projects/${projectId}/rules`) });
   const findings = useQuery({ queryKey: ["findings", projectId], queryFn: () => api<Finding[]>(`/api/v1/projects/${projectId}/findings`) });
   const tests = useQuery({ queryKey: ["tests", projectId], queryFn: () => api<TestCase[]>(`/api/v1/projects/${projectId}/test-cases`) });
+  const documents = useQuery({ queryKey: ["documents", projectId], queryFn: () => api<Document[]>(`/api/v1/projects/${projectId}/documents`) });
   const [selected, setSelected] = useState<Rule | null>(null);
   const [draftCondition, setDraftCondition] = useState<Record<string, unknown> | null>(null);
   const [filter, setFilter] = useState("all");
@@ -74,8 +75,8 @@ export default function RulesPage() {
     },
   });
   const filtered = useMemo(() => (rules.data || []).filter((rule) => filter === "all" || (filter === "review" && rule.status === "needs_review") || (filter === "critical" && rule.severity === "critical") || (filter === "guarded" && rule.enforcement === "guard") || (filter === "missing" && !(tests.data || []).some((test) => test.spec.rule_ids.includes(rule.stable_key)))), [rules.data, tests.data, filter]);
-  if (rules.isLoading || findings.isLoading || tests.isLoading) return <PageLoading label="Loading reviewed rule set" />;
-  if (rules.error || findings.error || tests.error) return <ErrorState error={rules.error || findings.error || tests.error} onRetry={() => { rules.refetch(); findings.refetch(); tests.refetch(); }} />;
+  if (rules.isLoading || findings.isLoading || tests.isLoading || documents.isLoading) return <PageLoading label="Loading reviewed rule set" />;
+  if (rules.error || findings.error || tests.error || documents.error) return <ErrorState error={rules.error || findings.error || tests.error || documents.error} onRetry={() => { rules.refetch(); findings.refetch(); tests.refetch(); documents.refetch(); }} />;
   const openFindings = findings.data!.filter((finding) => finding.resolution_state === "open");
   return <div className="content-wrap">
     <PageTitle eyebrow="Human review gate" title="Rules and findings" detail="Model-shaped candidates remain drafts until their quote, meaning, and deterministic condition are reviewed." actions={<Badge tone="blue">{rules.data!.length} current revisions</Badge>} />
@@ -89,6 +90,8 @@ export default function RulesPage() {
           {isResolving && <ConflictResolutionForm
             finding={finding}
             relatedRules={related}
+            documents={documents.data}
+            projectId={projectId}
             isPending={resolve.isPending}
             error={resolve.error}
             onCancel={() => closeResolution(finding.id)}

@@ -14,6 +14,7 @@ from app.models import (
     Document,
     Finding,
     Job,
+    PlacementDecision,
     Project,
     Report,
     Rule,
@@ -285,6 +286,23 @@ async def scoped_build(session: AsyncSession, identity: AuthIdentity, value: str
 
 async def scoped_test(session: AsyncSession, identity: AuthIdentity, value: str, *, write: bool = False) -> TestCase:
     return await _scoped_project_resource(session, identity, TestCase, value, write=write, resource_name="test")
+
+
+async def scoped_placement_decision(
+    session: AsyncSession,
+    identity: AuthIdentity,
+    value: str,
+    *,
+    write: bool = False,
+) -> PlacementDecision:
+    return await _scoped_project_resource(
+        session,
+        identity,
+        PlacementDecision,
+        value,
+        write=write,
+        resource_name="placement_decision",
+    )
 
 
 async def scoped_run(session: AsyncSession, identity: AuthIdentity, value: str, *, write: bool = False) -> Run:

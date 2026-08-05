@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
-import { FileText, FlaskConical, Gauge, Hammer, ScrollText, ShieldCheck } from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
+import { FileText, FlaskConical, Gauge, Hammer, Route, ScrollText, ShieldCheck } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { api, label } from "@/lib/api";
 import type { Project } from "@/lib/types";
@@ -12,6 +12,7 @@ const items = [
   ["Overview", "overview", Gauge],
   ["Sources", "sources", FileText],
   ["Rules", "rules", ShieldCheck],
+  ["Placements", "routing", Route],
   ["Build", "build", Hammer],
   ["Tests", "tests", FlaskConical],
   ["Report", "overview#latest-report", ScrollText],
@@ -30,10 +31,15 @@ function routeIsActive(pathname: string, hash: string, projectId: string, name: 
 
 export function ProjectShell({ projectId, children }: { projectId: string; children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [hash, setHash] = useState("");
   const project = useQuery({
     queryKey: ["project", projectId],
     queryFn: () => api<Project>(`/api/v1/projects/${projectId}`),
+  });
+  const projects = useQuery({
+    queryKey: ["projects"],
+    queryFn: () => api<Project[]>("/api/v1/projects"),
   });
   useEffect(() => {
     const readHash = () => setHash(window.location.hash);
@@ -57,6 +63,43 @@ export function ProjectShell({ projectId, children }: { projectId: string; child
         <span className="workspace-label">Policy workspace</span>
         <strong>{projectName}</strong>
         <small>{projectContext}</small>
+        <div className="project-switcher">
+          <label htmlFor="project-domain-switch">Project / domain</label>
+          <select
+            id="project-domain-switch"
+            aria-describedby="project-domain-switch-state"
+            value={projects.data?.some((item) => item.id === projectId) ? projectId : ""}
+            disabled={projects.isLoading || projects.isError || !projects.data?.length}
+            onChange={(event) => {
+              const selectedProjectId = event.target.value;
+              if (selectedProjectId && selectedProjectId !== projectId) {
+                router.push(`/projects/${encodeURIComponent(selectedProjectId)}/overview`);
+              }
+            }}
+          >
+            {projects.isLoading && <option value="">Loading projects…</option>}
+            {projects.isError && <option value="">Projects unavailable</option>}
+            {!projects.isLoading && !projects.isError && !projects.data?.length && <option value="">No projects available</option>}
+            {projects.data?.map((item) => <option value={item.id} key={item.id}>{item.name} · {label(item.domain)}</option>)}
+          </select>
+          <span id="project-domain-switch-state" className="project-switch-state" role="status">
+            {projects.isLoading
+              ? "Loading available projects."
+              : projects.isError
+                ? "The project list could not be loaded."
+                : projects.data?.length
+                  ? `${projects.data.length} ${projects.data.length === 1 ? "project" : "projects"} available.`
+                  : "This workspace has no available projects."}
+          </span>
+          {projects.isError && <button
+            className="project-switch-retry"
+            type="button"
+            onClick={() => void projects.refetch()}
+            disabled={projects.isFetching}
+          >
+            {projects.isFetching ? "Retrying…" : "Retry project list"}
+          </button>}
+        </div>
       </div>
       <nav aria-label="Project sections">
         {items.map(([name, route, Icon]) => {

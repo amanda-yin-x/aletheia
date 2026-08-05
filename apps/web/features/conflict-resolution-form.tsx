@@ -1,9 +1,11 @@
 "use client";
 
-import { Check } from "lucide-react";
+import { Check, ExternalLink } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import { Badge, Button } from "@/components/ui";
-import type { Finding, Rule } from "@/lib/types";
+import { authorityTone, documentPresentation, formattedEffectiveDate, metadataLabel } from "@/lib/document-presentation";
+import type { Document, Finding, Rule } from "@/lib/types";
 
 export interface ConflictResolutionDecision {
   findingId: string;
@@ -17,13 +19,25 @@ export interface ConflictResolutionDecision {
 interface ConflictResolutionFormProps {
   finding: Finding;
   relatedRules: Rule[];
+  documents?: Document[];
+  projectId?: string;
   isPending: boolean;
   error?: unknown;
   onCancel: () => void;
   onSubmit: (decision: ConflictResolutionDecision) => void;
 }
 
-export function ConflictResolutionForm({ finding, relatedRules, isPending, error, onCancel, onSubmit }: ConflictResolutionFormProps) {
+function witnessValue(value: unknown): string {
+  if (value == null) return "Not provided";
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") return String(value);
+  try { return JSON.stringify(value); } catch { return "Unavailable"; }
+}
+
+function witnessLabel(value: string): string {
+  return value.replaceAll("_", " ").replace(/\b\w/g, (character) => character.toUpperCase());
+}
+
+export function ConflictResolutionForm({ finding, relatedRules, documents = [], projectId, isPending, error, onCancel, onSubmit }: ConflictResolutionFormProps) {
   const [winnerRuleId, setWinnerRuleId] = useState("");
   const [authority, setAuthority] = useState("");
   const [rationale, setRationale] = useState("");
@@ -31,6 +45,9 @@ export function ConflictResolutionForm({ finding, relatedRules, isPending, error
   const canSubmit = isPairwiseConflict && Boolean(winnerRuleId && authority.trim() && rationale.trim()) && !isPending;
   const fieldPrefix = `conflict-${finding.id}`;
   const errorMessage = error instanceof Error ? error.message : error ? "The decision could not be saved. Refresh and try again." : "";
+  const winner = relatedRules.find((rule) => rule.id === winnerRuleId);
+  const loser = winnerRuleId ? relatedRules.find((rule) => rule.id !== winnerRuleId) : undefined;
+  const witness = Object.entries(finding.witness || {}).filter(([key]) => key !== "resolution");
 
   const submit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -56,11 +73,19 @@ export function ConflictResolutionForm({ finding, relatedRules, isPending, error
       <Badge tone="red">Build gate</Badge>
     </div>
 
+    {witness.length > 0 && <div className="conflict-witness" role="group" aria-label="Conflict witness context">
+      <strong>Relevant witness / context</strong>
+      <dl>{witness.map(([key, value]) => <div key={key}><dt>{witnessLabel(key)}</dt><dd>{witnessValue(value)}</dd></div>)}</dl>
+    </div>}
+
     <fieldset className="conflict-options" disabled={isPending || !isPairwiseConflict}>
       <legend>Select the authoritative rule revision</legend>
       {relatedRules.map((rule, index) => {
         const source = rule.source_refs[0];
         const selected = winnerRuleId === rule.id;
+        const losing = Boolean(winnerRuleId && !selected);
+        const sourceDocument = documents.find((document) => document.id === source?.document_id);
+        const sourceMetadata = documentPresentation(sourceDocument);
         return <label className={`conflict-option ${selected ? "selected" : ""}`} key={rule.id}>
           <input
             type="radio"
@@ -74,11 +99,19 @@ export function ConflictResolutionForm({ finding, relatedRules, isPending, error
             <span className="conflict-option-heading">
               <span>
                 <strong>{rule.title}</strong>
-                <small>{source?.document_name || "Source unavailable"} · revision {rule.revision}</small>
+                <small>{source?.document_name || "Source unavailable"} · {sourceDocument ? `${sourceMetadata.versionLabel} · ` : ""}revision {rule.revision}</small>
               </span>
-              {selected && <Badge tone="blue"><Check size={11} /> Selected</Badge>}
+              {selected ? <Badge tone="teal"><Check size={11} /> Winner</Badge> : losing ? <Badge tone="amber">Loser</Badge> : null}
             </span>
             <blockquote>{source?.quote || "No source quote is attached to this revision."}</blockquote>
+            {source && projectId && <Link className="conflict-source-link" href={`/projects/${encodeURIComponent(projectId)}/sources?document=${encodeURIComponent(source.document_id)}#line-${source.line_start}`} onClick={(event) => event.stopPropagation()}>
+              Open {source.document_name || "source"}, exact lines {source.line_start}–{source.line_end} <ExternalLink size={12} aria-hidden="true" />
+            </Link>}
+            {sourceDocument && <div className="conflict-source-authority" aria-label={`Authority metadata for ${sourceDocument.name}`}>
+              <Badge tone={authorityTone(sourceMetadata.authorityStatus)}>{sourceMetadata.authorityStatus ? metadataLabel(sourceMetadata.authorityStatus) : "Authority unavailable"}</Badge>
+              <span>Owner: {sourceMetadata.owner || "not provided"}</span>
+              <span>Effective: {formattedEffectiveDate(sourceMetadata.effectiveAt)}</span>
+            </div>}
             <span className="conflict-option-rule">Normalized as: {rule.normative_text}</span>
           </span>
         </label>;
@@ -87,6 +120,11 @@ export function ConflictResolutionForm({ finding, relatedRules, isPending, error
 
     {!isPairwiseConflict && <p className="conflict-form-error" role="alert">This reviewer currently supports pairwise conflicts. Refresh the finding data or use an administrative review for {relatedRules.length} related revisions.</p>}
 
+    {winner && loser && <div className="conflict-decision-summary" aria-live="polite">
+      <span><strong>Winner</strong>{winner.title}</span>
+      <span><strong>Loser</strong>{loser.title}</span>
+    </div>}
+
     <div className="conflict-decision-fields">
       <div className="field">
         <label htmlFor={`${fieldPrefix}-authority`}>Decision authority</label>
@@ -94,7 +132,7 @@ export function ConflictResolutionForm({ finding, relatedRules, isPending, error
           id={`${fieldPrefix}-authority`}
           value={authority}
           maxLength={500}
-          placeholder="e.g. Refund Policy v3, approved by Policy Operations"
+          placeholder="e.g. Current policy, approved by Policy Operations"
           disabled={isPending || !isPairwiseConflict}
           onChange={(event) => setAuthority(event.target.value)}
           aria-describedby={`${fieldPrefix}-authority-help`}

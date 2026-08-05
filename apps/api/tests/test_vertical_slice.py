@@ -104,14 +104,21 @@ async def test_complete_no_key_workflow_and_boundary_trace(session: AsyncSession
     build = await compile_project(session, project.id)
     assert build.stats["original"]["lines"] > build.stats["candidate"]["lines"]
     assert len(json.loads(build.artifacts["policies/tool-policy.json"])["rules"]) == 7
-    assert set(build.source_map) >= {"prompt-kernel.md", "policies/tool-policy.json", "tests/regression.yaml"}
+    mapped_artifacts = {
+        span["artifact_path"] for span in build.source_map["spans"]
+    }
+    assert mapped_artifacts >= {
+        "prompt-kernel.md",
+        "policies/tool-policy.json",
+        "tests/regression.yaml",
+    }
     run = await run_comparison(session, project.id, build.id)
     assert run.metrics["compiled_enforced"]["executed_violation_rate"] == 0
     assert run.metrics["compiled_enforced"]["false_block_rate"] == 0
     assert run.metrics["coverage"]["test_count"] == 16
-    assert run.metrics["coverage"]["rule_coverage"]["ratio"] == 1
-    assert run.metrics["coverage"]["source_coverage"]["ratio"] == 1
-    assert run.metrics["coverage"]["boundary_coverage"]["ratio"] == 1
+    assert run.metrics["coverage"]["declared_rule_linkage"]["ratio"] == 1
+    assert run.metrics["coverage"]["declared_source_linkage"]["ratio"] == 1
+    assert run.metrics["coverage"]["declared_boundary_linkage"]["ratio"] == 1
     assert run.metrics["coverage"]["critical_unclassified_rules"] == []
     assert run.dataset_manifest["data_scope"] == "evaluation"
     assert release_gate_ready(run.metrics, run.dataset_manifest)

@@ -1,6 +1,6 @@
 # Aletheia
 
-**Policy CI for AI agents.**
+**Source-aware policy refactoring and compilation for AI agents.**
 
 [![CI](https://github.com/amanda-yin-x/aletheia/actions/workflows/ci.yml/badge.svg)](https://github.com/amanda-yin-x/aletheia/actions/workflows/ci.yml)
 [![Status: deployed; guest E2E pending](https://img.shields.io/badge/status-deployed%3B_guest_E2E_pending-2563eb)](docs/deployment.md)
@@ -20,9 +20,12 @@ complete anonymous hosted workflow are not yet claimed as verified. The
 permanent-user Northstar lifecycle was previously verified on staging; see
 [the deployment runbook](docs/deployment.md) for the exact boundary.
 
-Aletheia turns scattered agent instructions into source-linked rules, reviewed
-release artifacts, deterministic tool guards, and repeatable release tests. The
-included Northstar Retail project starts with a composite `$249` case where
+Aletheia refactors reviewed prompts, skills, policies, SOPs, and tool schemas
+into a smaller always-loaded prompt kernel plus scoped skills, knowledge,
+deterministic guards, tests, and explicit pending material. Exact source
+anchors, placement decisions, generated spans, and pinned inputs make each
+candidate build inspectable. The included Northstar Retail project starts with
+a composite `$249` case where
 order state, refund destination, approval policy, and a retained SOP disagree.
 The workspace then provides a concrete path through the product: resolve two
 policy conflicts, approve a strict refund boundary, compile a stored,
@@ -31,14 +34,25 @@ blocked `$200.01` boundary trace, and export Markdown or JSON evidence.
 
 ![Aletheia landing page showing the source-linked refund policy decision](docs/screenshots/landing-desktop.png)
 
-> Aletheia turns agent policies into reviewed prompt, guard, and regression-test
-> artifacts, then shows how a candidate behaves across repeatable release
-> scenarios.
+> Aletheia refactors reviewed agent instructions into a smaller always-loaded
+> prompt kernel plus scoped skills, knowledge, guards, tests, and explicit
+> pending material, with source-linked build evidence.
 
 Aletheia is not a generic prompt compressor, production agent firewall, formal
 verification system, compliance certification, or claim about live-model
 performance. The bundled records are generated evaluation data; no customer
 records or real business side effects are included.
+
+| Product track | Current status |
+|---|---|
+| Gate 0 — local deterministic Northstar foundation | Complete in the settled tested fixture scope. |
+| Gate 0H — hosted preview and hardening | In progress: permanent-user staging passed; anonymous Turnstile redemption and complete guest E2E remain unverified. |
+| Gate 1 — source-aware generic compiler | Complete in the verified local two-domain fixture scope. This is not deployed/hosted Gate 1 evidence. |
+| Gates 2–8 | Not implemented. Provider interfaces, tau data sync, schemas, or research notes do not make these operating capabilities. |
+
+Gate 1 is local working-tree status, not deployed status. The public Workers
+still serve the separately identified `147448a` bundle until a later verified
+promotion.
 
 ## Why policy CI
 
@@ -105,13 +119,24 @@ still a release gate in this repository snapshot.
    **Approval above $200**, inspect the exact quote and
    `amount.minor_units > 20000`
    condition, then approve the revision.
-4. Open **Build** and compile a candidate. The output contains the prompt
-   kernel, refund workflow, tool policy, regression YAML, source map, and
-   manifest.
+4. Choose explicit destinations for the reviewed clauses, then open **Build**
+   and compile a candidate. The Gate 1 artifact contract includes a prompt
+   kernel, scoped `SKILL.md`, knowledge, pre-tool policy, regression YAML,
+   unsupported-material ledger, routing/preservation/metric reports, exact
+   source map, pinned inputs, and manifest. The concrete build manifest is
+   authoritative for the exact artifact set.
 5. Open **Tests**, run the bundled release suite, and inspect the
    `$200.01 without approval` guarded trace. The proposal is recorded, approval
    is required, and no refund mutation occurs.
-6. Create an evidence report and download Markdown or canonical JSON.
+6. Inspect each rule-derived generated span back to its rule revision,
+   placement version, and exact source anchor. Then create an evidence report
+   and download Markdown or canonical JSON.
+
+The verified local Gate 1 implementation includes an Acme appointments domain pack to
+test the same compiler outside refunds. It is synthetic evaluation data, not a
+live scheduling integration. The confirmed local Gate 1 suite exercises it
+through the shared compiler/runner; browser/release-bundle checks still gate
+the final status.
 
 The exact 90-second talk track is in [docs/demo-script.md](docs/demo-script.md).
 
@@ -198,8 +223,10 @@ human-readable implementation inventory and
 ## Architecture inside the API
 
 ```text
-source files → versioned documents + exact spans → reviewed Rule IR
-    → deterministic compiler → prompt / workflow / policy / tests / source map
+raw source bytes → versioned documents + authority metadata + exact anchors
+    → reviewed Rule IR → append-only placement decisions + pinned profile
+    → deterministic compiler → prompt kernel / skill / knowledge / guard / tests
+    → generated spans / routing / preservation / metrics / source map
     → deterministic replay → pre-tool policy decision → covered tools
     → labelled-arm results → traces / metrics → evidence report
 
@@ -208,7 +235,9 @@ domain services + SQL ───┼ FastAPI / SQL operation worker
                          └ Next.js same-origin client
 ```
 
-The backend remains a modular monolith. Core policy, compiler, and runner
+The backend remains a modular monolith. Generic compilation is profile-driven;
+Northstar and Acme content belongs in domain packs/seed services rather than
+compiler branches. Core policy, compiler, and runner
 modules do not import FastAPI; HTTP routes and the Typer CLI call the same async
 services. SQLite in WAL mode is the local default, while Alembic and the same
 SQLAlchemy models support PostgreSQL.
@@ -252,6 +281,30 @@ is optional and does not execute or score the benchmark.
 
 ## Verification boundary
 
+Gate 1 is complete in the verified local two-domain fixture scope. Final local
+results are: 139 passed and one skipped in the default API suite; 31 passed in
+the focused regenerated-contract/Gate 1 suite; Ruff and mypy passed; SQLite
+Alembic upgrade/drift passed through `0006`; and a fresh real-PostgreSQL
+migration integration passed one test with four deselected before its temporary
+database was removed. The frontend passed ESLint, strict type checking, all 84
+Vitest tests across 22 files, and a production Next.js build including the
+dynamic Placements route. The OpenNext bundle passed at compatibility date
+`2026-08-04`; Wrangler `4.118.0` type generation, root/staging deploy dry-runs,
+and startup check passed. The dry-runs packaged 53 assets and an 8,019.91 KiB
+bundle (1,665.20 KiB gzip); local active startup measured 34.0 ms. These are
+packaging checks, not deployment or production-performance evidence. None of
+these local results changes the deployed `147448a` Worker claim.
+
+The focused two-domain browser flow passed 1/1 in 15.2 seconds. The complete
+Playwright suite passed 6/6 in 1.3 minutes using fresh isolated API/web ports and
+Next output. The earlier transient 404 reproduced only with stale reused Next
+development output and disappeared on the clean run; no product workaround was
+added. `pip-audit` and the production high-severity `pnpm audit` reported no
+known vulnerabilities.
+
+The counts below describe the settled pre-Gate-1/public-guest release and must
+not be read as verification of the current Gate 1 working tree.
+
 The hosted changes have automated coverage for JWT validation,
 tenant scoping, operation idempotency and lease recovery, migrations, CSRF and
 Origin checks, the code-only PKCE callback, pre-routing hosted upload rejection,
@@ -293,7 +346,9 @@ reliability program has completed.
 For approved, machine-decidable rules, the covered policy adapter can
 deterministically allow, block, or request approval before a covered tool call
 executes. This applies only to configured semantics and calls routed through
-that adapter. See [docs/evidence-boundary.md](docs/evidence-boundary.md).
+that adapter. Exact provenance and structural preservation checks establish
+deterministic build conformance; `behavioral_fidelity` remains `not_measured`.
+See [docs/evidence-boundary.md](docs/evidence-boundary.md).
 
 ## Deployment status
 
@@ -325,8 +380,15 @@ See [docs/deployment.md](docs/deployment.md) for the exact runbook.
 - Render Free sleeps after idle periods and can take roughly a minute to wake.
   The bounded “Waking your workspace…” recovery UI improves the demo path but
   is not an availability guarantee.
-- The Northstar findings, compiler templates, and replay trajectories remain
-  domain-specific evaluation code, not a general policy-analysis system.
+- The verified local Gate 1 implementation supplies a generic compiler/profile and a second
+  Acme appointments corpus. Fixture findings, seeded reviews, and replay
+  trajectories remain domain-specific evaluation code; arbitrary extraction,
+  general conflict analysis, temporal monitoring, and live integrations do not
+  exist.
+- Compilation reports structural routing, exact provenance, protected-literal
+  checks, and declared linkage. It does not measure semantic equivalence or
+  behavioral fidelity, and it does not prove that a smaller kernel improves
+  model quality or cost.
 - Runs verify the selected build root and load its stored policy, test
   specifications/trajectories, tool registry, and fact metadata. A live test row
   remains only as relational identity; run, trace, and report presentation uses
@@ -378,6 +440,10 @@ See [docs/deployment.md](docs/deployment.md) for the exact runbook.
 - [Design references and decisions](docs/design-references.md)
 - [90-second walkthrough](docs/demo-script.md)
 - [Build plan and gates](docs/build-plan.md)
+- [Gate 1 local verification report](docs/gate-1-verification-report.md)
+- [Independent product and engineering review v2](docs/aletheia_independent_review_and_product_decision_v2.md)
+- [Repository continuation and Gate 1 handoff v3](docs/aletheia_refined_codex_execution_handoff_v3.md)
+- [Research map v2 (80 retained sources)](docs/aletheia_research_map_80_sources_v2.md)
 
 ## License and acknowledgements
 

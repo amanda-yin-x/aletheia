@@ -1,0 +1,116 @@
+{
+  "$defs": {
+    "CompilationInputs": {
+      "additionalProperties": false,
+      "properties": {
+        "baseline_prompt": {
+          "$ref": "#/$defs/PinnedDocumentInput"
+        },
+        "evaluation_data": {
+          "$ref": "#/$defs/PinnedDocumentInput"
+        },
+        "tool_schema": {
+          "$ref": "#/$defs/PinnedDocumentInput"
+        }
+      },
+      "required": [
+        "baseline_prompt",
+        "tool_schema",
+        "evaluation_data"
+      ],
+      "title": "CompilationInputs",
+      "type": "object"
+    },
+    "PinnedDocumentInput": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "maxLength": 255,
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        },
+        "version": {
+          "minimum": 1,
+          "title": "Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "name",
+        "version"
+      ],
+      "title": "PinnedDocumentInput",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "description": "Reviewed project-specific labels and exact input selections.",
+  "properties": {
+    "agent_label": {
+      "maxLength": 240,
+      "minLength": 1,
+      "title": "Agent Label",
+      "type": "string"
+    },
+    "bundle_slug": {
+      "maxLength": 120,
+      "minLength": 1,
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "title": "Bundle Slug",
+      "type": "string"
+    },
+    "expected_context": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Expected Context",
+      "type": "array"
+    },
+    "inputs": {
+      "$ref": "#/$defs/CompilationInputs"
+    },
+    "knowledge_title": {
+      "maxLength": 240,
+      "minLength": 1,
+      "title": "Knowledge Title",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "skill_title": {
+      "maxLength": 240,
+      "minLength": 1,
+      "title": "Skill Title",
+      "type": "string"
+    },
+    "suite_name": {
+      "maxLength": 240,
+      "minLength": 1,
+      "title": "Suite Name",
+      "type": "string"
+    },
+    "suite_version": {
+      "minimum": 1,
+      "title": "Suite Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "bundle_slug",
+    "agent_label",
+    "skill_title",
+    "knowledge_title",
+    "suite_name",
+    "suite_version",
+    "inputs",
+    "expected_context"
+  ],
+  "title": "CompilationConfig",
+  "type": "object"
+}

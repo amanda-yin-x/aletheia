@@ -2,16 +2,32 @@
   "schema_version": "1.0",
   "document": {
     "name": "Aletheia capability and verification inventory",
-    "version": "2026-08-04-canonical-147448a",
+    "version": "2026-08-04-gate1-local-verified",
     "repository": "https://github.com/amanda-yin-x/aletheia",
     "canonical_site": "https://aletheia.aletheia-web.workers.dev",
     "source_commit": "147448a",
+    "deployed_source_commit": "147448a",
+    "inspected_repository_base": "91055f6043edfd7f0cb171eac0bd04c611f2d509",
+    "gate1_deployment_boundary": "Gate 1 evidence describes the current local working tree. The public staging and canonical Workers remain the separately identified deployed 147448a bundle; no Gate 1 deployment is claimed.",
+    "gate1_verification_report": "docs/gate-1-verification-report.md",
+    "gate1_verified_builds": {
+      "northstar-retail": {
+        "content_hash": "4e0601f04010ae67b837a718c1a97942b048fa9468eb4820c098ee54c9ab99df",
+        "artifact_count": 19,
+        "behavioral_fidelity": "not_measured"
+      },
+      "acme-appointments": {
+        "content_hash": "efccbe65a0f57e4eafbc649dc4b707a2dd69949771d4310c53762b3b690e95c5",
+        "artifact_count": 19,
+        "behavioral_fidelity": "not_measured"
+      }
+    },
     "deployed_worker_versions": {
       "staging": "3788c6b0-291c-43a9-bef3-b48aaa4a0498",
       "canonical_production": "935c3c39-f63e-4041-804b-ef40431d50fc"
     },
     "hosted_verification_boundary": "The exact source commit is deployed to the staging and canonical Cloudflare Workers. Public landing and /demo routes, HTTPS redirection, unauthenticated API rejection, current branding/scenario content, and Turnstile challenge rendering were observed. Automated browsers were challenged, so successful CAPTCHA token redemption and the complete anonymous Northstar workflow are not claimed.",
-    "evidence_boundary": "The bundled results cover deterministic Northstar fixture data, reviewed rules, build-pinned artifacts, scripted trajectories, and calls routed through the fixture policy adapter. They do not establish live-model quality, customer safety, compliance, production reliability, or market validation."
+    "evidence_boundary": "The verified local Gate 1 working tree covers deterministic Northstar and Acme fixture data, reviewed rules/placements, source-aware builds, scripted trajectories, and calls routed through the fixture policy adapter. Exact provenance and structural preservation do not establish behavioral fidelity, live-model quality, customer safety, compliance, production reliability, or market validation. Gate 1 is not deployed; public Workers remain on 147448a."
   },
   "status_vocabulary": {
     "operating": "A connected path works in the stated environment and is more than a class, endpoint, or deployment seam.",
@@ -24,11 +40,11 @@
   "overall_status": {
     "local_product": {
       "status": "fixture",
-      "reason": "The settled revision passed its 111-test backend matrix, web/build/Worker checks, and five browser flows. In release 147448a, all 71 Vitest tests pass across 18 files and all 116 backend tests pass across two local runs: 115 default plus one real-PostgreSQL test. Hosted anonymous-workflow verification remains separate."
+      "reason": "Gate 0 and Gate 1 are complete in the verified local deterministic fixture scope. Gate 1 passed 139 API tests with 1 skipped, 31 focused Gate 1/contract tests, database/frontend/packaging checks, focused two-domain E2E 1/1, and full Playwright 6/6. Hosted/deployed status is separate."
     },
     "evaluation_mode": {
       "status": "fixture",
-      "reason": "The complete review, compile, run, trace, and report path uses the bundled Northstar corpus and deterministic scripted trajectories."
+      "reason": "The complete review, compile, run, trace, and report path uses deterministic scripted trajectories. Northstar and Acme pass the shared local compiler/runner path; Acme remains synthetic and is not a live integration."
     },
     "hosted_product": {
       "status": "unverified",
@@ -37,6 +53,12 @@
     "production_readiness": {
       "status": "absent",
       "reason": "Database-enforced tenant isolation, signed releases, customer runtime enforcement, production ingestion, operating controls, and production assurance are incomplete."
+    },
+    "feature_gates": {
+      "gate_0_local": "complete_in_settled_northstar_fixture_scope",
+      "gate_0h_hosted": "in_progress",
+      "gate_1_source_aware_compiler": "complete_in_verified_local_two_domain_fixture_scope",
+      "gates_2_through_8": "absent"
     }
   },
   "target_architecture": [
@@ -179,10 +201,10 @@
       "id": "sources.provenance_viewer",
       "name": "Versioned source records and source-linked viewer",
       "status": "fixture",
-      "environment": "Northstar workspace",
-      "scope": "Stores original-byte and normalized-text hashes, parser/normalizer identity and version, source versions, line counts, source references, and exact highlighted spans for bundled sources.",
-      "evidence": ["apps/api/app/models.py", "apps/web/app/projects/[projectId]/sources/page.tsx", "data/demo/northstar-retail/"],
-      "limitations": ["The hosted workspace uses fictional evaluation data.", "Source maps do not yet resolve every generated output span to a stable versioned anchor."]
+      "environment": "verified local Northstar and Acme fixtures",
+      "scope": "Stores raw-byte and normalized-text hashes, parser/normalizer identity and version, source versions, authority owner/status/effective/supersession/scope metadata, line counts, source references, and exact highlighted spans for bundled sources.",
+      "evidence": ["apps/api/app/models.py", "apps/api/app/services/compilation/provenance.py", "apps/web/app/projects/[projectId]/sources/page.tsx", "data/demo/northstar-retail/", "data/demo/acme-appointments/"],
+      "limitations": ["Both domain packs are fictional evaluation data.", "Local verification does not imply that Gate 1 is deployed or operates on customer data."]
     },
     {
       "id": "sources.local_ingestion",
@@ -239,22 +261,40 @@
       "limitations": ["There is no assignment, comment, two-person approval, durable audit actor model, or automatic analyzer rerun before compile."]
     },
     {
-      "id": "compiler.northstar_bundle",
-      "name": "Byte-reproducible Northstar artifact compiler",
+      "id": "review.placement_workflow",
+      "name": "Append-only rule placement review",
       "status": "fixture",
-      "environment": "Northstar workspace",
-      "scope": "Emits prompt, workflow, knowledge, policy, regression tests, pinned sources/rules/findings/tools/facts, source map, README, and a canonical manifest whose exact bytes form the build root.",
-      "evidence": ["apps/api/app/services/compiler.py", "apps/api/app/services/canonical.py", "apps/api/tests/test_evidence_correctness.py"],
-      "limitations": ["Templates and prose remain refund-specific.", "Artifacts are stored in database JSON rather than an append-only content-addressed blob store.", "Bundles are not signed."]
+      "environment": "verified local Northstar and Acme fixtures",
+      "scope": "Persists versioned tenant-scoped decisions for prompt_kernel, skill, knowledge, pre_tool_policy, test, human_review, or unsupported; updates use optimistic concurrency and retain prior versions.",
+      "evidence": ["apps/api/app/models.py", "apps/api/app/api/routes.py", "apps/api/app/schemas.py", "apps/api/migrations/versions/0006_gate1_compilation_contracts.py", "apps/api/tests/test_gate1_persistence_contracts.py", "apps/web/features/conflict-resolution-form.tsx"],
+      "limitations": ["This is fixture-scoped review, not a deployed collaborative approval system."]
     },
     {
-      "id": "compiler.domain_neutral",
-      "name": "Domain-neutral compiler and second domain",
-      "status": "absent",
-      "environment": "future local and hosted product",
-      "scope": "Would compile the same bounded IR across refund and appointment-scheduling corpora without semantic domain branches.",
-      "evidence": [],
-      "limitations": ["No appointment-scheduling corpus or generic template router exists."]
+      "id": "compiler.source_aware_bundle",
+      "name": "Source-aware domain-neutral artifact compiler",
+      "status": "fixture",
+      "environment": "verified local Northstar and Acme fixtures",
+      "scope": "Uses a pinned fail-closed profile and explicit placements to emit a prompt kernel, scoped SKILL.md, knowledge, pre-tool policy, tests, unsupported ledger, routing/preservation/metric reports, exact source map, pinned inputs, and canonical manifest across two synthetic domains.",
+      "evidence": ["apps/api/app/services/compiler.py", "apps/api/app/services/compilation/", "data/compiler-profiles/source-aware-v1.json", "data/demo/northstar-retail/", "data/demo/acme-appointments/", "apps/api/schemas/CompilerProfile.schema.json", "apps/api/schemas/BuildManifest.schema.json"],
+      "limitations": ["The complete local two-domain checkpoint passed; no hosted/deployed compiler claim is made.", "Arbitrary extraction, general conflict analysis, semantic equivalence, and live integrations are not implemented.", "Artifacts are database JSON rather than signed append-only release objects."]
+    },
+    {
+      "id": "compiler.exact_provenance_and_metrics",
+      "name": "Exact generated provenance and structural preservation evidence",
+      "status": "fixture",
+      "environment": "verified local Northstar and Acme fixtures",
+      "scope": "Verifies source quote, line and UTF-8 byte ranges, raw/normalized hashes, parser/normalizer identity, rule and placement versions, and generated artifact spans; reviewer-authored guidance requires reviewer, rationale, and offset-aware reviewed_at, while test-generated span markers are compiler_scaffold rather than source-derived. Reports separate kernel/skill/knowledge/enforcement/context/bundle sizes, routing, severity-weighted preservation, pending counts, and protected literals. The build inspector renders exact artifact hashes/downloads, span-to-source links, scaffold states, and reviewer-authored no-source-anchor claims with reviewer/rationale/timestamp provenance, plus routing, preservation, and metrics without falling back to another build.",
+      "evidence": ["apps/api/app/services/compilation/provenance.py", "apps/api/app/services/compilation/metrics.py", "apps/api/schemas/GeneratedSpan.schema.json", "apps/api/schemas/SourceMapArtifact.schema.json", "apps/api/schemas/PreservationReport.schema.json", "apps/api/schemas/CompilationMetrics.schema.json", "apps/web/features/build-inspection.tsx", "apps/web/lib/compilation-presentation.ts"],
+      "limitations": ["behavioral_fidelity is not_measured.", "Structural conformance does not establish semantic equivalence, model quality, or customer safety.", "The verified browser result is local fixture evidence, not hosted behavior."]
+    },
+    {
+      "id": "corpus.acme_appointments",
+      "name": "Acme appointment-scheduling proof corpus",
+      "status": "fixture",
+      "environment": "verified local fixture",
+      "scope": "Provides a synthetic second-domain SKILL.md, current policy, stale SOP, prompt/style/knowledge references, strict tools, state, placements, and deterministic cases for the generic compiler path.",
+      "evidence": ["data/demo/acme-appointments/", "apps/api/app/services/appointment_seed.py"],
+      "limitations": ["This is not a live scheduler or complete appointment policy.", "Maximum reschedule count and cooldown remain pending/test-only; undefined daylight hours is unsupported.", "The shared local compiler/runner/browser path passed; no hosted Acme path exists."]
     },
     {
       "id": "runtime.build_pinning",
@@ -288,7 +328,7 @@
       "name": "Labelled-arm deterministic evaluation",
       "status": "fixture",
       "environment": "Northstar workspace",
-      "scope": "Runs the build-pinned suite across the build-declared labelled arms from isolated state with explicit tool/compiler assertions plus computed rule, normative-source, and guarded-boundary coverage; the release gate also rejects unclassified critical rules.",
+      "scope": "Runs the build-pinned suite across the build-declared labelled arms from isolated state with explicit tool/compiler assertions plus declared rule, source, and boundary linkage; the release gate also rejects unclassified critical rules.",
       "evidence": ["apps/api/app/services/runner.py", "apps/api/app/services/seed.py", "apps/api/tests/test_evidence_correctness.py"],
       "limitations": ["Trajectories are scripted, not model-generated.", "There are no stochastic trials, uncertainty intervals, calibrated judges, human-label studies, or incident-derived regression lifecycle."]
     },
@@ -306,7 +346,7 @@
       "name": "Fixture traces and self-digested evidence reports",
       "status": "fixture",
       "environment": "Northstar workspace",
-      "scope": "Separates proposals, decisions, execution, results, and state changes; reports exact source/test/tool/fact/build/run hashes, parser/normalizer provenance, computed rule/source/boundary coverage, limitations, and a canonical report digest under aligned build/evidence schema-v0.3 contracts.",
+      "scope": "Separates proposals, decisions, execution, results, and state changes; reports exact source/test/tool/fact/build/run hashes, parser/normalizer provenance, declared rule/source/boundary linkage, limitations, and a canonical report digest under aligned build/evidence contracts.",
       "evidence": ["apps/api/app/services/reporting.py", "apps/api/tests/test_evidence_correctness.py", "apps/web/app/reports/[reportId]/page.tsx"],
       "limitations": ["Reports are not signed or trusted-timestamped.", "Failure rows do not yet deep-link directly to source anchors."]
     },
@@ -493,6 +533,12 @@
   ],
   "verification_gates": [
     {
+      "id": "gate1_source_aware_local",
+      "status": "fixture",
+      "scope": "Verified local Gate 1 source-aware compiler, persistence/contracts, Acme corpus, inspection surfaces, packaging, and browser workflow",
+      "result": "Final local working-tree evidence: default API suite 139 passed and 1 skipped; focused regenerated-contract/Gate 1 suite 31 passed; Ruff and mypy passed; SQLite Alembic upgrade/drift passed through 0006; fresh real-PostgreSQL migration integration passed 1 with 4 deselected and removed its temporary database; frontend ESLint and strict typecheck passed; all 84 Vitest tests across 22 files passed; production Next.js build passed with dynamic /projects/[projectId]/routing; OpenNext passed at compatibility date 2026-08-04; Wrangler 4.118.0 type generation, root/staging deploy dry-runs, and startup check passed; dry-runs packaged 53 assets and 8019.91 KiB / 1665.20 KiB gzip, and local active startup measured 34.0 ms; focused two-domain E2E passed 1/1 in 15.2 seconds; full fresh-isolated Playwright passed 6/6 in 1.3 minutes; pip-audit and production pnpm audit --audit-level high reported no known vulnerabilities; git diff check passed. Dry-run measurements are not deployment or production-performance evidence; public Workers remain on deployed 147448a and behavioral_fidelity is not_measured."
+    },
+    {
       "id": "evidence_core_targeted",
       "status": "operating",
       "scope": "Focused evidence-correctness checks",
@@ -554,9 +600,10 @@
     }
   ],
   "highest_priority_gaps": [
-    "Add database-enforced tenant isolation or a verified private-schema and least-privilege grant boundary.",
+    "Review the completed local Gate 1 evidence before authorizing Gate 2; keep hosted Gate 0H verification as a separate track.",
     "Verify the deployed release with a completed anonymous Turnstile redemption, signed-JWT isolation, guest limits/expiry/cleanup/reset denial, waitlist persistence, and the complete Northstar workflow before describing the canonical preview as end-to-end operating.",
-    "Build a second domain and domain-neutral compiler/analyzer before making general policy-analysis claims.",
+    "Add database-enforced tenant isolation or a verified private-schema and least-privilege grant boundary before broader customer data or teams.",
+    "Keep arbitrary extraction, solver analysis, temporal monitors, mutation testing, live models, upstream tau execution, and customer runtime integrations in Gates 2-8 until Gate 1 evidence is reviewed.",
     "Add typed fact catalogs, multi-currency/time semantics, a real local-model loop, customer CI command, and guarded runtime SDK only after fixture evidence contracts are stable.",
     "Store and sign build roots with release promotion, rollback, revocation, and deployment receipts."
   ],

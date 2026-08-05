@@ -10,7 +10,17 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth import AuthIdentity
 from app.config import get_settings
-from app.models import Build, Document, Finding, Job, Project, Rule, TestCase, UserAccount
+from app.models import (
+    Build,
+    Document,
+    Finding,
+    Job,
+    PlacementDecision,
+    Project,
+    Rule,
+    TestCase,
+    UserAccount,
+)
 from app.schemas import OperationError, OperationOut
 from app.services.canonical import content_hash
 from app.services.compiler import compile_project
@@ -32,6 +42,9 @@ async def operation_input_fingerprint(
     """Capture the exact mutable inputs a queued operation is authorized to consume."""
     captured_payload = dict(payload)
     if kind == "compile":
+        project = await session.get(Project, project_id)
+        if project is None:
+            raise ServiceError("project_not_found", "Project not found.", status_code=404)
         documents = list(
             (
                 await session.scalars(
@@ -68,7 +81,21 @@ async def operation_input_fingerprint(
                 )
             ).all()
         )
+        placements = list(
+            (
+                await session.scalars(
+                    select(PlacementDecision)
+                    .where(PlacementDecision.project_id == project_id)
+                    .order_by(PlacementDecision.rule_id, PlacementDecision.version)
+                )
+            ).all()
+        )
         snapshot: dict[str, Any] = {
+            "project_configuration": [
+                project.domain,
+                project.compiler_profile,
+                project.compilation_config,
+            ],
             "documents": [
                 [
                     item.id,
@@ -80,6 +107,13 @@ async def operation_input_fingerprint(
                     item.mime_type,
                     item.line_count,
                     item.origin,
+                    item.authority_owner,
+                    item.authority_status,
+                    item.effective_at,
+                    item.supersedes_document_id,
+                    item.jurisdictions,
+                    item.authority_scopes,
+                    item.version_label,
                 ]
                 for item in documents
             ],
@@ -103,6 +137,8 @@ async def operation_input_fingerprint(
                     item.target_tools,
                     item.exceptions,
                     item.reviewer_note,
+                    item.provenance_kind,
+                    item.provenance_metadata,
                 ]
                 for item in rules
             ],
@@ -129,6 +165,24 @@ async def operation_input_fingerprint(
                     item.spec,
                 ]
                 for item in tests
+            ],
+            "placements": [
+                [
+                    item.id,
+                    item.rule_id,
+                    item.version,
+                    item.profile_name,
+                    item.profile_version,
+                    item.destinations,
+                    item.scope_slug,
+                    item.rendering,
+                    item.transform_kind,
+                    item.disposition,
+                    item.rationale,
+                    item.review_status,
+                    item.reviewer,
+                ]
+                for item in placements
             ],
         }
     elif kind == "run":

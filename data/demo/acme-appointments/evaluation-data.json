@@ -1,0 +1,222 @@
+{
+  "schema_version": "1.0",
+  "data_scope": "evaluation",
+  "contains_customer_records": false,
+  "evaluation_timestamp": "2026-08-04T18:00:00Z",
+  "customers": [
+    {
+      "id": "C-301",
+      "name": "Alicia Morgan",
+      "timezone": "America/Toronto",
+      "identity": {
+        "status": "verified",
+        "verification_id": "VERIFY-ACME301",
+        "verified_at": "2026-08-04T17:55:00Z",
+        "expires_at": "2026-08-04T18:25:00Z"
+      }
+    },
+    {
+      "id": "C-302",
+      "name": "Omar Haddad",
+      "timezone": "Europe/London",
+      "identity": {
+        "status": "unverified",
+        "verification_id": null,
+        "verified_at": null,
+        "expires_at": null
+      }
+    },
+    {
+      "id": "C-303",
+      "name": "Ren Ito",
+      "timezone": null,
+      "identity": {
+        "status": "verified",
+        "verification_id": "VERIFY-ACME303",
+        "verified_at": "2026-08-04T17:50:00Z",
+        "expires_at": "2026-08-04T18:20:00Z"
+      }
+    }
+  ],
+  "appointments": [
+    {
+      "id": "A-1001",
+      "version": 3,
+      "customer_id": "C-301",
+      "clinic_id": "CLINIC-TOR-01",
+      "service_code": "consultation",
+      "starts_at": "2026-08-11T14:30:00-04:00",
+      "customer_timezone": "America/Toronto",
+      "status": "scheduled",
+      "reschedule_count": 1,
+      "last_rescheduled_at": "2026-08-03T16:00:00Z",
+      "reschedule_fee": {
+        "currency": "CAD",
+        "minor_units": 1500
+      },
+      "cancellation_fee": {
+        "currency": "CAD",
+        "minor_units": 2500
+      }
+    },
+    {
+      "id": "A-1002",
+      "version": 5,
+      "customer_id": "C-302",
+      "clinic_id": "CLINIC-LON-02",
+      "service_code": "consultation",
+      "starts_at": "2026-08-12T10:00:00+01:00",
+      "customer_timezone": "Europe/London",
+      "status": "scheduled",
+      "reschedule_count": 2,
+      "last_rescheduled_at": "2026-08-04T12:30:00Z",
+      "reschedule_fee": {
+        "currency": "GBP",
+        "minor_units": 1000
+      },
+      "cancellation_fee": {
+        "currency": "GBP",
+        "minor_units": 2000
+      }
+    },
+    {
+      "id": "A-1003",
+      "version": 2,
+      "customer_id": "C-303",
+      "clinic_id": "CLINIC-TOR-01",
+      "service_code": "follow_up",
+      "starts_at": "2026-08-13T15:00:00-04:00",
+      "customer_timezone": null,
+      "status": "scheduled",
+      "reschedule_count": 0,
+      "last_rescheduled_at": null,
+      "reschedule_fee": {
+        "currency": "CAD",
+        "minor_units": 0
+      },
+      "cancellation_fee": {
+        "currency": "CAD",
+        "minor_units": 0
+      }
+    },
+    {
+      "id": "A-1004",
+      "version": 4,
+      "customer_id": "C-301",
+      "clinic_id": "CLINIC-TOR-01",
+      "service_code": "follow_up",
+      "starts_at": "2026-08-10T18:30:00-04:00",
+      "customer_timezone": "America/Toronto",
+      "status": "cancelled",
+      "reschedule_count": 0,
+      "last_rescheduled_at": null,
+      "reschedule_fee": {
+        "currency": "CAD",
+        "minor_units": 0
+      },
+      "cancellation_fee": {
+        "currency": "CAD",
+        "minor_units": 0
+      }
+    }
+  ],
+  "availability": [
+    {
+      "slot_id": "SLOT-TOR-0811-0900",
+      "clinic_id": "CLINIC-TOR-01",
+      "service_code": "consultation",
+      "starts_at": "2026-08-11T09:00:00-04:00",
+      "clinic_timezone": "America/Toronto",
+      "available": true
+    },
+    {
+      "slot_id": "SLOT-TOR-0811-1630",
+      "clinic_id": "CLINIC-TOR-01",
+      "service_code": "consultation",
+      "starts_at": "2026-08-11T16:30:00-04:00",
+      "clinic_timezone": "America/Toronto",
+      "available": true
+    },
+    {
+      "slot_id": "SLOT-TOR-0811-1700",
+      "clinic_id": "CLINIC-TOR-01",
+      "service_code": "consultation",
+      "starts_at": "2026-08-11T17:00:00-04:00",
+      "clinic_timezone": "America/Toronto",
+      "available": true
+    },
+    {
+      "slot_id": "SLOT-TOR-0816-1830",
+      "clinic_id": "CLINIC-TOR-01",
+      "service_code": "consultation",
+      "starts_at": "2026-08-16T18:30:00-04:00",
+      "clinic_timezone": "America/Toronto",
+      "available": true
+    },
+    {
+      "slot_id": "SLOT-LON-0812-1000",
+      "clinic_id": "CLINIC-LON-02",
+      "service_code": "consultation",
+      "starts_at": "2026-08-12T10:00:00+01:00",
+      "clinic_timezone": "Europe/London",
+      "available": true
+    }
+  ],
+  "confirmations": [
+    {
+      "id": "CONFIRM-ACME1001",
+      "customer_id": "C-301",
+      "appointment_id": "A-1001",
+      "action": "reschedule",
+      "proposed_start_at": "2026-08-11T16:30:00-04:00",
+      "customer_timezone": "America/Toronto",
+      "fee": {
+        "currency": "CAD",
+        "minor_units": 1500
+      },
+      "policy_version": "2.0",
+      "created_at": "2026-08-04T17:58:00Z",
+      "expires_at": "2026-08-04T18:13:00Z",
+      "used_at": null
+    },
+    {
+      "id": "CONFIRM-EXPIRED1002",
+      "customer_id": "C-302",
+      "appointment_id": "A-1002",
+      "action": "cancel",
+      "proposed_start_at": null,
+      "customer_timezone": "Europe/London",
+      "fee": {
+        "currency": "GBP",
+        "minor_units": 2000
+      },
+      "policy_version": "2.0",
+      "created_at": "2026-08-04T16:30:00Z",
+      "expires_at": "2026-08-04T16:45:00Z",
+      "used_at": null
+    }
+  ],
+  "appointment_events": [
+    {
+      "event_id": "EVT-A1001-R1",
+      "appointment_id": "A-1001",
+      "event_type": "appointment_rescheduled",
+      "sequence": 1,
+      "occurred_at": "2026-08-03T16:00:00Z"
+    },
+    {
+      "event_id": "EVT-A1002-R1",
+      "appointment_id": "A-1002",
+      "event_type": "appointment_rescheduled",
+      "sequence": 1,
+      "occurred_at": "2026-07-20T10:00:00Z"
+    },
+    {
+      "event_id": "EVT-A1002-R2",
+      "appointment_id": "A-1002",
+      "event_type": "appointment_rescheduled",
+      "sequence": 2,
+      "occurred_at": "2026-08-04T12:30:00Z"
+    }
+  ]
+}

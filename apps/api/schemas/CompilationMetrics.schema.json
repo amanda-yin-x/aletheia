@@ -1,0 +1,326 @@
+{
+  "$defs": {
+    "ContentSizeMetric": {
+      "additionalProperties": false,
+      "properties": {
+        "characters": {
+          "minimum": 0,
+          "title": "Characters",
+          "type": "integer"
+        },
+        "estimated_tokens": {
+          "minimum": 0,
+          "title": "Estimated Tokens",
+          "type": "integer"
+        },
+        "lines": {
+          "minimum": 0,
+          "title": "Lines",
+          "type": "integer"
+        },
+        "utf8_bytes": {
+          "minimum": 0,
+          "title": "Utf8 Bytes",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "lines",
+        "characters",
+        "utf8_bytes",
+        "estimated_tokens"
+      ],
+      "title": "ContentSizeMetric",
+      "type": "object"
+    },
+    "ExpectedContextMetric": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact_paths": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Artifact Paths",
+          "type": "array"
+        },
+        "characters": {
+          "minimum": 0,
+          "title": "Characters",
+          "type": "integer"
+        },
+        "estimated_tokens": {
+          "minimum": 0,
+          "title": "Estimated Tokens",
+          "type": "integer"
+        },
+        "lines": {
+          "minimum": 0,
+          "title": "Lines",
+          "type": "integer"
+        },
+        "utf8_bytes": {
+          "minimum": 0,
+          "title": "Utf8 Bytes",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "lines",
+        "characters",
+        "utf8_bytes",
+        "estimated_tokens",
+        "artifact_paths"
+      ],
+      "title": "ExpectedContextMetric",
+      "type": "object"
+    },
+    "MetricsEstimator": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "version": {
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "version"
+      ],
+      "title": "MetricsEstimator",
+      "type": "object"
+    },
+    "PreservationCheck": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact_paths": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Artifact Paths",
+          "type": "array"
+        },
+        "literals": {
+          "items": {
+            "$ref": "#/$defs/ProtectedLiteral"
+          },
+          "title": "Literals",
+          "type": "array"
+        },
+        "missing": {
+          "items": {
+            "$ref": "#/$defs/ProtectedLiteral"
+          },
+          "title": "Missing",
+          "type": "array"
+        },
+        "preserved": {
+          "title": "Preserved",
+          "type": "boolean"
+        },
+        "rule_key": {
+          "title": "Rule Key",
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule_key",
+        "literals",
+        "missing",
+        "preserved"
+      ],
+      "title": "PreservationCheck",
+      "type": "object"
+    },
+    "ProtectedLiteral": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "negation",
+            "threshold_or_duration",
+            "quoted_literal",
+            "tool_name",
+            "boundary_or_exception"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "value": {
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "value"
+      ],
+      "title": "ProtectedLiteral",
+      "type": "object"
+    },
+    "RoutingMetrics": {
+      "additionalProperties": false,
+      "properties": {
+        "active_normative_clauses": {
+          "minimum": 0,
+          "title": "Active Normative Clauses",
+          "type": "integer"
+        },
+        "approved_preservation": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Approved Preservation",
+          "type": "number"
+        },
+        "blocked_count": {
+          "minimum": 0,
+          "title": "Blocked Count",
+          "type": "integer"
+        },
+        "explicit_dispositions": {
+          "minimum": 0,
+          "title": "Explicit Dispositions",
+          "type": "integer"
+        },
+        "high_critical_guard_and_test_placement": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "High Critical Guard And Test Placement",
+          "type": "number"
+        },
+        "routing_coverage": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Routing Coverage",
+          "type": "number"
+        },
+        "severity_weighted_approved_preservation": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Severity Weighted Approved Preservation",
+          "type": "number"
+        },
+        "unresolved_count": {
+          "minimum": 0,
+          "title": "Unresolved Count",
+          "type": "integer"
+        },
+        "unrouted_count": {
+          "minimum": 0,
+          "title": "Unrouted Count",
+          "type": "integer"
+        },
+        "unsupported_count": {
+          "minimum": 0,
+          "title": "Unsupported Count",
+          "type": "integer"
+        },
+        "verified_source_anchor_coverage": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Verified Source Anchor Coverage",
+          "type": "number"
+        }
+      },
+      "required": [
+        "active_normative_clauses",
+        "explicit_dispositions",
+        "routing_coverage",
+        "verified_source_anchor_coverage",
+        "approved_preservation",
+        "severity_weighted_approved_preservation",
+        "high_critical_guard_and_test_placement",
+        "blocked_count",
+        "unsupported_count",
+        "unrouted_count",
+        "unresolved_count"
+      ],
+      "title": "RoutingMetrics",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "baseline_always_loaded": {
+      "$ref": "#/$defs/ContentSizeMetric"
+    },
+    "behavioral_fidelity": {
+      "const": "not_measured",
+      "default": "not_measured",
+      "title": "Behavioral Fidelity",
+      "type": "string"
+    },
+    "compiled_kernel": {
+      "$ref": "#/$defs/ContentSizeMetric"
+    },
+    "estimator": {
+      "$ref": "#/$defs/MetricsEstimator"
+    },
+    "expected_per_task_context": {
+      "$ref": "#/$defs/ExpectedContextMetric"
+    },
+    "interpretation": {
+      "minLength": 1,
+      "title": "Interpretation",
+      "type": "string"
+    },
+    "knowledge": {
+      "additionalProperties": {
+        "$ref": "#/$defs/ContentSizeMetric"
+      },
+      "title": "Knowledge",
+      "type": "object"
+    },
+    "machine_enforced": {
+      "additionalProperties": {
+        "$ref": "#/$defs/ContentSizeMetric"
+      },
+      "title": "Machine Enforced",
+      "type": "object"
+    },
+    "protected_literals": {
+      "items": {
+        "$ref": "#/$defs/PreservationCheck"
+      },
+      "title": "Protected Literals",
+      "type": "array"
+    },
+    "routing": {
+      "$ref": "#/$defs/RoutingMetrics"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "skills": {
+      "additionalProperties": {
+        "$ref": "#/$defs/ContentSizeMetric"
+      },
+      "title": "Skills",
+      "type": "object"
+    },
+    "total_bundle_without_manifest": {
+      "$ref": "#/$defs/ContentSizeMetric"
+    }
+  },
+  "required": [
+    "estimator",
+    "baseline_always_loaded",
+    "compiled_kernel",
+    "skills",
+    "knowledge",
+    "machine_enforced",
+    "total_bundle_without_manifest",
+    "expected_per_task_context",
+    "routing",
+    "protected_literals",
+    "interpretation"
+  ],
+  "title": "CompilationMetrics",
+  "type": "object"
+}

@@ -1,0 +1,134 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "destinations": {
+      "items": {
+        "enum": [
+          "prompt_kernel",
+          "skill",
+          "knowledge",
+          "pre_tool_policy",
+          "test",
+          "human_review",
+          "unsupported"
+        ],
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Destinations",
+      "type": "array"
+    },
+    "disposition": {
+      "enum": [
+        "routed",
+        "blocked",
+        "unsupported",
+        "retired"
+      ],
+      "title": "Disposition",
+      "type": "string"
+    },
+    "profile_name": {
+      "maxLength": 120,
+      "minLength": 1,
+      "title": "Profile Name",
+      "type": "string"
+    },
+    "profile_version": {
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$",
+      "title": "Profile Version",
+      "type": "string"
+    },
+    "project_id": {
+      "title": "Project Id",
+      "type": "string"
+    },
+    "rationale": {
+      "maxLength": 5000,
+      "minLength": 1,
+      "title": "Rationale",
+      "type": "string"
+    },
+    "rendering": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Rendering"
+    },
+    "review_status": {
+      "enum": [
+        "approved",
+        "needs_review"
+      ],
+      "title": "Review Status",
+      "type": "string"
+    },
+    "reviewer": {
+      "maxLength": 200,
+      "minLength": 1,
+      "title": "Reviewer",
+      "type": "string"
+    },
+    "rule_id": {
+      "title": "Rule Id",
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "scope_slug": {
+      "anyOf": [
+        {
+          "maxLength": 120,
+          "minLength": 1,
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Scope Slug"
+    },
+    "transform_kind": {
+      "enum": [
+        "verbatim",
+        "reviewed_normalization",
+        "reviewer_authored_guidance",
+        "compiler_scaffold"
+      ],
+      "title": "Transform Kind",
+      "type": "string"
+    },
+    "version": {
+      "minimum": 1,
+      "title": "Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "project_id",
+    "rule_id",
+    "version",
+    "profile_name",
+    "profile_version",
+    "destinations",
+    "transform_kind",
+    "disposition",
+    "rationale",
+    "review_status",
+    "reviewer"
+  ],
+  "title": "PlacementDecisionContract",
+  "type": "object"
+}

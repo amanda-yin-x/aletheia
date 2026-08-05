@@ -279,6 +279,51 @@
       "title": "RuleException",
       "type": "object"
     },
+    "RuleProvenanceMetadata": {
+      "additionalProperties": false,
+      "properties": {
+        "rationale": {
+          "anyOf": [
+            {
+              "maxLength": 5000,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Rationale"
+        },
+        "reviewed_at": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reviewed At"
+        },
+        "reviewer": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reviewer"
+        }
+      },
+      "title": "RuleProvenanceMetadata",
+      "type": "object"
+    },
     "RuleRequirement": {
       "additionalProperties": false,
       "properties": {
@@ -487,6 +532,18 @@
     "normative_text": {
       "title": "Normative Text",
       "type": "string"
+    },
+    "provenance_kind": {
+      "default": "source_anchored",
+      "enum": [
+        "source_anchored",
+        "reviewer_authored_guidance"
+      ],
+      "title": "Provenance Kind",
+      "type": "string"
+    },
+    "provenance_metadata": {
+      "$ref": "#/$defs/RuleProvenanceMetadata"
     },
     "requires": {
       "items": {

@@ -2,17 +2,37 @@
 
 Use this product claim verbatim:
 
-> Aletheia turns agent policies into reviewed prompt, guard, and regression-test
-> artifacts, then shows how a candidate behaves across repeatable release
-> scenarios.
+> Aletheia refactors reviewed agent instructions into a smaller always-loaded
+> prompt kernel plus scoped skills, knowledge, guards, tests, and explicit
+> pending material, with source-linked build evidence.
 
-Use this deterministic boundary verbatim:
+Use this deterministic execution boundary verbatim:
 
 > Approved, machine-decidable rules can allow, block, or request approval before
-> a covered tool call executes. Results are limited to configured rules and
-> calls routed through this policy adapter.
+> a covered tool proposal mutates fixture state. Results are limited to pinned
+> rules and calls routed through the configured policy adapter.
 
-Do not claim formal verification, certification, universal safety, causal proof,
-lossless compression, live-customer performance, protection outside a covered
-adapter, or that a smaller prompt always improves quality/cost. Hard-rule checks
-are deterministic; conversational-quality judgement is outside the P0 evidence.
+Use this compilation-evidence boundary verbatim:
+
+> Exact source anchors, placement decisions, generated spans, protected-literal
+> checks, and structural preservation metrics establish inspectable build
+> conformance. Behavioral fidelity is not measured.
+
+## What may be demonstrated
+
+- exact raw/normalized hashes and source quote/line/UTF-8 byte provenance;
+- reviewed authority and append-only placement decisions;
+- deterministic, content-digested prompt/skill/knowledge/guard/test artifacts;
+- a blocked covered proposal leaving no execution event and no changed state;
+- repeatable scripted Northstar/Acme fixture outcomes once the relevant suite
+  has passed on the claimed repository state.
+
+## What may not be inferred
+
+Do not claim formal verification, certification, universal safety, automatic
+understanding of arbitrary policies, causal proof, semantic equivalence,
+production reliability, live-customer performance,
+protection outside a covered adapter, or that a smaller prompt necessarily
+improves quality or cost. Do not report declarative rule/source/boundary linkage
+as observed evaluator coverage. A local or permanent-user staging result does
+not prove the anonymous hosted lifecycle.

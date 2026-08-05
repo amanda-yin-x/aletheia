@@ -1,3 +1,5 @@
+import hashlib
+import json
 from datetime import datetime
 from typing import Annotated, Any, Literal
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
@@ -15,6 +17,8 @@ class APIModel(BaseModel):
 
 
 SHA256_PATTERN = r"^[0-9a-f]{64}$"
+SEMVER_PATTERN = r"^[0-9]+\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$"
+SLUG_PATTERN = r"^[a-z0-9]+(?:-[a-z0-9]+)*$"
 
 
 class SourceRef(APIModel):
@@ -30,6 +34,515 @@ class SourceRef(APIModel):
         if self.line_end < self.line_start:
             raise ValueError("line_end must be at or after line_start")
         return self
+
+
+class CompilerScopeProfile(APIModel):
+    slug: str = Field(pattern=SLUG_PATTERN, min_length=1, max_length=120)
+    title: str = Field(min_length=1, max_length=240)
+    load_policy: Literal["always", "on_demand", "never"] = "on_demand"
+    skill_path: str | None = None
+    knowledge_path: str | None = None
+
+
+class CompilerProfile(APIModel):
+    """Versioned, domain-neutral rendering profile pinned by a project."""
+
+    schema_version: Literal["1.0"] = "1.0"
+    name: str = Field(min_length=1, max_length=120)
+    version: str = Field(pattern=SEMVER_PATTERN)
+    path: str = Field(min_length=1, max_length=500)
+    agent_name: str | None = Field(default=None, max_length=240)
+    agent_role: str | None = Field(default=None, max_length=2000)
+    response_contract: str | None = Field(default=None, max_length=5000)
+    scopes: list[CompilerScopeProfile] = Field(default_factory=list)
+    source_document_ids: list[str] = Field(default_factory=list)
+
+
+class PinnedDocumentInput(APIModel):
+    name: str = Field(min_length=1, max_length=255)
+    version: int = Field(ge=1)
+
+
+class CompilationInputs(APIModel):
+    baseline_prompt: PinnedDocumentInput
+    tool_schema: PinnedDocumentInput
+    evaluation_data: PinnedDocumentInput
+
+
+class CompilationConfig(APIModel):
+    """Reviewed project-specific labels and exact input selections."""
+
+    schema_version: Literal["1.0"] = "1.0"
+    bundle_slug: str = Field(pattern=SLUG_PATTERN, min_length=1, max_length=120)
+    agent_label: str = Field(min_length=1, max_length=240)
+    skill_title: str = Field(min_length=1, max_length=240)
+    knowledge_title: str = Field(min_length=1, max_length=240)
+    suite_name: str = Field(min_length=1, max_length=240)
+    suite_version: int = Field(ge=1)
+    inputs: CompilationInputs
+    expected_context: list[str] = Field(min_length=1)
+
+    @field_validator("expected_context")
+    @classmethod
+    def unique_expected_context(cls, value: list[str]) -> list[str]:
+        if any(not path.strip() for path in value):
+            raise ValueError("expected context paths must be non-empty")
+        if len(value) != len(set(value)):
+            raise ValueError("expected context paths must be unique")
+        return value
+
+
+class DocumentAuthorityMetadata(APIModel):
+    owner: str = Field(min_length=1, max_length=200)
+    status: Literal["current", "superseded", "draft", "reference"]
+    effective_at: datetime | None = None
+    supersedes_document_id: str | None = None
+    jurisdictions: list[str] = Field(default_factory=list)
+    scopes: list[str] = Field(default_factory=list)
+    version_label: str = Field(min_length=1, max_length=80)
+
+
+class SourceAnchor(APIModel):
+    """Immutable normalized-text anchor used by Gate 1 generated spans."""
+
+    source_anchor_id: str = Field(pattern=SHA256_PATTERN)
+    document_key: str = Field(min_length=1, max_length=400)
+    document_name: str = Field(min_length=1, max_length=255)
+    document_version: int = Field(ge=1)
+    version_label: str = Field(min_length=1, max_length=80)
+    authority_owner: str = Field(min_length=1, max_length=200)
+    authority_status: Literal["current", "superseded", "draft", "reference"]
+    original_sha256: str = Field(pattern=SHA256_PATTERN)
+    normalized_sha256: str = Field(pattern=SHA256_PATTERN)
+    line_start: int = Field(ge=1)
+    line_end: int = Field(ge=1)
+    utf8_byte_start: int = Field(ge=0)
+    utf8_byte_end: int = Field(ge=0)
+    quote: str = Field(min_length=1)
+    quote_sha256: str = Field(pattern=SHA256_PATTERN)
+    parser: str
+    parser_version: str
+    normalizer: str
+    normalizer_version: str
+
+    @model_validator(mode="after")
+    def validate_ranges(self) -> "SourceAnchor":
+        if self.line_end < self.line_start:
+            raise ValueError("line_end must be at or after line_start")
+        if self.utf8_byte_end < self.utf8_byte_start:
+            raise ValueError("utf8_byte_end must be at or after utf8_byte_start")
+        if self.utf8_byte_end == self.utf8_byte_start:
+            raise ValueError("a non-empty source quote must occupy at least one UTF-8 byte")
+        if self.document_key != f"{self.document_name}@{self.document_version}":
+            raise ValueError("document_key must pin the source document name and version")
+        expected_quote_sha256 = hashlib.sha256(self.quote.encode("utf-8")).hexdigest()
+        if self.quote_sha256 != expected_quote_sha256:
+            raise ValueError("quote_sha256 must identify the exact UTF-8 source quote")
+        anchor_identity = {
+            "document_name": self.document_name,
+            "document_version": self.document_version,
+            "normalized_sha256": self.normalized_sha256,
+            "line_start": self.line_start,
+            "line_end": self.line_end,
+            "quote_sha256": self.quote_sha256,
+        }
+        canonical_identity = (
+            json.dumps(
+                anchor_identity,
+                sort_keys=True,
+                separators=(",", ":"),
+                ensure_ascii=False,
+            )
+            + "\n"
+        ).encode("utf-8")
+        expected_anchor_id = hashlib.sha256(canonical_identity).hexdigest()
+        if self.source_anchor_id != expected_anchor_id:
+            raise ValueError("source_anchor_id must identify the immutable anchor fields")
+        return self
+
+
+class PlacementDecisionContract(APIModel):
+    schema_version: Literal["1.0"] = "1.0"
+    project_id: str
+    rule_id: str
+    version: int = Field(ge=1)
+    profile_name: str = Field(min_length=1, max_length=120)
+    profile_version: str = Field(pattern=SEMVER_PATTERN)
+    destinations: list[
+        Literal[
+            "prompt_kernel",
+            "skill",
+            "knowledge",
+            "pre_tool_policy",
+            "test",
+            "human_review",
+            "unsupported",
+        ]
+    ] = Field(min_length=1)
+    scope_slug: str | None = Field(
+        default=None, pattern=SLUG_PATTERN, min_length=1, max_length=120
+    )
+    rendering: str | None = None
+    transform_kind: Literal[
+        "verbatim",
+        "reviewed_normalization",
+        "reviewer_authored_guidance",
+        "compiler_scaffold",
+    ]
+    disposition: Literal["routed", "blocked", "unsupported", "retired"]
+    rationale: str = Field(min_length=1, max_length=5000)
+    review_status: Literal["approved", "needs_review"]
+    reviewer: str = Field(min_length=1, max_length=200)
+
+    @model_validator(mode="after")
+    def validate_placement(self) -> "PlacementDecisionContract":
+        if len(self.destinations) != len(set(self.destinations)):
+            raise ValueError("placement destinations must be unique")
+        if self.disposition == "unsupported" and "unsupported" not in self.destinations:
+            raise ValueError("unsupported dispositions must include the unsupported destination")
+        return self
+
+
+class RuleProvenanceMetadata(APIModel):
+    reviewer: str | None = Field(default=None, max_length=200)
+    rationale: str | None = Field(default=None, max_length=5000)
+    reviewed_at: str | None = None
+
+    @field_validator("reviewed_at")
+    @classmethod
+    def validate_reviewed_at(cls, value: str | None) -> str | None:
+        if value is None:
+            return value
+        try:
+            parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except ValueError as error:
+            raise ValueError("reviewed_at must be ISO 8601") from error
+        if parsed.tzinfo is None or parsed.utcoffset() is None:
+            raise ValueError("reviewed_at must include a UTC offset")
+        return value
+
+
+class RuleProvenance(APIModel):
+    kind: Literal["source_anchored", "reviewer_authored_guidance"] = "source_anchored"
+    metadata: RuleProvenanceMetadata = Field(default_factory=RuleProvenanceMetadata)
+
+    @model_validator(mode="after")
+    def validate_reviewer_guidance(self) -> "RuleProvenance":
+        if self.kind == "reviewer_authored_guidance" and (
+            not self.metadata.reviewer
+            or not self.metadata.rationale
+            or self.metadata.reviewed_at is None
+        ):
+            raise ValueError(
+                "reviewer-authored guidance requires reviewer, rationale, and reviewed_at"
+            )
+        return self
+
+
+class PlacementDecisionOut(PlacementDecisionContract):
+    id: str
+    created_at: datetime
+    updated_at: datetime
+
+
+class PlacementDecisionPatch(APIModel):
+    expected_version: int = Field(ge=1)
+    profile_name: str | None = Field(default=None, min_length=1, max_length=120)
+    profile_version: str | None = Field(default=None, pattern=SEMVER_PATTERN)
+    destinations: list[
+        Literal[
+            "prompt_kernel",
+            "skill",
+            "knowledge",
+            "pre_tool_policy",
+            "test",
+            "human_review",
+            "unsupported",
+        ]
+    ] | None = Field(default=None, min_length=1)
+    scope_slug: str | None = Field(
+        default=None, pattern=SLUG_PATTERN, min_length=1, max_length=120
+    )
+    rendering: str | None = None
+    transform_kind: Literal[
+        "verbatim",
+        "reviewed_normalization",
+        "reviewer_authored_guidance",
+        "compiler_scaffold",
+    ] | None = None
+    disposition: Literal["routed", "blocked", "unsupported", "retired"] | None = None
+    rationale: str | None = Field(default=None, min_length=1, max_length=5000)
+    review_status: Literal["approved", "needs_review"] | None = None
+    reviewer: str | None = Field(default=None, min_length=1, max_length=200)
+
+    @model_validator(mode="after")
+    def validate_patch(self) -> "PlacementDecisionPatch":
+        changed = self.model_dump(exclude={"expected_version"}, exclude_none=True)
+        if not changed:
+            raise ValueError("at least one placement field must change")
+        if self.destinations is not None and len(self.destinations) != len(
+            set(self.destinations)
+        ):
+            raise ValueError("placement destinations must be unique")
+        return self
+
+
+class GeneratedSpan(APIModel):
+    artifact_path: str = Field(min_length=1, max_length=500)
+    artifact_sha256: str = Field(pattern=SHA256_PATTERN)
+    rule_id: str | None = None
+    rule_stable_key: str | None = None
+    rule_revision: int | None = Field(default=None, ge=1)
+    placement_decision_id: str | None = None
+    placement_version: int | None = Field(default=None, ge=1)
+    line_start: int = Field(ge=1)
+    line_end: int = Field(ge=1)
+    utf8_byte_start: int = Field(ge=0)
+    utf8_byte_end: int = Field(ge=0)
+    transform_kind: Literal[
+        "verbatim",
+        "reviewed_normalization",
+        "reviewer_authored_guidance",
+        "compiler_scaffold",
+    ]
+    text_sha256: str = Field(pattern=SHA256_PATTERN)
+    source_refs: list[SourceAnchor] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def validate_generated_span(self) -> "GeneratedSpan":
+        if self.line_end < self.line_start:
+            raise ValueError("line_end must be at or after line_start")
+        if self.utf8_byte_end < self.utf8_byte_start:
+            raise ValueError("utf8_byte_end must be at or after utf8_byte_start")
+        if self.transform_kind in {"verbatim", "reviewed_normalization"} and not self.source_refs:
+            raise ValueError("source-derived spans require at least one source anchor")
+        if self.transform_kind == "compiler_scaffold" and self.source_refs:
+            raise ValueError("compiler scaffold spans cannot claim source anchors")
+        return self
+
+
+class GeneratedSpanOut(GeneratedSpan):
+    id: str
+    build_id: str
+    created_at: datetime
+
+
+class PlacementRecord(APIModel):
+    """Immutable placement snapshot embedded in a compiled build."""
+
+    placement_key: str = Field(min_length=1)
+    rule_key: str = Field(min_length=1)
+    rule_stable_key: str = Field(min_length=1)
+    rule_revision: int = Field(ge=1)
+    version: int = Field(ge=1)
+    profile_name: str = Field(min_length=1, max_length=120)
+    profile_version: str = Field(pattern=SEMVER_PATTERN)
+    destinations: list[
+        Literal[
+            "prompt_kernel",
+            "skill",
+            "knowledge",
+            "pre_tool_policy",
+            "test",
+            "human_review",
+            "unsupported",
+        ]
+    ] = Field(min_length=1)
+    scope_slug: str | None = Field(
+        default=None, pattern=SLUG_PATTERN, min_length=1, max_length=120
+    )
+    rendering: str | None = None
+    transform_kind: Literal[
+        "verbatim",
+        "reviewed_normalization",
+        "reviewer_authored_guidance",
+        "compiler_scaffold",
+    ]
+    disposition: Literal["routed", "blocked", "unsupported", "retired"]
+    rationale: str = Field(min_length=1, max_length=5000)
+    review_status: Literal["approved", "needs_review"]
+    reviewer: str = Field(min_length=1, max_length=200)
+
+    @field_validator("destinations")
+    @classmethod
+    def unique_destinations(cls, value: list[str]) -> list[str]:
+        if len(value) != len(set(value)):
+            raise ValueError("placement destinations must be unique")
+        return value
+
+    @model_validator(mode="after")
+    def validate_keys(self) -> "PlacementRecord":
+        expected_rule_key = f"{self.rule_stable_key}@{self.rule_revision}"
+        if self.rule_key != expected_rule_key:
+            raise ValueError("rule_key must identify the stable key and revision")
+        if self.placement_key != f"{expected_rule_key}:placement:{self.version}":
+            raise ValueError("placement_key must identify the rule and decision version")
+        return self
+
+
+class RoutingReportEntry(APIModel):
+    rule_key: str
+    rule_stable_key: str
+    rule_revision: int = Field(ge=1)
+    title: str
+    rule_status: Literal[
+        "candidate", "needs_review", "approved", "rejected", "superseded"
+    ]
+    severity: Literal["low", "medium", "high", "critical"]
+    category: Literal[
+        "style",
+        "workflow",
+        "knowledge",
+        "runtime_fact",
+        "hard_constraint",
+        "handoff",
+        "quality",
+    ]
+    provenance_kind: Literal["source_anchored", "reviewer_authored_guidance"]
+    provenance_metadata: RuleProvenanceMetadata = Field(
+        default_factory=RuleProvenanceMetadata
+    )
+    verified_source_anchors: int = Field(ge=0)
+    source_anchors: list[SourceAnchor]
+    placement: PlacementRecord
+    destinations: list[
+        Literal[
+            "prompt_kernel",
+            "skill",
+            "knowledge",
+            "pre_tool_policy",
+            "test",
+            "human_review",
+            "unsupported",
+        ]
+    ]
+    disposition: Literal["routed", "blocked", "unsupported", "retired"]
+    rationale: str
+
+
+class RoutingReportCounts(APIModel):
+    active: int = Field(ge=0)
+    routed: int = Field(ge=0)
+    blocked: int = Field(ge=0)
+    unsupported: int = Field(ge=0)
+
+
+class RoutingReportProfile(APIModel):
+    name: str = Field(min_length=1, max_length=120)
+    version: str = Field(pattern=SEMVER_PATTERN)
+    sha256: str = Field(pattern=SHA256_PATTERN)
+
+
+class RoutingReport(APIModel):
+    schema_version: Literal["1.0"] = "1.0"
+    profile: RoutingReportProfile
+    entries: list[RoutingReportEntry]
+    counts: RoutingReportCounts
+
+    @model_validator(mode="after")
+    def validate_counts(self) -> "RoutingReport":
+        expected = {
+            "active": len(self.entries),
+            "routed": sum(item.disposition == "routed" for item in self.entries),
+            "blocked": sum(item.disposition == "blocked" for item in self.entries),
+            "unsupported": sum(
+                item.disposition == "unsupported" for item in self.entries
+            ),
+        }
+        if self.counts.model_dump() != expected:
+            raise ValueError("routing counts must match the report entries")
+        return self
+
+
+class ContentSizeMetric(APIModel):
+    lines: int = Field(ge=0)
+    characters: int = Field(ge=0)
+    utf8_bytes: int = Field(ge=0)
+    estimated_tokens: int = Field(ge=0)
+
+
+class ProtectedLiteral(APIModel):
+    kind: Literal[
+        "negation",
+        "threshold_or_duration",
+        "quoted_literal",
+        "tool_name",
+        "boundary_or_exception",
+    ]
+    value: str
+
+
+class PreservationCheck(APIModel):
+    rule_key: str
+    artifact_paths: list[str] = Field(default_factory=list)
+    literals: list[ProtectedLiteral]
+    missing: list[ProtectedLiteral]
+    preserved: bool
+
+
+class PreservationReport(APIModel):
+    schema_version: Literal["1.0"] = "1.0"
+    checks: list[PreservationCheck]
+    behavioral_fidelity: Literal["not_measured"] = "not_measured"
+    interpretation: str = Field(min_length=1)
+
+
+class MetricsEstimator(APIModel):
+    name: str
+    version: str
+
+
+class ExpectedContextMetric(ContentSizeMetric):
+    artifact_paths: list[str]
+
+
+class RoutingMetrics(APIModel):
+    active_normative_clauses: int = Field(ge=0)
+    explicit_dispositions: int = Field(ge=0)
+    routing_coverage: float = Field(ge=0, le=1)
+    verified_source_anchor_coverage: float = Field(ge=0, le=1)
+    approved_preservation: float = Field(ge=0, le=1)
+    severity_weighted_approved_preservation: float = Field(ge=0, le=1)
+    high_critical_guard_and_test_placement: float = Field(ge=0, le=1)
+    blocked_count: int = Field(ge=0)
+    unsupported_count: int = Field(ge=0)
+    unrouted_count: int = Field(ge=0)
+    unresolved_count: int = Field(ge=0)
+
+
+class CompilationMetrics(APIModel):
+    schema_version: Literal["1.0"] = "1.0"
+    estimator: MetricsEstimator
+    baseline_always_loaded: ContentSizeMetric
+    compiled_kernel: ContentSizeMetric
+    skills: dict[str, ContentSizeMetric]
+    knowledge: dict[str, ContentSizeMetric]
+    machine_enforced: dict[str, ContentSizeMetric]
+    total_bundle_without_manifest: ContentSizeMetric
+    expected_per_task_context: ExpectedContextMetric
+    routing: RoutingMetrics
+    protected_literals: list[PreservationCheck]
+    behavioral_fidelity: Literal["not_measured"] = "not_measured"
+    interpretation: str = Field(min_length=1)
+
+
+class SourceMapArtifact(APIModel):
+    schema_version: Literal["1.0"] = "1.0"
+    range_convention: Literal[
+        "1-based inclusive lines; 0-based half-open UTF-8 byte ranges"
+    ]
+    spans: list[GeneratedSpan]
+
+
+class UnsupportedRuleEntry(RoutingReportEntry):
+    normative_text: str
+    reason: str
+
+
+class UnsupportedRulesArtifact(APIModel):
+    schema_version: Literal["1.0"] = "1.0"
+    rules: list[UnsupportedRuleEntry]
+    interpretation: str = Field(min_length=1)
 
 
 class Predicate(APIModel):
@@ -142,6 +655,20 @@ class RuleIR(APIModel):
     source_refs: list[CompiledSourceRef]
     target_tools: list[str] = Field(default_factory=list)
     reviewer_note: str = ""
+    provenance_kind: Literal[
+        "source_anchored", "reviewer_authored_guidance"
+    ] = "source_anchored"
+    provenance_metadata: RuleProvenanceMetadata = Field(
+        default_factory=RuleProvenanceMetadata
+    )
+
+    @model_validator(mode="after")
+    def validate_rule_provenance(self) -> "RuleIR":
+        RuleProvenance(
+            kind=self.provenance_kind,
+            metadata=self.provenance_metadata,
+        )
+        return self
 
 
 class PolicyToolCall(APIModel):
@@ -330,6 +857,7 @@ class CustomerFixture(APIModel):
     id: str = Field(min_length=1)
     name: str = Field(min_length=1)
     timezone: str | None
+    identity: dict[str, Any] | None = None
 
     @field_validator("timezone")
     @classmethod
@@ -354,13 +882,69 @@ class OrderFixture(APIModel):
     payment_method: str = Field(min_length=1)
 
 
+class AppointmentFixture(APIModel):
+    id: str = Field(min_length=1)
+    version: int = Field(ge=1)
+    customer_id: str = Field(min_length=1)
+    clinic_id: str = Field(min_length=1)
+    service_code: str = Field(min_length=1)
+    starts_at: str
+    customer_timezone: str | None
+    status: str = Field(min_length=1)
+    reschedule_count: int = Field(ge=0)
+    last_rescheduled_at: str | None
+    reschedule_fee: Money
+    cancellation_fee: Money
+
+
+class AvailabilityFixture(APIModel):
+    slot_id: str = Field(min_length=1)
+    clinic_id: str = Field(min_length=1)
+    service_code: str = Field(min_length=1)
+    starts_at: str
+    clinic_timezone: str
+    available: bool
+
+
+class ConfirmationFixture(APIModel):
+    id: str = Field(min_length=1)
+    customer_id: str = Field(min_length=1)
+    appointment_id: str = Field(min_length=1)
+    action: str = Field(min_length=1)
+    proposed_start_at: str | None
+    customer_timezone: str
+    fee: Money
+    policy_version: str
+    created_at: str
+    expires_at: str
+    used_at: str | None
+
+
+class AppointmentEventFixture(APIModel):
+    event_id: str = Field(min_length=1)
+    appointment_id: str = Field(min_length=1)
+    event_type: str = Field(min_length=1)
+    sequence: int = Field(ge=1)
+    occurred_at: str
+
+
 class FactFixture(APIModel):
-    schema_version: Literal["0.2"] = "0.2"
+    schema_version: Literal["0.2", "1.0"] = "0.2"
     data_scope: Literal["evaluation"]
     contains_customer_records: Literal[False]
     evaluation_timestamp: str
     customers: list[CustomerFixture]
-    orders: list[OrderFixture]
+    orders: list[OrderFixture] = Field(default_factory=list)
+    appointments: list[AppointmentFixture] = Field(default_factory=list)
+    availability: list[AvailabilityFixture] = Field(default_factory=list)
+    confirmations: list[ConfirmationFixture] = Field(default_factory=list)
+    appointment_events: list[AppointmentEventFixture] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def require_domain_records(self) -> "FactFixture":
+        if not self.orders and not self.appointments:
+            raise ValueError("evaluation data requires orders or appointments")
+        return self
 
     @field_validator("evaluation_timestamp")
     @classmethod
@@ -423,6 +1007,32 @@ class ManifestCompiler(APIModel):
     token_estimator: str
 
 
+class ManifestCompilerProfile(APIModel):
+    name: str = Field(min_length=1, max_length=120)
+    version: str = Field(pattern=SEMVER_PATTERN)
+    path: str = Field(min_length=1, max_length=500)
+    digest: str = Field(pattern=SHA256_PATTERN)
+
+
+class ManifestPlacementInput(PlacementRecord):
+    digest: str = Field(pattern=SHA256_PATTERN)
+
+    @model_validator(mode="after")
+    def validate_digest(self) -> "ManifestPlacementInput":
+        canonical_record = (
+            json.dumps(
+                self.model_dump(exclude={"digest"}),
+                sort_keys=True,
+                separators=(",", ":"),
+                ensure_ascii=False,
+            )
+            + "\n"
+        ).encode("utf-8")
+        if self.digest != hashlib.sha256(canonical_record).hexdigest():
+            raise ValueError("placement digest must identify the canonical placement record")
+        return self
+
+
 class ManifestRuntime(APIModel):
     adapter: str
     runner_input_version: str
@@ -459,6 +1069,12 @@ class ManifestRuleInput(APIModel):
         "quality",
     ]
     enforcement: Literal["prompt", "guard", "test_only", "human_review"]
+    provenance_kind: Literal[
+        "source_anchored", "reviewer_authored_guidance"
+    ] = "source_anchored"
+    provenance_metadata: RuleProvenanceMetadata = Field(
+        default_factory=RuleProvenanceMetadata
+    )
     source_documents: list[str]
     digest: str = Field(pattern=SHA256_PATTERN)
 
@@ -501,7 +1117,7 @@ class ManifestFindings(APIModel):
 
 
 class InputManifest(APIModel):
-    schema_version: Literal["0.3"] = "0.3"
+    schema_version: Literal["0.3", "1.0"] = "0.3"
     compiler: ManifestCompiler
     runtime: ManifestRuntime
     sources: list[ManifestSourceInput]
@@ -510,6 +1126,19 @@ class InputManifest(APIModel):
     tools: ManifestArtifactInput
     facts: ManifestFactInput
     findings: ManifestFindings
+    compiler_profile: ManifestCompilerProfile | None = None
+    placements: list[ManifestPlacementInput] = Field(default_factory=list)
+    compilation_config_digest: str | None = Field(default=None, pattern=SHA256_PATTERN)
+
+    @model_validator(mode="after")
+    def require_gate1_inputs(self) -> "InputManifest":
+        if self.schema_version == "1.0" and (
+            self.compiler_profile is None or self.compilation_config_digest is None
+        ):
+            raise ValueError(
+                "Gate 1 input manifests require compiler_profile and compilation_config_digest"
+            )
+        return self
 
 
 class ManifestSerialization(APIModel):
@@ -525,7 +1154,7 @@ class ManifestArtifactRoot(APIModel):
 
 
 class BuildManifest(APIModel):
-    schema_version: Literal["0.3"] = "0.3"
+    schema_version: Literal["0.3", "1.0"] = "0.3"
     compiler_version: str
     serialization: ManifestSerialization
     inputs: InputManifest
@@ -535,6 +1164,12 @@ class BuildManifest(APIModel):
     unresolved_findings: list[ManifestFinding]
     accepted_findings: list[ManifestFinding]
     limitations: list[str]
+
+    @model_validator(mode="after")
+    def align_manifest_versions(self) -> "BuildManifest":
+        if self.schema_version == "1.0" and self.inputs.schema_version != "1.0":
+            raise ValueError("Gate 1 build manifests require Gate 1 input manifests")
+        return self
 
 
 class EvidenceProvenance(APIModel):
@@ -615,9 +1250,9 @@ class CoverageMetrics(APIModel):
     explicit_assertion_case_count: int = Field(ge=0)
     explicit_assertion_coverage: float = Field(ge=0, le=1)
     compiler_assertion_coverage: float = Field(ge=0, le=1)
-    rule_coverage: "CoverageDimension"
-    source_coverage: "CoverageDimension"
-    boundary_coverage: "CoverageDimension"
+    declared_rule_linkage: "CoverageDimension"
+    declared_source_linkage: "CoverageDimension"
+    declared_boundary_linkage: "CoverageDimension"
     critical_unclassified_rules: list[str]
 
 
@@ -670,6 +1305,14 @@ class ProjectOut(APIModel):
     domain: str
     description: str
     mode: str
+    compiler_profile: CompilerProfile = Field(
+        default_factory=lambda: CompilerProfile(
+            name="source-aware",
+            version="1.0.0",
+            path="compiler-profiles/source-aware-v1.json",
+        )
+    )
+    compilation_config: dict[str, Any] = Field(default_factory=dict)
     created_at: datetime
 
 
@@ -686,6 +1329,15 @@ class DocumentOut(APIModel):
     line_count: int
     token_estimate: int
     origin: dict[str, Any]
+    authority_owner: str = "unspecified"
+    authority_status: Literal["current", "superseded", "draft", "reference"] = (
+        "reference"
+    )
+    effective_at: datetime | None = None
+    supersedes_document_id: str | None = None
+    jurisdictions: list[str] = Field(default_factory=list)
+    authority_scopes: list[str] = Field(default_factory=list)
+    version_label: str = ""
     created_at: datetime
 
 
@@ -724,6 +1376,12 @@ class RuleOut(APIModel):
     target_tools: list[str]
     exceptions: list[RuleException]
     reviewer_note: str
+    provenance_kind: Literal[
+        "source_anchored", "reviewer_authored_guidance"
+    ] = "source_anchored"
+    provenance_metadata: RuleProvenanceMetadata = Field(
+        default_factory=RuleProvenanceMetadata
+    )
     created_at: datetime
     updated_at: datetime
 
@@ -815,6 +1473,24 @@ class BuildOut(APIModel):
     stats: dict[str, Any]
     content_hash: str
     created_at: datetime
+
+
+class BuildArtifactInspection(APIModel):
+    path: str
+    sha256: str = Field(pattern=SHA256_PATTERN)
+
+
+class BuildInspectionOut(APIModel):
+    build_id: str
+    project_id: str
+    status: str
+    input_hash: str = Field(pattern=SHA256_PATTERN)
+    compiler_version: str
+    content_hash: str = Field(pattern=SHA256_PATTERN)
+    artifacts: list[BuildArtifactInspection]
+    source_map: SourceMapArtifact | dict[str, list[str]]
+    stats: dict[str, Any]
+    generated_spans: list[GeneratedSpanOut]
 
 
 class TestCaseOut(APIModel):

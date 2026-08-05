@@ -6,15 +6,23 @@ interface RateLimiter {
   limit(options: { key: string }): Promise<{ success: boolean }>;
 }
 
-interface RateLimitEnv {
-  API_RATE_LIMITER?: RateLimiter;
-  API_POLL_RATE_LIMITER?: RateLimiter;
-  API_HEAVY_RATE_LIMITER?: RateLimiter;
-}
-
 export interface EdgeRateLimitResult {
   allowed: boolean;
   retryAfterSeconds: number;
+}
+
+function isRateLimiter(candidate: unknown): candidate is RateLimiter {
+  return !(
+    typeof candidate !== "object"
+    || candidate === null
+    || !("limit" in candidate)
+    || typeof candidate.limit !== "function"
+  );
+}
+
+function rateLimiterBinding(env: object, name: string): RateLimiter | undefined {
+  const candidate: unknown = Reflect.get(env, name);
+  return isRateLimiter(candidate) ? candidate : undefined;
 }
 
 function categoryForPath(path: readonly string[]): RateLimitCategory {
@@ -37,13 +45,12 @@ export async function enforceEdgeApiRateLimit(
   }
 
   const { env } = await getCloudflareContext({ async: true });
-  const bindings = env as unknown as RateLimitEnv;
-  const general = bindings.API_RATE_LIMITER;
+  const general = rateLimiterBinding(env, "API_RATE_LIMITER");
   const category = categoryForPath(path);
   const specialized = category === "poll"
-    ? bindings.API_POLL_RATE_LIMITER
+    ? rateLimiterBinding(env, "API_POLL_RATE_LIMITER")
     : category === "heavy"
-      ? bindings.API_HEAVY_RATE_LIMITER
+      ? rateLimiterBinding(env, "API_HEAVY_RATE_LIMITER")
       : null;
   if (!general || (category !== "general" && !specialized)) {
     throw new Error("Required API rate-limit bindings are unavailable.");
