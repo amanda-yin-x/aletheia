@@ -5,6 +5,7 @@ COPY apps/api/pyproject.toml apps/api/uv.lock ./
 RUN uv sync --frozen --no-dev --no-install-project
 COPY apps/api ./
 COPY data/demo /data/demo
+COPY data/compiler-profiles /data/compiler-profiles
 RUN uv sync --frozen --no-dev
 EXPOSE 8000
 CMD ["uv", "run", "aletheia", "serve"]

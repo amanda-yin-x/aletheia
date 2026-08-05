@@ -90,6 +90,24 @@ jobs:
       - name: Upgrade an empty PostgreSQL database and run the hosted lifecycle
         run: cd apps/api && uv run pytest -m postgres
 
+  api-container-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - name: Build the production API image
+        run: docker build --file apps/api/Dockerfile --tag aletheia-api:ci .
+      - name: Verify bundled runtime data and fixture imports
+        run: >-
+          docker run --rm --env ENVIRONMENT=test --entrypoint uv aletheia-api:ci
+          run --no-sync python -c
+          'from pathlib import Path; root = Path("/data");
+          assert (root / "compiler-profiles" / "source-aware-v1.json").is_file();
+          assert (root / "demo" / "northstar-retail").is_dir();
+          assert (root / "demo" / "acme-appointments").is_dir();
+          from app.services.demo_registry import demo_fixture_slugs;
+          assert demo_fixture_slugs() == ("acme-appointments", "northstar-retail")'
+
   secret-scan:
     runs-on: ubuntu-latest
     timeout-minutes: 10
