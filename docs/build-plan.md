@@ -1,15 +1,17 @@
 # Build plan and gates
 
 **Reconciled:** 2026-08-04  
-**Inspected base:** `91055f6043edfd7f0cb171eac0bd04c611f2d509`; verified Gate 1 implementation: `d10af278f785be76a8232589b4d0264792147a17`
+**Last independently audited anchor:** `4f4e410a2b114bb16b55566bca79c555a489bd9b`  
+**Original Gate 1 start:** `91055f6043edfd7f0cb171eac0bd04c611f2d509`  
+**Reconciliation start:** `0d5b356e6143f784c726f55406ca1ba12d308af0`; verified implementation: `2292a5f7089d061c9dc8b977852ee04d182373bc`
 
 ## Status at a glance
 
 | Track | Status | Exit boundary |
 |---|---|---|
-| Gate 0 — deterministic Northstar foundation | Complete in the settled tested local fixture scope | Preserve ingest → review → build → run → trace → report behavior and its no-key path. |
-| Gate 0H — hosted preview and release hardening | In progress | Permanent-user staging passed; anonymous Turnstile redemption and the complete guest lifecycle still require hosted verification. |
-| Gate 1 — source-aware policy refactoring/compiler | Complete in verified local two-domain fixture scope | API/database/frontend/packaging/browser checks cover the shared Northstar/Acme path; not deployed. |
+| Gate 0 — Local deterministic foundation | Complete in the settled tested Northstar fixture/local scope | Preserve ingest → review → build → run → trace → report behavior and its no-key path. |
+| Gate 0H — Hosted verification and release hardening | In progress | Permanent-user staging passed; anonymous Turnstile redemption and the complete guest lifecycle still require hosted verification. |
+| Gate 1 — Source-aware policy refactoring and prompt/skill compilation | Complete in verified local two-domain fixture scope | API/database/frontend/packaging/browser checks cover the shared Northstar/Acme path; not deployed. |
 | Gates 2–8 | Absent | Start only after a recorded Gate 1 review. |
 
 ## Gate 0 foundation to preserve
@@ -63,16 +65,16 @@ The verified local implementation introduces:
 8. an Acme appointments corpus using the same compiler contracts as Northstar;
 9. source/rule placement review and build-inspection surfaces.
 
-Confirmed on the verified local implementation commit: default API `139 passed, 1
-skipped`; focused regenerated-contract/Gate 1 suite `31 passed`; Ruff, mypy,
+Confirmed on the verified local implementation commit: default API `148 passed, 1
+skipped`; focused regenerated-contract/Gate 1 suite `40 passed`; Ruff, mypy,
 SQLite Alembic upgrade/drift through `0006`, and fresh PostgreSQL migration
-integration `1 passed, 4 deselected`; frontend ESLint/typecheck, all 84 Vitest
-tests across 22 files, and production Next.js build. The temporary PostgreSQL
+integration `1 passed, 4 deselected`; frontend ESLint/typecheck, all 87 Vitest
+tests across 23 files, and production Next.js build. The temporary PostgreSQL
 database was removed. OpenNext at compatibility date `2026-08-04`, Wrangler
-`4.118.0` type generation, root/staging deploy dry-runs (53 assets; 8,019.91 KiB
-/ 1,665.20 KiB gzip), and local startup check (34.0 ms) passed. Browser E2E
-passed. The focused two-domain E2E passed 1/1 in 15.2 seconds; the complete
-fresh-isolated Playwright suite passed 6/6 in 1.3 minutes. `pip-audit` and the
+`4.118.0` type generation, root/staging deploy dry-runs (53 assets; 8,026.44 KiB
+/ 1,666.83 KiB gzip), and local startup check (40.4 ms active) passed. Browser
+E2E passed. The focused two-domain E2E passed 1/1 in 34.6 seconds; the complete
+fresh-isolated Playwright suite passed 6/6 in 1.1 minutes. `pip-audit` and the
 production high-severity `pnpm audit` reported no known vulnerabilities. The
 dry-run bundle/startup values are packaging observations, not deployment or
 production-performance evidence. None of this changes the deployed public
@@ -81,6 +83,35 @@ production-performance evidence. None of this changes the deployed public
 See [the Gate 1 local verification report](gate-1-verification-report.md) for
 the exact build roots, artifact tree, representative provenance/metrics, demo
 path, and unsupported claims.
+
+## Gate 1 reviewable-slice record
+
+The implementation landed across `d10af27` and focused reconciliation
+`2292a5f`, so Git history does not independently prove that every intermediate
+slice was runnable. The table below is the
+equivalent review/status breakdown required by the execution brief; only the
+combined end state carries the recorded pass claim.
+
+| Slice | Principal paths | Evidence-backed outcome |
+|---|---|---|
+| 1 — contracts and profiles | models/schemas, migration `0006`, compiler profile, generated OpenAPI/JSON Schema/client | Fail-closed profile, placement, generated-span, routing, preservation, and metric contracts passed contract/persistence tests. |
+| 2 — generic compiler and Northstar parity | `services/compilation/`, compiler facade, Northstar seeds/tests | Northstar builds through the profile-driven core; fresh-process bytes/digests and legacy-build readability passed. |
+| 3 — Acme corpus | `data/demo/acme-appointments/`, appointment seed, shared runner | The substantial appointment corpus, manual authority conflicts, pending temporal clauses, and unsupported daylight clause passed the shared compiler/runner path. |
+| 4 — review and inspection UI | project switcher, routing/placement workbench, build inspection, presentation helpers | Source authority, placement versions, bundle tree, metrics, and exact span links passed unit/component and browser coverage. |
+| 5 — evidence and documentation | verification report, successor documents, capability inventory, screenshots | Claims, artifact roots, unsupported boundaries, and local-versus-hosted status were recorded without starting Gate 2. |
+
+The last pre-reconciliation repository-wide CI evidence is [run
+30963753935](https://github.com/amanda-yin-x/aletheia/actions/runs/30963753935)
+on `0d5b356`, where quality, PostgreSQL integration, and secret-scan jobs all
+passed. The final pushed documentation commit requires its own green run.
+Hosted Supabase/Render remains at migration `0005`; local/CI migration head is
+`0006`.
+
+The existing CLI retains deterministic `compile`, `test`, and `report`
+commands. A stable customer-facing `aletheia check` exit/evidence contract and
+narrow pre-side-effect dispatcher were deliberately not improvised inside this
+checkpoint; they are the immediate post-Gate-1 integration seam if product
+validation requires them, and must not be described as complete Gate 8.
 
 ## Gate 1 regression contract
 

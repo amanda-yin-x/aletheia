@@ -2,6 +2,9 @@
 
 **Original review date:** 2026-08-03  
 **Repository reconciliation date:** 2026-08-04  
+**Last independently audited anchor:** `4f4e410a2b114bb16b55566bca79c555a489bd9b`  
+**Inspected repository start:** `91055f6043edfd7f0cb171eac0bd04c611f2d509`  
+**Verified Gate 1 implementation:** `2292a5f7089d061c9dc8b977852ee04d182373bc`; final pushed CI pending  
 **Version:** 2.0  
 **Purpose:** product positioning, adjacent-product analysis, user/practitioner evidence, benchmark design, formal/AI implementation, and enterprise architecture  
 **Companion files:** `aletheia_independent_review_and_product_decision_v2.md` and `aletheia_refined_codex_execution_handoff_v3.md`  
@@ -21,10 +24,11 @@ The current implementation evidence changes the earlier synthesis in four ways:
   tested fixture scope;
 - Supabase, Render, and Cloudflare are provisioned, but hosted anonymous guest
   verification remains Gate 0H work in progress;
-- a generic source-aware compiler, exact provenance/placement contracts,
-  structural preservation metrics, and the Acme appointments corpus now exist as
-  a Gate 1 implementation that is complete in the verified local two-domain
-  fixture scope, including API/database/frontend/packaging/browser evidence;
+- **Gate 1 — Source-aware policy refactoring and prompt/skill compilation** now
+  has a generic compiler, exact provenance/placement contracts, structural
+  preservation metrics, and the Acme appointments corpus complete in the
+  verified local two-domain fixture scope, including
+  API/database/frontend/packaging/browser evidence;
 - solver analysis, temporal monitors, mutation testing, live models, upstream
   tau execution, runtime SDKs, and enterprise controls remain absent Gates 2–8.
 
@@ -43,6 +47,17 @@ This is a decision-oriented source map, not a bibliometric review or proof of ma
 - Recent preprints establish that the direction is active; their headline results remain author-reported until independently replicated.
 
 The review intentionally includes direct competitors, mature adjacent platforms, open-source implementations, standards, papers, and user threads. It does not count duplicate search results or generic SEO summaries.
+
+### Cluster-to-decision map
+
+| Source cluster | What it may support | What remains unvalidated/current status |
+|---|---|---|
+| A — evaluation/observability/guardrails | Product-positioning decision not to lead with a generic eval or guard proxy | Feature density does not prove competitor traction or Aletheia demand |
+| B — direct overlap | Narrower source-aware refactoring/provenance wedge and portability hypothesis | Vendor claims are not independent proof; willingness to pay needs interviews/adoption evidence |
+| C — practitioner threads | Integration, authorization, privacy, and tool-format risks worth testing | Anecdotes do not establish prevalence, market size, or a required feature |
+| D — benchmarks/formal/instruction research | Later Gate 2–7 designs and careful evidence semantics | No solver, temporal, mutation, behavioral-fidelity, live evaluation, or tau-execution capability exists now |
+| E — Qwen/local serving | Candidate design constraints for future Gate 5 capability probes | No local/live model operates; model quality, hardware fit, and structured-tool reliability remain assumptions |
+| F — enterprise/storage/integration | Later release integrity, runtime, tenancy, and production-maturity patterns | RLS, signed distribution, customer ingestion, enterprise controls, and production assurance remain absent |
 
 ## A. Evaluation, observability, and guardrail platforms
 
@@ -159,7 +174,7 @@ The review intentionally includes direct competitors, mature adjacent platforms,
 The external evidence supports six decisions:
 
 1. **Keep the project, change the centre.** Runtime guardrails are crowded; source-aware policy change review and CI is the stronger remaining wedge.
-2. **Accept the bounded Gate 1 result.** Commit `d10af278f785be76a8232589b4d0264792147a17` contains a second domain and a generic source-aware compiler whose local two-domain, packaging, and browser checkpoint passed; hosted deployment and real model/customer integrations remain later work.
+2. **Accept the bounded Gate 1 result.** Commit `2292a5f7089d061c9dc8b977852ee04d182373bc` contains the reconciled second domain and generic source-aware compiler whose local two-domain, packaging, and browser checkpoint passed; hosted deployment and real model/customer integrations remain later work.
 3. **Keep hard decisions deterministic and bounded.** The current path uses schemas, exact source verification, human review, placement decisions, tests, and runtime code. LLM proposals, solvers, and generic monitors remain future gates.
 4. **Use benchmarks carefully.** Retail-17 is an intentionally selected smoke suite; a proper external result requires the upstream full split, exact version/configuration, and separately reported applicability.
 5. **Right-size the architecture.** The current modular monolith, SQLite/Postgres, provider seams, SQL jobs, and CLI are enough for Gate 1 proof. A customer runtime SDK, signed distribution, broader shared tenancy, and enterprise controls remain later work.

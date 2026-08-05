@@ -6,9 +6,10 @@ path. FastAPI, Typer, and the SQL operation worker share one service layer;
 Next.js is the product surface and the same-origin backend-for-frontend on
 Cloudflare.
 
-Gate 1 is complete in the verified local Northstar/Acme fixture scope. That
-compiler/UI result is not deployed: the public Workers remain on the separately
-recorded `147448a` bundle.
+**Gate 1 — Source-aware policy refactoring and prompt/skill compilation** is
+complete in the verified local Northstar/Acme fixture scope. That compiler/UI
+result is not deployed: the public Workers remain on the separately recorded
+`147448a` bundle.
 
 ## Hosted request path
 
@@ -50,7 +51,8 @@ raw source bytes
   → pinned compiler profile + compilation config
   → prompt kernel / scoped skill / knowledge / guard / test / pending material
   → exact generated spans + source map + routing/preservation/metric evidence
-  → content-digested manifest and immutable build/run evidence
+  → artifact SHA-256
+  → content-digested build root, manifest, and immutable build/run evidence
 ```
 
 The generic compiler is profile-driven. It routes reviewed clauses to
@@ -104,10 +106,11 @@ are unique per workspace. Jobs carry workspace/project identity, and
 placements, builds, runs, traces, and reports are loaded through the same
 ownership chain.
 
-Bootstrap is idempotent: first access creates a personal workspace and seeded
-Northstar project; later access reopens it. Reset replaces only that project’s
-seeded contents while preserving its ID. Hosted arbitrary project creation and
-source upload remain disabled.
+Bootstrap is idempotent: current Gate 1 source creates a personal workspace and
+the seeded Northstar and Acme fixture projects; later access reopens them. Reset
+replaces only the requested seeded project’s contents while preserving its ID.
+The deployed `147448a` path remains Northstar-only. Hosted arbitrary project
+creation and source upload remain disabled.
 
 Alembic is the only production schema creator. API/worker startup does not call
 `create_all()` or globally seed data. Render Free applies migrations under a

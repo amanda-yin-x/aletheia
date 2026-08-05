@@ -45,14 +45,14 @@ records or real business side effects are included.
 
 | Product track | Current status |
 |---|---|
-| Gate 0 — local deterministic Northstar foundation | Complete in the settled tested fixture scope. |
-| Gate 0H — hosted preview and hardening | In progress: permanent-user staging passed; anonymous Turnstile redemption and complete guest E2E remain unverified. |
-| Gate 1 — source-aware generic compiler | Complete in the verified local two-domain fixture scope. This is not deployed/hosted Gate 1 evidence. |
+| Gate 0 — Local deterministic foundation | Complete in the settled tested Northstar fixture scope. |
+| Gate 0H — Hosted verification and release hardening | In progress: permanent-user staging passed; anonymous Turnstile redemption and complete guest E2E remain unverified. |
+| Gate 1 — Source-aware policy refactoring and prompt/skill compilation | Complete in the verified local two-domain fixture scope. This is not deployed/hosted Gate 1 evidence. |
 | Gates 2–8 | Not implemented. Provider interfaces, tau data sync, schemas, or research notes do not make these operating capabilities. |
 
-Gate 1 is local working-tree status, not deployed status. The public Workers
-still serve the separately identified `147448a` bundle until a later verified
-promotion.
+Gate 1 evidence is pinned to local implementation checkpoint `2292a5f`; it is
+not deployed status. The public Workers still serve the separately identified
+`147448a` bundle until a later verified promotion.
 
 ## Why policy CI
 
@@ -135,8 +135,9 @@ still a release gate in this repository snapshot.
 The verified local Gate 1 implementation includes an Acme appointments domain pack to
 test the same compiler outside refunds. It is synthetic evaluation data, not a
 live scheduling integration. The confirmed local Gate 1 suite exercises it
-through the shared compiler/runner; browser/release-bundle checks still gate
-the final status.
+through the shared compiler/runner, placement/build UI, release-bundle checks,
+and the sixth Playwright flow. Those checks passed locally; they do not imply a
+hosted Acme deployment.
 
 The exact 90-second talk track is in [docs/demo-script.md](docs/demo-script.md).
 
@@ -282,28 +283,29 @@ is optional and does not execute or score the benchmark.
 ## Verification boundary
 
 Gate 1 is complete in the verified local two-domain fixture scope. Final local
-results are: 139 passed and one skipped in the default API suite; 31 passed in
+results are: 148 passed and one skipped in the default API suite; 40 passed in
 the focused regenerated-contract/Gate 1 suite; Ruff and mypy passed; SQLite
 Alembic upgrade/drift passed through `0006`; and a fresh real-PostgreSQL
 migration integration passed one test with four deselected before its temporary
-database was removed. The frontend passed ESLint, strict type checking, all 84
-Vitest tests across 22 files, and a production Next.js build including the
+database was removed. The frontend passed ESLint, strict type checking, all 87
+Vitest tests across 23 files, and a production Next.js build including the
 dynamic Placements route. The OpenNext bundle passed at compatibility date
 `2026-08-04`; Wrangler `4.118.0` type generation, root/staging deploy dry-runs,
-and startup check passed. The dry-runs packaged 53 assets and an 8,019.91 KiB
-bundle (1,665.20 KiB gzip); local active startup measured 34.0 ms. These are
+and startup check passed. The dry-runs packaged 53 assets and an 8,026.44 KiB
+bundle (1,666.83 KiB gzip); local active startup measured 40.4 ms. These are
 packaging checks, not deployment or production-performance evidence. None of
 these local results changes the deployed `147448a` Worker claim.
 
-The focused two-domain browser flow passed 1/1 in 15.2 seconds. The complete
-Playwright suite passed 6/6 in 1.3 minutes using fresh isolated API/web ports and
+The focused two-domain browser flow passed 1/1 in 34.6 seconds including fresh
+server startup. The complete
+Playwright suite passed 6/6 in 1.1 minutes using fresh isolated API/web ports and
 Next output. The earlier transient 404 reproduced only with stale reused Next
 development output and disappeared on the clean run; no product workaround was
 added. `pip-audit` and the production high-severity `pnpm audit` reported no
 known vulnerabilities.
 
 The counts below describe the settled pre-Gate-1/public-guest release and must
-not be read as verification of Gate 1 implementation commit `d10af278`.
+not be read as verification of Gate 1 implementation commit `2292a5f`.
 
 The hosted changes have automated coverage for JWT validation,
 tenant scoping, operation idempotency and lease recovery, migrations, CSRF and
@@ -330,11 +332,14 @@ order, so a mutation cannot cross the captured-input fence.
 The verified Gate 1 backend, web, build, Worker dry-run, and clean six-flow
 browser checks all passed locally. The repository's quality, secret-scan, and
 PostgreSQL integration jobs also passed in [GitHub Actions run
-#30963519448](https://github.com/amanda-yin-x/aletheia/actions/runs/30963519448)
-on documentation checkpoint `25b42ff` and implementation parent `d10af27`.
-The target Supabase project is migrated through Alembic head; its Data API is
-disabled, `anon`/`authenticated` have no application-table privileges, and the
-future-table default denial was verified transactionally. The Render service
+#30963753935](https://github.com/amanda-yin-x/aletheia/actions/runs/30963753935)
+on the pre-reconciliation repository commit `0d5b356`; the current
+implementation checkpoint is `2292a5f` and requires its own final pushed CI
+run. The hosted Supabase schema is verified through
+`0005_guest_access_waitlist`, while migration `0006_gate1_compilation_contracts`
+has passed only in local/CI databases and is not deployed. The hosted Data API
+is disabled, `anon`/`authenticated` have no application-table privileges, and
+the future-table default denial was verified transactionally. The Render service
 and named Cloudflare staging Worker passed the permanent-user authenticated
 bootstrap,
 two-user isolation, build/run/trace/report, download, and direct-origin security
@@ -394,10 +399,11 @@ See [docs/deployment.md](docs/deployment.md) for the exact runbook.
   specifications/trajectories, tool registry, and fact metadata. A live test row
   remains only as relational identity; run, trace, and report presentation uses
   the stored result snapshot.
-- The settled backend suite reproduces equivalent build roots byte-for-byte,
-  and the repository CI passed on the settled implementation commit. Bundles
-  remain unsigned database records rather than signed objects in an append-only
-  release store.
+- The settled backend suite reproduces equivalent build roots byte-for-byte.
+  The last pre-reconciliation repository CI passed on `0d5b356`; CI for the
+  current Gate 1 implementation/documentation checkpoint is recorded only
+  after the pushed run succeeds. Bundles remain unsigned database records
+  rather than signed objects in an append-only release store.
 - Tenant authorization is enforced in FastAPI query scopes; Postgres RLS is not
   defined. On the hosted Supabase target, the Data API is disabled,
   `anon`/`authenticated` hold no application-table privileges, and a

@@ -5,6 +5,10 @@
 **Scope:** what is built, what has been verified, what still needs hosted
 verification, and what remains for a production-capable system
 
+**Audit lineage:** independently audited `4f4e410`; original Gate 1 start
+`91055f6`; reconciliation start `0d5b356`; verified implementation checkpoint
+`2292a5f`.
+
 This is an engineering assessment, not launch copy. It does not turn fixture
 results into claims about live models, customer traffic, security
 certification, regulatory compliance, uptime, or market validation.
@@ -28,16 +32,16 @@ vocabulary or make hosted/deployment gates pass.
 
 | Feature gate | Canonical status | Boundary |
 |---|---|---|
-| Gate 0 — local deterministic foundation | **Operating/Fixture complete in its settled Northstar scope** | The no-key source-review/build/run/trace/report regression floor. |
-| Gate 0H — hosted preview/hardening | **Unverified/in progress** | Permanent-user staging passed; anonymous Turnstile redemption and complete guest E2E remain open. |
-| Gate 1 — source-aware policy refactoring/compiler | **Fixture complete in verified local two-domain scope** | API/database/frontend/packaging/browser checks include the two-domain/fresh-process path. Not deployed. |
+| Gate 0 — Local deterministic foundation | **Operating/Fixture complete in its settled Northstar scope** | The no-key source-review/build/run/trace/report regression floor. |
+| Gate 0H — Hosted verification and release hardening | **Unverified/in progress** | Permanent-user staging passed; anonymous Turnstile redemption and complete guest E2E remain open. |
+| Gate 1 — Source-aware policy refactoring and prompt/skill compilation | **Fixture complete in verified local two-domain scope** | API/database/frontend/packaging/browser checks include the two-domain/fresh-process path. Not deployed. |
 | Gates 2–8 | **Absent** | Provider interfaces, tau data sync, schemas, or planned commands are not operating implementations. |
 
 Feature gates describe product behavior. The later P0–P3 roadmap describes
 production maturity. A production task does not silently complete a feature
 gate, and a local feature does not silently pass a hosted gate.
 
-The Gate 1 row describes local implementation commit `d10af278f785be76a8232589b4d0264792147a17`. It is not part of the deployed
+The Gate 1 row describes local implementation commit `2292a5f7089d061c9dc8b977852ee04d182373bc`. It is not part of the deployed
 public `147448a` Worker bundle unless a later release is explicitly verified and
 promoted.
 
@@ -83,8 +87,8 @@ versions, and exact source-to-generated-span links. These are deterministic
 structural conformance mechanisms. `behavioral_fidelity` is explicitly
 `not_measured`.
 
-The current guest implementation includes the following intended path and
-controls:
+The deployed-source `147448a` guest implementation includes the following
+intended path and controls:
 
 - keep the landing page and `/demo` entry public while protecting workspace
   resources;
@@ -126,8 +130,10 @@ controls:
 - store normalized unique waitlist consent separately so it survives guest
   workspace cleanup.
 
-The dedicated Supabase project and Render Free service are provisioned, the
-hosted database is migrated through Alembic head, and the Data API is disabled.
+The dedicated Supabase project and Render Free service are provisioned. The
+hosted database is verified through `0005_guest_access_waitlist`; current
+source migration `0006_gate1_compilation_contracts` has passed locally and in
+CI but is not deployed. The Data API is disabled.
 Hosted inspection found zero application-table privileges for `anon` and
 `authenticated`, and a transactionally created probe table inherited the same
 default denial. The named Cloudflare staging Worker previously passed the
@@ -342,12 +348,15 @@ The schema now includes:
 - `workspace_members` with owner/admin/editor/viewer roles;
 - `workspace_id` on projects;
 - workspace/project/requester ownership on jobs;
-- per-project uniqueness for project slugs, build hashes, and operation keys.
+- workspace-scoped uniqueness for project slugs and per-project uniqueness for
+  build hashes and operation keys.
 
 `POST /api/v1/workspaces/bootstrap` creates or reuses the signed subject's first
-workspace and seeds one personal Northstar project. This works for permanent
-and anonymous identities. The derived workspace slug includes a subject hash;
-it is not a shared fixed slug. Repeated bootstrap is idempotent.
+workspace. Current Gate 1 source seeds personal Northstar and Acme fixture
+projects; the deployed `147448a` hosted path seeds Northstar only. Bootstrap is
+implemented for permanent and anonymous identities, although anonymous hosted
+redemption/lifecycle remains unverified. The derived workspace slug includes a
+subject hash; it is not a shared fixed slug. Repeated bootstrap is idempotent.
 
 Every resource lookup joins back to workspace membership. Unauthorized IDs are
 returned as not found to reduce enumeration. Write routes require owner, admin,
@@ -649,8 +658,9 @@ Implemented qualities:
   origin-secret requirements on the product boundary;
 - pre-routing origin/bearer checks and hosted document-upload rejection;
 - local OpenAPI and production docs shutdown;
-- Alembic baseline plus tenancy/operation, evidence, document-provenance, and
-  guest-access/waitlist migrations;
+- Alembic baseline plus tenancy/operation, evidence, document-provenance,
+  guest-access/waitlist, and local/CI Gate 1 placement/compilation-contract
+  migrations;
 - PostgreSQL advisory lock helper for controlled migrations;
 - async runtime URL and synchronous migration URL normalization;
 - bounded SQLAlchemy pool settings;
@@ -672,9 +682,10 @@ remains in effect.
 
 Remaining work:
 
+- apply and verify `0006_gate1_compilation_contracts` only as part of a separate
+  Gate 1 hosted release; the current hosted database remains at `0005`;
 - move migration execution from the advisory-locked container entrypoint to a
-  paid Render pre-deploy phase when the service is upgraded; the current hosted
-  database is already at Alembic head;
+  paid Render pre-deploy phase when the service is upgraded;
 - retain clean-image Compose and Render container smoke tests for future base
   image or entrypoint changes;
 - pagination, stable cursors, permanent/team quotas, endpoint-specific budgets
@@ -706,41 +717,47 @@ checks also pass. This does not change hosted or deployed status.
 
 Final local Gate 1 evidence:
 
-- the default API suite passed 139 tests with one skipped;
-- the focused regenerated-contract/Gate 1 suite passed 31 tests;
+- the default API suite passed 148 tests with one skipped;
+- the focused regenerated-contract/Gate 1 suite passed 40 tests;
 - Ruff and mypy passed;
 - SQLite Alembic upgrade/drift passed through migration `0006`;
 - a fresh real-PostgreSQL migration integration passed one test with four
   deselected, then removed its temporary database;
 - frontend ESLint and strict type checking passed;
-- all 84 Vitest tests across 22 files passed;
+- all 87 Vitest tests across 23 files passed;
 - the production Next.js build passed and includes the dynamic
   `/projects/[projectId]/routing` route;
 - OpenNext at compatibility date `2026-08-04`, Wrangler `4.118.0` type
   generation, root/staging deploy dry-runs, and `wrangler check startup` passed;
-- the dry-runs packaged 53 assets and an 8,019.91 KiB bundle (1,665.20 KiB
-  gzip), while local active startup measured 34.0 ms;
-- focused two-domain Playwright passed 1/1 in 15.2 seconds;
-- the complete Playwright suite passed 6/6 in 1.3 minutes using fresh isolated
+- the dry-runs packaged 53 assets and an 8,026.44 KiB bundle (1,666.83 KiB
+  gzip), while local active startup measured 40.4 ms;
+- focused two-domain Playwright passed 1/1 in 34.6 seconds including server startup;
+- the complete Playwright suite passed 6/6 in 1.1 minutes using fresh isolated
   API/web ports and Next output;
 - `pip-audit` and production `pnpm audit --audit-level high` reported no known
-  vulnerabilities; and
-- `git diff --check` is clean.
+  vulnerabilities;
+- `git diff --check` is clean; and
+- [GitHub Actions run
+  30963753935](https://github.com/amanda-yin-x/aletheia/actions/runs/30963753935)
+  passed quality, PostgreSQL integration, and secret scan on the
+  pre-reconciliation commit `0d5b356`; the final pushed documentation commit
+  requires its own green run.
 
 The dry-run size and startup observations do not prove hosted Gate 1 deployment,
 production performance, or behavioral fidelity.
 The public Workers remain on the separately recorded `147448a` bundle.
-The verified Northstar and Acme build roots, 19-artifact trees, representative
+The verified Northstar and Acme build roots, 20-artifact trees, representative
 source span, context metrics, demo steps, and exact claim boundary are recorded
 in [the Gate 1 verification report](gate-1-verification-report.md).
 The older counts below are retained as historical regression evidence and must
 not be represented as the final Gate 1 count.
 
-### Locally verified for the current web implementation
+### Historical pre-Gate-1 public-guest regression evidence
 
 - ESLint passed.
 - Strict TypeScript passed.
-- In the current guest implementation, Vitest passes 71 tests across 18 files.
+- In the deployed-source `147448a` guest implementation, Vitest passed 71 tests
+  across 18 files.
 - Next.js 16 production build passed.
 - Cloudflare binding type generation passed without a committed diff.
 - OpenNext Cloudflare bundle generation passed.
@@ -748,8 +765,10 @@ not be represented as the final Gate 1 count.
 - The settled pre-guest revision passed all five Playwright Chromium flows
   against a dedicated migrated/reset SQLite database, covering landing/CTA,
   reduced motion, responsive widths, conflict choice, compile, run, trace,
-  report, and export. The current guest implementation still needs this full
-  browser rerun.
+  report, and export. At the `147448a` release checkpoint the guest-specific
+  browser rerun remained open. This historical five-flow statement does not
+  override the current local Gate 1 six-flow result above or verify the hosted
+  anonymous lifecycle.
 - Focused tests cover session-cookie propagation, mutation security, safe
   redirects, code-only PKCE exchange/raw-token rejection, API proxy credential
   filtering, every modeled Operation terminal state, conflict payloads,
@@ -792,11 +811,11 @@ secret-scan, and PostgreSQL 17 jobs then passed in [GitHub Actions run
 #30867243068](https://github.com/amanda-yin-x/aletheia/actions/runs/30867243068)
 on implementation commit `5d45a776407955f86227e1890900d9857196a007`.
 
-The current guest implementation passes all 116 backend tests across two local
-runs: 115 in the default run and the separately executed PostgreSQL-marked
-integration test.
-Playwright still lists five browser flows; hosted guest verification remains a
-separate release gate.
+At the `147448a` guest release checkpoint, 116 backend tests passed across two
+local runs: 115 in the default run and the separately executed
+PostgreSQL-marked integration test. Playwright then listed five browser flows.
+Current Gate 1 source lists and passed six local flows; hosted anonymous guest
+verification remains a separate release gate.
 
 The focused evidence-correctness gate passed Ruff, strict mypy, 33 targeted
 tests, and the SQLite `0003` upgrade/downgrade/backfill/Alembic-check lifecycle.
@@ -811,14 +830,15 @@ processed queued build and run operations through the worker, polled their
 results, proved the operation snapshot fence with two concurrent sessions using
 the shared `Project → child` lock order, and cleaned up through downgrade. The
 GitHub Actions equivalent also
-passed against PostgreSQL 17. The target Supabase database has since migrated
-through the same Alembic head, and its disabled Data API plus current/default
-role-denial boundary passed direct hosted inspection.
+passed against PostgreSQL 17. The target Supabase database is verified through
+hosted migration `0005`, and its disabled Data API plus current/default
+role-denial boundary passed direct hosted inspection. Local and CI databases
+migrated through current source head `0006`; no hosted `0006` claim is made.
 
 ### Hosted connected-system and current-release verification
 
 - dedicated Supabase Auth/Postgres and Render services are provisioned;
-- Alembic head, empty Data API schema, negative REST access, zero current
+- hosted Alembic `0005`, empty Data API schema, negative REST access, zero current
   `anon`/`authenticated` table grants, and zero probe-table default grants
   passed on the target database;
 - the named Cloudflare staging Worker proxies to Render with the matching
@@ -865,9 +885,10 @@ connected hosted gate.
 - establish production monitoring, incident response, paid-plan/SLO, and
   rollback evidence.
 
-The settled Playwright run starts the API against a dedicated SQLite database
-after an Alembic upgrade and reset seed; all five local Chromium flows passed.
-The current guest implementation lists those flows but still needs the full
+The historical settled Playwright run started the API against a dedicated
+SQLite database after an Alembic upgrade and reset seed; all five local Chromium
+flows passed. Current Gate 1 later passed six local flows. Neither result
+redeems a real Turnstile token or substitutes for the outstanding hosted guest
 run.
 Hosted staging evidence is a separate connected-system check and not a
 substitute for the remaining production audits.

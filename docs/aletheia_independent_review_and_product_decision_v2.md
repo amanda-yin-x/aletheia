@@ -2,7 +2,9 @@
 
 **Version:** 2.0  
 **Reconciliation date:** 2026-08-04  
-**Repository inspected:** local Gate 1 implementation `d10af278f785be76a8232589b4d0264792147a17`, based on `91055f6043edfd7f0cb171eac0bd04c611f2d509`  
+**Last independently audited anchor:** `4f4e410a2b114bb16b55566bca79c555a489bd9b`  
+**Repository inspected:** local Gate 1 implementation `2292a5f7089d061c9dc8b977852ee04d182373bc`, reconciled from `0d5b356e6143f784c726f55406ca1ba12d308af0` and based on original start `91055f6043edfd7f0cb171eac0bd04c611f2d509`  
+**Last pre-reconciliation CI:** [30963753935](https://github.com/amanda-yin-x/aletheia/actions/runs/30963753935) passed on `0d5b356`; final pushed CI pending  
 **Predecessor:** `aletheia_independent_review_and_product_decision (1).md`, version 1.0, retained unchanged as historical input  
 **Predecessor SHA-256:** `60b2cb7445f24965a485aadcbda54dfca15b38a971c418d7fe4a1a5c07ac6e53`
 
@@ -57,25 +59,42 @@ customer adoption, product quality, or willingness to pay.
 | Gate 1 — Source-aware policy refactoring and prompt/skill compilation | Complete in the verified local two-domain deterministic fixture scope; not deployed. |
 | Gates 2–8 | Not implemented as product capabilities. Existing provider interfaces and tau data sync do not count as those gates. |
 
-Confirmed local Gate 1 checkpoint evidence: the default API suite passed 139
-tests with one skipped; the focused regenerated-contract/Gate 1 suite passed 31;
+Confirmed local Gate 1 checkpoint evidence: the default API suite passed 148
+tests with one skipped; the focused regenerated-contract/Gate 1 suite passed 40;
 Ruff, mypy, SQLite Alembic upgrade/drift through `0006`, and one fresh real
 PostgreSQL migration integration passed (four deselected, temporary database
-removed). Frontend ESLint, strict type checking, all 84 Vitest tests across 22
+removed). Frontend ESLint, strict type checking, all 87 Vitest tests across 23
 files, and the production Next.js build passed. OpenNext at compatibility date
 `2026-08-04`, Wrangler `4.118.0` type generation, root/staging dry-runs (53
-assets; 8,019.91 KiB / 1,665.20 KiB gzip), and local startup check (34.0 ms)
-also passed. The focused two-domain E2E passed 1/1 in 15.2 seconds and the full
-fresh-isolated Playwright suite passed 6/6 in 1.3 minutes. `pip-audit` and the
+assets; 8,026.44 KiB / 1,666.83 KiB gzip), and local startup check (40.4 ms
+active) also passed. The focused two-domain E2E passed 1/1 in 34.6 seconds and the full
+fresh-isolated Playwright suite passed 6/6 in 1.1 minutes. `pip-audit` and the
 production high-severity `pnpm audit` found no known vulnerabilities. Dry-run
 size/startup observations are not deployment or production-performance claims.
 
-These are local working-tree results. The deployed public Workers remain the
+These are results from the pinned local Gate 1 checkpoint. The deployed public Workers remain the
 separately recorded `147448a` release; this review does not imply Gate 1 was
 deployed.
 
 The exact checkpoint evidence is in
 [`gate-1-verification-report.md`](gate-1-verification-report.md).
+
+### Verification commands and results
+
+The commands below are the recorded local verification surface; environment
+URLs in the PostgreSQL row identify a disposable local database that was
+removed after the run.
+
+| Check | Command | Result |
+|---|---|---|
+| Python quality | `cd apps/api && uv run ruff check app tests && uv run mypy app` | Passed |
+| Default API | `cd apps/api && ENVIRONMENT=test uv run pytest -q` | 148 passed, 1 skipped |
+| Gate 1/contracts | `cd apps/api && ENVIRONMENT=test uv run pytest -q tests/test_contracts.py tests/test_gate1_compilation.py tests/test_gate1_persistence_contracts.py` | 40 passed |
+| SQLite migrations | `make migration-check` | Upgrade/check passed through `0006` |
+| PostgreSQL migration marker | `cd apps/api && TEST_DATABASE_URL=postgresql+asyncpg://amandayin@localhost:5432/aletheia_gate1_verify_20260804_2130 TEST_MIGRATION_DATABASE_URL=postgresql+psycopg://amandayin@localhost:5432/aletheia_gate1_verify_20260804_2130 ENVIRONMENT=test uv run pytest -q -m postgres tests/test_migrations_integration.py` | 1 passed, 4 deselected; database removed |
+| Web | `corepack pnpm --filter @aletheia/web lint && corepack pnpm --filter @aletheia/web typecheck && corepack pnpm --filter @aletheia/web test` plus the OpenNext production build | Lint/type/build passed; 87/87 tests |
+| Browser | `PLAYWRIGHT_API_PORT=8014 PLAYWRIGHT_WEB_PORT=3014 PLAYWRIGHT_ISOLATED_WEB=1 corepack pnpm --filter @aletheia/web test:e2e` | 6/6 passed |
+| Repository CI | GitHub Actions run `30963753935` on `0d5b356` | Last pre-reconciliation quality/PostgreSQL/secret-scan pass; final pushed CI pending |
 
 ### Gate 0 foundation retained
 
@@ -91,6 +110,11 @@ The repository already provides:
 - idempotent HTTP `202` operations, polling, leases, recovery, and a local
   worker path;
 - a no-key Northstar workflow with fixture traces and evidence exports.
+
+The frontend remains the repository's own Next.js/React component system with
+custom CSS, shared design tokens (including `tokens.css`), and local UI
+components. It has not migrated to Tailwind or shadcn, and this review does not
+infer such a migration from visual similarity.
 
 ### Gate 0H boundary
 
@@ -190,6 +214,19 @@ unsupported.
    `147448a` public site and from behavioral/production claims.
 
 ## 7. Product assessment
+
+Evidence classes must not be blended:
+
+- **Demonstrated fixture value:** the deterministic Northstar/Acme results below
+  were run against synthetic, pinned sources.
+- **Interview evidence:** the recorded mentor feedback is anecdotal evidence
+  from a limited audience, not a representative customer study.
+- **Market inference:** competitor/source density suggests the generic runtime-
+  guard category is crowded and motivates the narrower wedge; it does not prove
+  demand for Aletheia.
+- **Unvalidated assumptions:** workflow frequency, time saved, prompt-context
+  benefit, CI adoption, willingness to pay, and customer safety remain to be
+  tested.
 
 ### Demonstrated value
 

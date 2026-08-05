@@ -232,8 +232,11 @@ sign-in` Turnstile integration are configured. Database and origin credentials
 remain in platform secret stores; no service-role or secret API key is used by
 the application.
 
-Alembic has upgraded the hosted database through head. The release database
-boundary was then checked independently of FastAPI:
+Alembic upgraded the hosted database through
+`0005_guest_access_waitlist`. Current source head
+`0006_gate1_compilation_contracts` has passed local and CI migration checks but
+has not been applied to the hosted database because Gate 1 is not deployed.
+The hosted release database boundary was checked independently of FastAPI:
 
 - the Data API is disabled (`db_schema` is empty and the REST probe is
   unavailable);

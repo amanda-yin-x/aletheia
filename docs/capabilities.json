@@ -5,20 +5,22 @@
     "version": "2026-08-04-gate1-local-verified",
     "repository": "https://github.com/amanda-yin-x/aletheia",
     "canonical_site": "https://aletheia.aletheia-web.workers.dev",
-    "source_commit": "d10af278f785be76a8232589b4d0264792147a17",
+    "source_commit": "2292a5f7089d061c9dc8b977852ee04d182373bc",
+    "reconciled_repository_head": "2292a5f7089d061c9dc8b977852ee04d182373bc",
+    "last_green_ci_run": "30963753935",
     "deployed_source_commit": "147448a",
     "inspected_repository_base": "91055f6043edfd7f0cb171eac0bd04c611f2d509",
-    "gate1_deployment_boundary": "Gate 1 evidence describes verified implementation commit d10af278f785be76a8232589b4d0264792147a17. The public staging and canonical Workers remain the separately identified deployed 147448a bundle; no Gate 1 deployment is claimed.",
+    "gate1_deployment_boundary": "Gate 1 evidence describes verified implementation commit 2292a5f7089d061c9dc8b977852ee04d182373bc. The public staging and canonical Workers remain the separately identified deployed 147448a bundle; no Gate 1 deployment is claimed.",
     "gate1_verification_report": "docs/gate-1-verification-report.md",
     "gate1_verified_builds": {
       "northstar-retail": {
-        "content_hash": "4e0601f04010ae67b837a718c1a97942b048fa9468eb4820c098ee54c9ab99df",
-        "artifact_count": 19,
+        "content_hash": "0b11b2f92430cabaa09bbf3eb837431a3f66b4c79a535003a4512f07698d5676",
+        "artifact_count": 20,
         "behavioral_fidelity": "not_measured"
       },
       "acme-appointments": {
-        "content_hash": "efccbe65a0f57e4eafbc649dc4b707a2dd69949771d4310c53762b3b690e95c5",
-        "artifact_count": 19,
+        "content_hash": "fb8eb7030c76211e0247481dd637aa52a241385379f4867ceb41d51a9343d2a4",
+        "artifact_count": 20,
         "behavioral_fidelity": "not_measured"
       }
     },
@@ -27,7 +29,7 @@
       "canonical_production": "935c3c39-f63e-4041-804b-ef40431d50fc"
     },
     "hosted_verification_boundary": "Deployed source commit 147448a is on the staging and canonical Cloudflare Workers. Public landing and /demo routes, HTTPS redirection, unauthenticated API rejection, current branding/scenario content, and Turnstile challenge rendering were observed. Automated browsers were challenged, so successful CAPTCHA token redemption and the complete anonymous Northstar workflow are not claimed.",
-    "evidence_boundary": "Verified local Gate 1 implementation commit d10af278f785be76a8232589b4d0264792147a17 covers deterministic Northstar and Acme fixture data, reviewed rules/placements, source-aware builds, scripted trajectories, and calls routed through the fixture policy adapter. Exact provenance and structural preservation do not establish behavioral fidelity, live-model quality, customer safety, compliance, production reliability, or market validation. Gate 1 is not deployed; public Workers remain on 147448a."
+    "evidence_boundary": "Verified local Gate 1 implementation commit 2292a5f7089d061c9dc8b977852ee04d182373bc covers deterministic Northstar and Acme fixture data, reviewed rules/placements, source-aware builds, scripted trajectories, and calls routed through the fixture policy adapter. Exact provenance and structural preservation do not establish behavioral fidelity, live-model quality, customer safety, compliance, production reliability, or market validation. Gate 1 is not deployed; public Workers remain on 147448a."
   },
   "status_vocabulary": {
     "operating": "A connected path works in the stated environment and is more than a class, endpoint, or deployment seam.",
@@ -40,7 +42,7 @@
   "overall_status": {
     "local_product": {
       "status": "fixture",
-      "reason": "Gate 0 and Gate 1 are complete in the verified local deterministic fixture scope. Gate 1 passed 139 API tests with 1 skipped, 31 focused Gate 1/contract tests, database/frontend/packaging checks, focused two-domain E2E 1/1, and full Playwright 6/6. Hosted/deployed status is separate."
+      "reason": "Gate 0 and Gate 1 are complete in the verified local deterministic fixture scope. Gate 1 passed 148 API tests with 1 skipped, 40 focused Gate 1/contract tests, database/frontend/packaging checks, focused two-domain E2E 1/1, and full Playwright 6/6. Hosted/deployed status is separate."
     },
     "evaluation_mode": {
       "status": "fixture",
@@ -102,10 +104,10 @@
       "id": "web.workspace",
       "name": "Signed-session review, build, run, and report UI",
       "status": "fixture",
-      "environment": "local Northstar workspace; permanent-user staging path",
-      "scope": "Provides source, rule, build, test, run, trace, and report routes backed by the deterministic Northstar workflow for a guest or permanent signed subject.",
+      "environment": "local Northstar and Acme fixtures; permanent-user Northstar staging path",
+      "scope": "Provides source, authority/rule review, placement, build, test, run, trace, and report routes. The local fixture UI switches between Northstar and Acme; the separately deployed permanent-user path is Northstar-only.",
       "evidence": ["apps/web/app/projects/", "apps/web/app/runs/", "apps/web/app/scenario-results/", "apps/web/app/reports/"],
-      "limitations": ["The permanent-user hosted workflow passed; the public guest entry and limits remain to verify there.", "The current scenario and domain content is Northstar-specific."]
+      "limitations": ["The permanent-user hosted Northstar workflow passed; the public guest entry and limits remain to verify there.", "Acme is verified only as local synthetic fixture data and is not deployed."]
     },
     {
       "id": "auth.local",
@@ -246,8 +248,8 @@
       "id": "analysis.findings",
       "name": "Conflict, ambiguity, duplicate, and coverage findings",
       "status": "fixture",
-      "environment": "Northstar workspace",
-      "scope": "Shows known current-versus-legacy conflicts, duplicate guidance, ambiguity, and missing-test findings with proof labels and witnesses.",
+      "environment": "local Northstar and Acme fixture workspaces",
+      "scope": "Shows fixture-authored current-versus-legacy conflicts, duplicate guidance, ambiguity, unsupported temporal items, and missing-test findings with proof labels and witnesses.",
       "evidence": ["apps/api/app/services/seed.py", "apps/web/app/projects/[projectId]/rules/page.tsx"],
       "limitations": ["There is no domain-neutral conflict engine, bounded solver, or automatic re-analysis of arbitrary uploaded sources.", "Analysis and test-generation operation kinds remain placeholders."]
     },
@@ -255,8 +257,8 @@
       "id": "review.workflow",
       "name": "Revision-safe rule and finding review",
       "status": "fixture",
-      "environment": "Northstar workspace",
-      "scope": "Uses optimistic revisions, forces semantic edits back to review, records a conflict winner/loser/authority/rationale, supersedes the loser, and gates compilation on unresolved critical findings.",
+      "environment": "local Northstar and Acme fixture workspaces",
+      "scope": "Uses optimistic revisions, forces semantic edits back to review, records a conflict winner/loser/authority/rationale, supersedes the loser, and gates compilation on unresolved critical findings in both seeded domains.",
       "evidence": ["apps/api/app/services/review.py", "apps/api/app/api/routes.py", "apps/web/app/projects/[projectId]/rules/page.tsx"],
       "limitations": ["There is no assignment, comment, two-person approval, durable audit actor model, or automatic analyzer rerun before compile."]
     },
@@ -393,7 +395,7 @@
       "environment": "local development and tests",
       "scope": "Provides a zero-install local database with Alembic migrations and deterministic seed/reset.",
       "evidence": ["apps/api/migrations/", "apps/api/tests/test_migrations_integration.py", "Makefile"],
-      "limitations": ["All five clean Playwright flows and the empty SQLite Alembic upgrade/check passed locally; SQLite does not substitute for the hosted PostgreSQL path."]
+      "limitations": ["All six current clean Playwright flows and the empty SQLite Alembic upgrade/check passed locally; SQLite does not substitute for the hosted PostgreSQL path."]
     },
     {
       "id": "database.postgres",
@@ -402,7 +404,7 @@
       "environment": "hosted Supabase plus isolated local PostgreSQL 14 and PostgreSQL 17 CI",
       "scope": "Includes PostgreSQL-compatible models, migrations, URL normalization, advisory migration locking, bounded pooling, conditional anon/authenticated table-privilege revocation, and a PostgreSQL lifecycle CI job.",
       "evidence": ["apps/api/migrations/", "apps/api/tests/test_migrations_integration.py", ".github/workflows/ci.yml"],
-      "limitations": ["Render startup logs record the hosted 0004 to 0005_guest_access_waitlist migration and successful readiness, and the database previously passed Data API/current/default grant denial; the connected anonymous data lifecycle is not yet verified.", "No backup/restore drill is claimed.", "Render Free has no pre-deploy migration command."]
+      "limitations": ["Render startup logs record the hosted 0004 to 0005_guest_access_waitlist migration and successful readiness, and the database previously passed Data API/current/default grant denial; current source migration 0006_gate1_compilation_contracts is verified only in local/CI databases and is not deployed.", "The connected anonymous data lifecycle is not yet verified.", "No backup/restore drill is claimed.", "Render Free has no pre-deploy migration command."]
     },
     {
       "id": "deployment.cloudflare",
@@ -456,7 +458,7 @@
       "environment": "GitHub Actions target",
       "scope": "Runs Python audit/lint/types/tests, SQLite migration drift, generated contracts, web lint/types/tests, OpenNext build, production/staging Wrangler dry-runs, Playwright, PostgreSQL lifecycle and role-privilege integration, and secret scanning.",
       "evidence": [".github/workflows/ci.yml", "Makefile"],
-      "limitations": ["Run 30963519448 passed on Gate 1 documentation checkpoint 25b42ffd08bdc9566478653d5765c3be11ba141f, whose implementation parent is d10af278f785be76a8232589b4d0264792147a17; this verifies repository checks, not hosted Cloudflare, Render, or Supabase behavior."]
+      "limitations": ["Run 30963753935 is the last pre-reconciliation quality, PostgreSQL integration, and secret-scan pass on 0d5b356e6143f784c726f55406ca1ba12d308af0. Verified implementation commit 2292a5f7089d061c9dc8b977852ee04d182373bc requires its own final pushed CI; repository checks do not verify hosted Cloudflare, Render, or Supabase behavior."]
     },
     {
       "id": "ci.customer_release_check",
@@ -536,7 +538,7 @@
       "id": "gate1_source_aware_local",
       "status": "fixture",
       "scope": "Verified local Gate 1 source-aware compiler, persistence/contracts, Acme corpus, inspection surfaces, packaging, and browser workflow",
-      "result": "Final local working-tree evidence: default API suite 139 passed and 1 skipped; focused regenerated-contract/Gate 1 suite 31 passed; Ruff and mypy passed; SQLite Alembic upgrade/drift passed through 0006; fresh real-PostgreSQL migration integration passed 1 with 4 deselected and removed its temporary database; frontend ESLint and strict typecheck passed; all 84 Vitest tests across 22 files passed; production Next.js build passed with dynamic /projects/[projectId]/routing; OpenNext passed at compatibility date 2026-08-04; Wrangler 4.118.0 type generation, root/staging deploy dry-runs, and startup check passed; dry-runs packaged 53 assets and 8019.91 KiB / 1665.20 KiB gzip, and local active startup measured 34.0 ms; focused two-domain E2E passed 1/1 in 15.2 seconds; full fresh-isolated Playwright passed 6/6 in 1.3 minutes; pip-audit and production pnpm audit --audit-level high reported no known vulnerabilities; git diff check passed. Dry-run measurements are not deployment or production-performance evidence; public Workers remain on deployed 147448a and behavioral_fidelity is not_measured."
+      "result": "Final pinned local checkpoint evidence: default API suite 148 passed and 1 skipped; focused regenerated-contract/Gate 1 suite 40 passed; Ruff and mypy passed; SQLite Alembic upgrade/drift passed through 0006; fresh real-PostgreSQL migration integration passed 1 with 4 deselected and removed its temporary database; frontend ESLint and strict typecheck passed; all 87 Vitest tests across 23 files passed; production Next.js build passed with dynamic /projects/[projectId]/routing; OpenNext passed at compatibility date 2026-08-04; Wrangler 4.118.0 type generation, root/staging deploy dry-runs, and startup check passed; dry-runs packaged 53 assets and 8026.44 KiB / 1666.83 KiB gzip, and local active startup measured 40.4 ms; focused two-domain E2E passed 1/1 in 34.6 seconds; full fresh-isolated Playwright passed 6/6 in 1.1 minutes; pip-audit and production pnpm audit --audit-level high reported no known vulnerabilities; git diff check passed. Dry-run measurements are not deployment or production-performance evidence; public Workers remain on deployed 147448a and behavioral_fidelity is not_measured."
     },
     {
       "id": "evidence_core_targeted",
@@ -552,9 +554,9 @@
     },
     {
       "id": "final_combined_ci",
-      "status": "operating",
-      "scope": "Aggregated GitHub Actions workflow on the settled commit",
-      "result": "GitHub Actions run 30963519448 passed quality, secret-scan, and PostgreSQL integration on Gate 1 documentation checkpoint 25b42ffd08bdc9566478653d5765c3be11ba141f, whose verified implementation parent is d10af278f785be76a8232589b4d0264792147a17."
+      "status": "unverified",
+      "scope": "Aggregated GitHub Actions workflow on the final Gate 1 documentation checkpoint",
+      "result": "GitHub Actions run 30963753935 is the last pre-reconciliation quality, secret-scan, and PostgreSQL integration pass on 0d5b356e6143f784c726f55406ca1ba12d308af0. Final pushed CI for verified implementation commit 2292a5f7089d061c9dc8b977852ee04d182373bc and its documentation checkpoint is pending."
     },
     {
       "id": "clean_browser_e2e",

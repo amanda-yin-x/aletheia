@@ -402,13 +402,13 @@ link and preserves the normalized unique email record.
 | Guest limits/reset | Implemented; connected hosted verification pending | 30 successful writes, six live operations, and reset denied. |
 | Guest expiry/cleanup | Implemented; connected hosted verification pending | Seven-day TTL; auth-created-at 30-day cleanup at startup/every 24 hours, including auth-only anonymous identities; dry-run CLI; failures alert and fail open. |
 | Waitlist | Implemented; connected hosted verification pending | Normalized unique consent survives guest cleanup. |
-| Rule review/build gate | Implemented; evaluation-limited | Northstar semantics. |
-| Compiler/artifacts | Implemented; evaluation-limited | Focused byte-root, build-pinning, and aligned build/evidence schema-v0.3 checks pass; storage and signing gaps remain. |
+| Rule review/build gate | Hosted Northstar release plus local Gate 1 | The deployed `147448a` path is Northstar-only; two-domain placement/refactoring is local and not deployed. |
+| Compiler/artifacts | Local Gate 1 verified; deployed release older | Exact generated provenance and the Gate 1 bundle schema pass locally; hosted `147448a` retains the earlier Northstar artifact path. Storage/signing gaps remain. |
 | Operation contract/polling | Permanent-user staging path verified | Inline on Render Free; guest six-operation boundary pending. |
 | Labelled-arm run/trace/report | Implemented; evaluation-limited | Deterministic fixture, no live model. |
 | Report streaming | Staging verified | Markdown/JSON responses traverse both Cloudflare and Render hops. |
 | Account/logout/cache clear | Implemented; staging session path verified | Broader browser/back-cache audit remains. |
-| Supabase Postgres target | Provisioned and verified | Alembic head applied; Data API off; current/default app-table grants denied. |
+| Supabase Postgres target | Provisioned; hosted schema at `0005` | Data API off and current/default app-table grants denied. Current source migration `0006` is local/CI-only. |
 | Render deployment | Provisioned and staging verified | Free Virginia service; inline work and cold-start limits apply. |
 | Current Cloudflare revision | Exact bundle deployed to both environments | Commit `147448a`; staging `3788c6b0-291c-43a9-bef3-b48aaa4a0498`; canonical production `935c3c39-f63e-4041-804b-ef40431d50fc`. |
 
@@ -418,12 +418,14 @@ link and preserves the normalized unique email record.
 
 - ESLint passed.
 - Strict TypeScript passed.
-- In the current guest implementation, all 71 Vitest tests pass across 18 files.
+- In the deployed-source `147448a` guest implementation, all 71 Vitest tests
+  passed across 18 files.
 - Next.js production build passed.
 - OpenNext Cloudflare build passed and emitted a Worker bundle.
 - The settled pre-guest revision passed five Playwright Chromium flows against
-  a dedicated migrated/reset SQLite database; the current guest implementation
-  still needs that browser rerun.
+  a dedicated migrated/reset SQLite database; at the `147448a` checkpoint the
+  guest-specific browser rerun remained open. Current local Gate 1 later passed
+  six flows, but that does not verify hosted guest authentication.
 - Focused tests cover:
   - session cookie refresh on both request and response;
   - safe redirect parsing;
@@ -463,14 +465,16 @@ the isolated PostgreSQL 14 run passed that remaining case. All 111 collected
 backend tests therefore passed across the two local runs. GitHub's clean
 PostgreSQL 17 job also passed for the settled implementation.
 
-The current guest implementation passes all 116 backend tests across two local
-runs: 115 default tests plus the separately executed PostgreSQL-marked test.
+The deployed-source `147448a` guest implementation passed all 116 backend tests
+across two local runs: 115 default tests plus the separately executed
+PostgreSQL-marked test.
 That real two-session PostgreSQL path includes the `Project → child`
 input-snapshot lock fence. Hosted verification remains separate.
 
 ### Hosted connected-system and current-release verification
 
-- the target Supabase database migrated through Alembic head;
+- the target Supabase database migrated through hosted release migration
+  `0005_guest_access_waitlist`; current source head `0006` is local/CI-only;
 - the Data API is disabled, negative REST access is unavailable, current
   `anon`/`authenticated` application-table grants are zero, and a transactional
   probe table inherited zero default grants;

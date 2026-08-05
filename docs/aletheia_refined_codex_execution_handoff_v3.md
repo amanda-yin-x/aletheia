@@ -2,7 +2,9 @@
 
 **Version:** 3.0  
 **Reconciliation date:** 2026-08-04  
-**Repository base inspected:** `91055f6043edfd7f0cb171eac0bd04c611f2d509`; verified Gate 1 implementation: `d10af278f785be76a8232589b4d0264792147a17`  
+**Last independently audited anchor:** `4f4e410a2b114bb16b55566bca79c555a489bd9b`  
+**Original Gate 1 base:** `91055f6043edfd7f0cb171eac0bd04c611f2d509`; reconciliation start: `0d5b356e6143f784c726f55406ca1ba12d308af0`  
+**Verified Gate 1 implementation:** `2292a5f7089d061c9dc8b977852ee04d182373bc`; last pre-reconciliation CI [30963753935](https://github.com/amanda-yin-x/aletheia/actions/runs/30963753935) passed  
 **Predecessor:** `aletheia_refined_codex_execution_handoff_v2 (1).md`, retained unchanged as historical input  
 **Predecessor SHA-256:** `325e6c980eeee5b11457e1ebe7475aef04d734962345fc84a83e81ba46c63948`
 
@@ -40,29 +42,57 @@ two-domain workflow in which a human can inspect authority conflicts, approve
 rule placement, compile portable artifacts, and trace generated material back
 to exact reviewed inputs.
 
+### Gate 1 — Source-aware policy refactoring and prompt/skill compilation
+
+**User story.** As an agent engineer maintaining a bloated or contradictory
+system prompt, `AGENTS.md`/`SKILL.md`, SOPs, policies, and tool schemas, I want
+Aletheia to turn a human-reviewed rule set into a smaller always-loaded kernel
+plus scoped skills, knowledge, guards, and tests, while showing exactly where
+every instruction came from, where it moved, and what could not safely be
+preserved or enforced.
+
+Gate 1 accepts pinned baseline prompts, `AGENTS.md`/`SKILL.md` sources, current
+and stale policy/SOP versions, style/knowledge references, tool schemas and
+trusted facts, approved regression scenarios, document authority metadata,
+immutable hashes/anchors, reviewed Rule IR revisions, manual authority
+decisions, a compiler profile, and reviewer-approved placements. No arbitrary
+executable code or unreviewed model output may enter compilation.
+
+It deterministically routes and renders reviewed material, preserves exact
+source/review provenance, measures structural preservation/context size, and
+keeps ambiguous or unsupported material visible. It does not extract arbitrary
+rules with an LLM, prove contradictions, execute temporal monitors, mutation-
+score tests, establish live-model behavioral preservation, or run upstream tau.
+
 ## 3. Normalized gate status
 
 | Gate | Status at this reconciliation | Meaning |
 |---|---|---|
-| Gate 0 — deterministic Northstar foundation | Complete in the settled, tested local fixture scope | Existing ingest/review/build/run/trace/report behavior is the regression floor. |
-| Gate 0H — hosted verification and hardening | In progress | Supabase, Render, Cloudflare staging/canonical Workers, and permanent-user staging E2E exist. Anonymous Turnstile redemption and full guest E2E remain unverified. |
-| Gate 1 — source-aware refactoring/compiler | Complete in verified local two-domain fixture scope | Generic contracts/compiler, exact provenance, placement review, metrics, Acme, API/database/frontend/packaging, and browser E2E passed. Not deployed. |
+| Gate 0 — Local deterministic foundation | Complete in the settled, tested Northstar fixture/local scope | Existing ingest/review/build/run/trace/report behavior is the regression floor. |
+| Gate 0H — Hosted verification and release hardening | In progress | Supabase, Render, Cloudflare staging/canonical Workers, and permanent-user staging E2E exist. Anonymous Turnstile redemption and full guest E2E remain unverified. |
+| Gate 1 — Source-aware policy refactoring and prompt/skill compilation | Complete in verified local two-domain fixture scope | Generic contracts/compiler, exact provenance, placement review, metrics, Acme, API/database/frontend/packaging, and browser E2E passed. Not deployed. |
 | Gates 2–8 | Absent | Interfaces, schemas, adapters, research notes, or tau syncs are not operating product capabilities. |
 
-Current confirmed local checkpoint: default API `139 passed, 1 skipped`;
-focused regenerated-contract/Gate 1 suite `31 passed`; Ruff and mypy passed;
+Current confirmed local checkpoint: default API `148 passed, 1 skipped`;
+focused regenerated-contract/Gate 1 suite `40 passed`; Ruff and mypy passed;
 SQLite Alembic upgrade/drift passed through `0006`; fresh real PostgreSQL
 migration integration `1 passed, 4 deselected` and removed its temporary
-database; frontend ESLint/typecheck, `84/84` Vitest tests across 22 files, and
+database; frontend ESLint/typecheck, `87/87` Vitest tests across 23 files, and
 production Next.js build passed. OpenNext at compatibility date `2026-08-04`,
 Wrangler `4.118.0` type generation, root/staging deploy dry-runs (53 assets;
-8,019.91 KiB / 1,665.20 KiB gzip), and local startup check (34.0 ms) passed.
-Focused two-domain E2E passed `1/1` in 15.2 seconds and the complete fresh-
-isolated Playwright suite passed `6/6` in 1.3 minutes. `pip-audit` and the
+8,026.44 KiB / 1,666.83 KiB gzip), and local startup check (40.4 ms active) passed.
+Focused two-domain E2E passed `1/1` in 34.6 seconds and the complete fresh-
+isolated Playwright suite passed `6/6` in 1.1 minutes. `pip-audit` and the
 production high-severity `pnpm audit` reported no known vulnerabilities. These
 local results and packaging observations are not a deployment or
 production-performance claim; the public Workers remain the separate
 `147448a` bundle.
+
+The last pre-reconciliation repository CI
+[30963753935](https://github.com/amanda-yin-x/aletheia/actions/runs/30963753935)
+passed quality, PostgreSQL integration, and secret scan on `0d5b356`; the final
+pushed documentation commit requires its own green run. Hosted schema
+verification remains at `0005`; `0006` is local/CI only.
 
 See [`gate-1-verification-report.md`](gate-1-verification-report.md) for the
 verified roots, artifact tree, representative provenance/metrics, demo path,
@@ -71,6 +101,24 @@ and claim boundary.
 Never infer a completed gate from the presence of a class, route, schema, UI
 screen, configuration seam, or research note. Record `unverified` until the
 end-to-end behavior has been run.
+
+### Before/after capability matrix
+
+"Before" is inspected start `91055f6`; "after" is the verified Gate 1
+implementation at `2292a5f`, reconciled from `0d5b356`.
+
+| Capability | Before Gate 1 | Verified after Gate 1 |
+|---|---|---|
+| Gate 0 local deterministic workflow | Complete in the settled Northstar fixture scope | Retained; the complete regression floor remains green |
+| Gate 0H hosted preview | Permanent-user staging passed; anonymous guest verification open | Unchanged; Gate 1 was not deployed and anonymous Turnstile redemption remains unverified |
+| Compiler domain neutrality | Northstar/refund-shaped routing and artifacts | One pinned generic core/profile compiles Northstar and Acme in local fixture scope |
+| Reviewed placement/disposition | Computed route labels; no complete reviewable placement ledger | Append-only reviewed placement versions and explicit dispositions, with no silent active-clause drop |
+| Generated provenance | Source-linked inputs, but no complete generated-span chain | Exact `DocumentVersion → SourceAnchor → RuleRevision → PlacementDecision → GeneratedSpan → ArtifactHash → BuildRoot` chain |
+| Primary skill output | Refund-shaped workflow artifacts | Scoped `skills/<scope>/SKILL.md` plus kernel, knowledge, guard, test, and pending artifacts |
+| Second domain | Absent | Substantial synthetic Acme appointments corpus through shared API/UI/compiler/runner paths |
+| Structural/context evidence | Partial fixture statistics | Reproducible routing, preservation, protected-literal, and context/bundle metrics |
+| Behavioral fidelity | Not measured | Still `not_measured`; no semantic-equivalence claim |
+| Gates 2–8 | Absent/interface-only seams | Still absent; no solver, temporal, mutation, model, live/tau, or customer-runtime claim |
 
 ## 4. Existing architecture to preserve
 
@@ -99,6 +147,8 @@ raw source bytes
   → pinned compiler profile + compilation config
   → generated artifact + exact generated span
   → routing/preservation/metrics/source-map evidence
+  → artifact SHA-256
+  → build root
 ```
 
 Every link must be inspectable and deterministic. Reviewer-authored guidance is
@@ -126,6 +176,7 @@ visibly distinct from rule-derived spans.
 
 The verified local compiler emits:
 
+- `README.md`;
 - `prompt-kernel.md`;
 - `skills/<scope>/SKILL.md`;
 - `knowledge/<scope>.md`;
@@ -136,8 +187,11 @@ The verified local compiler emits:
 - `preservation-report.json`;
 - `compilation-metrics.json`;
 - `source-map.json`;
-- pinned compiler profile, placements, source metadata, rules, findings, tool
-  schemas, facts, manifest, and artifact hashes.
+- `inputs/compiler-profile.json`, `inputs/pinned-source-metadata.json`,
+  `inputs/placement-decisions.json`, `inputs/rules.json`, and
+  `inputs/findings.json`;
+- pinned tool schemas and facts; and
+- `manifest.json` with every non-root artifact hash and the build root.
 
 The exact manifest generated by a build is authoritative. Documentation must
 not invent artifact counts.
@@ -223,6 +277,32 @@ the Gate 1 regression contract:
 
 If any item is not executed, record it as pending—not implicitly passed.
 
+### Checkpoint-equivalent implementation record
+
+The implementation landed across the earlier `d10af27` checkpoint and focused
+`2292a5f` reconciliation rather than as five separate PRs, so commit history
+does not prove that every intermediate checkpoint was independently runnable. This retrospective
+breakdown is the prompt-authorized equivalent patch/status record; only the
+combined verified end state is marked passed.
+
+| Checkpoint/slice | Main change areas | Recorded evidence |
+|---|---|---|
+| A — truth reconciliation | audited `4f4e410` to inspected `91055f6`; current docs/capabilities/deployment boundary | Newer guest/waitlist/Turnstile/branding work retained; three historical inputs preserved untracked |
+| B — Gate 0 local closure | snapshot locks, declared-linkage terminology, approved provenance invariant, raw/normalized hash docs, contract drift | Existing and added backend/migration regressions pass; hosted checks remain separate |
+| C / slice 1 — contracts and profiles | migration `0006`, persistence/schema/API types, profile, generated contracts | Focused contract/persistence/fail-closed tests pass |
+| D / slice 2 — generic compiler | profile/router/renderer/provenance/metrics/bundle modules and Northstar parity | Two-process reproducibility, no-domain-string, old-build immutability, and Northstar regressions pass |
+| E / slice 3 — Acme | long-form source pack, seeded authority conflicts/placements, shared runner | Acme compiles/runs without entering unsupported daylight or pending temporal clauses into the guard |
+| F / slice 4 — review/compilation UI | domain switch, authority review, placement ledger, bundle tree, metrics, exact span links | 87 component/unit tests and the six-flow browser suite pass |
+| G / slice 5 — evidence/docs | report, successor documents, capability inventory, screenshots, packaging checks | Local claims and hosted/non-behavioral boundaries recorded; final pushed CI pending |
+
+The exact commands, pass counts, build roots, and source-span example are in
+[`gate-1-verification-report.md`](gate-1-verification-report.md).
+
+The existing CLI exposes deterministic `compile`, `test`, and `report` paths.
+A stable customer-facing `aletheia check` exit/evidence contract and narrow
+pre-side-effect dispatcher remain the immediate post-Gate-1 integration seam
+if validated demand warrants them; neither is claimed as completed Gate 8.
+
 ## 9. Engineering rules
 
 - Treat source text as untrusted data, never instructions to the compiler or
@@ -246,15 +326,20 @@ If any item is not executed, record it as pending—not implicitly passed.
 Stop and review evidence before Gate 2. The following remain future work and
 must not be folded into the Gate 1 claim:
 
-- bounded Z3 conflict, implication, redundancy, and boundary analysis;
-- generic temporal monitors and stateful obligations;
-- policy mutation generation and mutation score;
-- Qwen/Ollama/vLLM extraction or a live model/tool loop;
-- upstream tau task execution beyond data sync/import;
-- production dispatcher SDK, observe/enforce rollout, signing, promotion, and
-  last-known-good distribution;
-- arbitrary uploads, shared enterprise tenancy, SSO/SCIM/RBAC, audit export,
-  managed secrets, or compliance claims.
+| Future gate | Useful acceptance boundary retained for later work |
+|---|---|
+| Gate 2 — bounded symbolic analysis | A declared typed subset produces SAT/UNSAT/unknown/timeout, assumptions, counterexamples, and differential tests without claiming universal proof. |
+| Gate 3 — restricted temporal/LTLf monitors | Versioned finite-history semantics compile into deterministic persisted monitor state and traces; unsupported temporal language stays explicit. |
+| Gate 4 — policy mutation testing | Deterministic mutant classes, killed/survived evidence, mutation score, and critical-survivor gates are reproducible. |
+| Gate 5 — real local model integration | A pinned Qwen/engine capability probe and schema/quote-verified candidate extraction path operates; human approval and deterministic enforcement remain mandatory. |
+| Gate 6 — controlled evaluation | Deterministic, live-model, benchmark, and later shadow-pilot lanes remain separate, with pinned configurations and no invented causal claim. |
+| Gate 7 — upstream tau execution | The pinned upstream evaluator/tasks execute through an Aletheia intercept adapter without changing official evaluation semantics or inventing a score. |
+| Gate 8 — CLI/CI/reference runtime | Stable `aletheia check` exits/evidence and a safe pre-side-effect dispatcher consume verified/signed bundles with observe/enforce and rollback boundaries. |
+
+Arbitrary uploads, shared enterprise tenancy, SSO/SCIM/RBAC, audit export,
+managed secrets, compliance claims, and a complete production control plane are
+separate maturity work, not implicit acceptance criteria for these feature
+gates.
 
 Those are Gates 2–8, not hidden subfeatures of Gate 1.
 

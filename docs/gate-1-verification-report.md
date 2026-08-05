@@ -1,10 +1,13 @@
-# Gate 1 local verification report
+# Gate 1 — Source-aware policy refactoring and prompt/skill compilation
 
-**Gate:** source-aware policy refactoring and prompt/skill compilation  
+## Local verification report
+
 **Verdict:** complete in the verified local two-domain deterministic fixture scope  
 **Verification date:** 2026-08-04  
-**Inspected base:** `91055f6043edfd7f0cb171eac0bd04c611f2d509`  
-**Verified implementation commit:** `d10af278f785be76a8232589b4d0264792147a17`  
+**Last independently audited anchor:** `4f4e410a2b114bb16b55566bca79c555a489bd9b`  
+**Original Gate 1 start:** `91055f6043edfd7f0cb171eac0bd04c611f2d509`  
+**Reconciliation starting HEAD:** `0d5b356e6143f784c726f55406ca1ba12d308af0`  
+**Verified implementation commit:** `2292a5f7089d061c9dc8b977852ee04d182373bc`  
 **Deployment boundary:** not deployed; public Workers remain on `147448a`
 
 ## 1. What this verdict means
@@ -19,23 +22,58 @@ database, packaging, and browser checkpoint passes.
 The verdict is deliberately narrow:
 
 - it applies to deterministic synthetic fixtures, not customer documents;
-- it applies to implementation commit `d10af278f785be76a8232589b4d0264792147a17`,
+- it applies to implementation commit `2292a5f7089d061c9dc8b977852ee04d182373bc`,
   not to base commit `91055f6` alone;
-- the tracked working tree was clean immediately after that implementation
-  commit; the three preserved historical `(1).md` inputs remained deliberately
-  untracked and byte-for-byte unchanged;
+- the implementation commit contains code, fixtures, tests, and generated
+  contracts; this successor report and refreshed screenshots are a separate
+  documentation checkpoint;
 - no Gate 1 bundle was promoted to Cloudflare, Render, or Supabase;
 - Gate 0H anonymous hosted verification remains a separate in-progress track;
 - behavioral fidelity remains `not_measured`.
 
-## 2. Ending-state map
+The audited anchor moved before Gate 1 work began. The inspected
+`4f4e410..91055f6` range contains the five guest-preview, waitlist, resilience,
+HTTPS, brand, and release-evidence commits `3c352ee`, `85e6666`, `c8505c7`,
+`147448a`, and `91055f6`; that newer work was retained rather than reset.
+
+At original Gate 1 start `91055f6`, the tracked tree was clean and exactly three
+historical research inputs were untracked. Before this reconciliation, local
+`main` and `origin/main` both resolved to `0d5b356`. The intervening local work
+was audited rather than reset. The same three historical inputs remain
+untracked and byte-identical after `2292a5f`.
+
+Preserved untracked inputs at both boundaries:
+
+- `aletheia_independent_review_and_product_decision (1).md` —
+  `60b2cb7445f24965a485aadcbda54dfca15b38a971c418d7fe4a1a5c07ac6e53`;
+- `aletheia_refined_codex_execution_handoff_v2 (1).md` —
+  `325e6c980eeee5b11457e1ebe7475aef04d734962345fc84a83e81ba46c63948`;
+- `aletheia_research_map_80_sources (1).md` —
+  `206d2767343a31f24b3a6e7dcb02af3805c0dc205bcf25867788711fbc861ff4`.
+
+## 2. Current capability matrix
+
+Feature gates and production maturity are separate ladders:
+
+| Capability/track | Evidence-backed status | Boundary |
+|---|---|---|
+| Gate 0 — Local deterministic foundation | Complete in the settled tested Northstar fixture/local scope | Source review, authority resolution, build, 16-case/three-arm run, trace, and report remain the regression floor. |
+| Gate 0H — Hosted verification and release hardening | In progress / unverified | Permanent-user Northstar staging passed; anonymous Turnstile redemption and complete guest E2E remain unverified. Hosted schema is at `0005`. |
+| Gate 1 — Source-aware policy refactoring and prompt/skill compilation | Complete in verified local two-domain fixture scope | Northstar and Acme API/database/frontend/packaging/browser evidence passed. Migration `0006` and Gate 1 are not deployed. |
+| Gates 2–8 | Absent as product capabilities | Interfaces, research, and tau sync do not establish solver, temporal, mutation, model, live evaluation, tau execution, or runtime SDK operation. |
+| Production maturity | Preview, not production-ready | Database RLS/private-schema isolation, signed promotion, customer ingestion/runtime, operational assurance, and enterprise controls remain absent. |
+
+This matrix is the current capability view. The before/after Gate 1 matrix is
+retained in the v3 execution handoff.
+
+## 3. Ending-state map
 
 The verified implementation commit adds or materially changes these Gate 1 areas:
 
 | Area | Principal repository paths |
 |---|---|
 | Persistence and HTTP contracts | `apps/api/app/models.py`, `schemas.py`, `api/routes.py`, `tenancy.py`, migration `0006_gate1_compilation_contracts.py` |
-| Generic compiler | `apps/api/app/services/compiler.py`, `apps/api/app/services/compilation/` |
+| Generic compiler | `apps/api/app/services/compiler.py`, `apps/api/app/services/compilation/`, `fixture_inventory.py` |
 | Domain packs | `data/demo/northstar-retail/`, `data/demo/acme-appointments/`, `appointment_seed.py` |
 | Pinned profile | `data/compiler-profiles/source-aware-v1.json` |
 | Generated contracts | `apps/api/openapi.json`, 34 JSON Schemas in `apps/api/schemas/`, generated TypeScript client schema |
@@ -47,7 +85,24 @@ The verified implementation commit adds or materially changes these Gate 1 areas
 remain byte-for-byte unchanged; their versioned successors record predecessor
 names and SHA-256 values.
 
-## 3. Implemented source-to-artifact chain
+## 4. Checkpoint-equivalent change record
+
+Gate 1 landed across the earlier `d10af27` implementation and focused
+`2292a5f` reconciliation commit rather than as five separate PRs. The following
+is an evidence-honest equivalent patch/status breakdown. The pass verdict
+applies to the combined end state.
+
+| Checkpoint | Files/areas changed and why | Verification boundary |
+|---|---|---|
+| A — truth reconciliation | Canonical docs/capabilities were reconciled from audited `4f4e410` through starting `91055f6`; historical prompts and the three untracked inputs were retained. | Commit/worktree lineage and hashes inspected; no newer guest/branding work reset. |
+| B — Gate 0 local closure | Operation/project locking, declared-linkage naming, approved-rule provenance, raw/normalized hash docs, and generated-contract drift coverage were closed or reconfirmed. | Gate 0 backend/migration/web/browser regression remains green; hosted blockers stay separate. |
+| C / slice 1 — contracts/profile | Models, schemas, API/tenancy, migration `0006`, pinned profile, OpenAPI, JSON Schemas, and generated client establish placement/span/report contracts. | Contract, migration, fail-closed, and cross-tenant tests pass. |
+| D / slice 2 — generic compiler | `services/compilation/` splits profile, provenance, rendering, metrics, and bundle logic from the compatibility facade. | Northstar parity, no-domain-string, fresh-process reproducibility, digest, and old-build tests pass. |
+| E / slice 3 — Acme | The long-form appointment domain pack, seed service, manual conflicts, placements, cases, and shared runner path establish a second domain. | Shared compile/run path passes; stale, ambiguous, and pending items remain explicit. |
+| F / slice 4 — UI | Project switcher, source authority, placement routing, build inspection, exact source links, metrics, and state handling extend the existing design system. | 87 web tests and six Playwright flows pass. |
+| G / slice 5 — evidence/docs | Successor documents, capability inventory, screenshots, build roots, provenance example, and claim boundary record the checkpoint. | Packaging/audits pass; final pushed CI pending; no Gate 2 or hosted Gate 1 claim. |
+
+## 5. Implemented source-to-artifact chain
 
 ```text
 raw source bytes + normalized text
@@ -62,6 +117,8 @@ raw source bytes + normalized text
   → pinned compiler profile/configuration
   → generated artifact span
   → routing/preservation/metrics/source-map/manifest evidence
+  → artifact SHA-256
+  → build root
 ```
 
 The compiler recognizes `prompt_kernel`, `skill`, `knowledge`,
@@ -70,34 +127,90 @@ Transforms are explicitly classified. Reviewer-authored guidance carries no
 source-anchor claim. Test-generated span markers and other generated framing are
 `compiler_scaffold`, never source-derived text.
 
-## 4. Final verification results
+## 6. Final verification results
 
 | Check | Final result |
 |---|---|
-| Default API suite | **139 passed, 1 skipped** |
-| Focused regenerated-contract/Gate 1 suite | **31 passed** |
-| Python lint/types | Ruff passed; mypy passed |
+| Default API suite | **148 passed, 1 skipped** |
+| Focused regenerated-contract/Gate 1 suite | **40 passed** |
+| Python lint/types | Ruff passed; mypy passed over 38 source files |
 | SQLite schema | Alembic upgrade and drift check passed through `0006` |
 | Fresh PostgreSQL migration marker | **1 passed, 4 deselected**; temporary database removed |
-| Frontend unit/component | ESLint passed; strict typecheck passed; **84/84** Vitest tests across 22 files passed |
+| Frontend unit/component | ESLint passed; strict typecheck passed; **87/87** Vitest tests across 23 files passed |
 | Next.js | Production build passed; dynamic `/projects/[projectId]/routing` emitted |
-| Focused browser path | Two-domain E2E **1/1** in 15.2 seconds |
-| Complete browser path | Playwright **6/6** in 1.3 minutes using fresh isolated API/web ports and Next output |
+| Focused browser path | Two-domain E2E **1/1** in 34.6 seconds including fresh server startup |
+| Complete browser path | Playwright **6/6** in 1.1 minutes using fresh isolated API/web ports and Next output |
 | Cloudflare bundle | OpenNext passed at compatibility date `2026-08-04` |
 | Wrangler | Version `4.118.0` type generation, root/staging deploy dry-runs, and startup check passed |
-| Dry-run package observation | 53 assets; 8,019.91 KiB / 1,665.20 KiB gzip |
-| Local startup observation | Active startup 34.0 ms |
+| Dry-run package observation | 53 assets; 8,026.44 KiB / 1,666.83 KiB gzip |
+| Local startup observation | Active startup 40.4 ms in a 174.9 ms local profile window |
 | Dependency audits | `pip-audit` and production `pnpm audit --audit-level high`: no known vulnerabilities reported |
-| GitHub Actions | Run [30963519448](https://github.com/amanda-yin-x/aletheia/actions/runs/30963519448) passed quality, secret scan, and PostgreSQL integration on `25b42ffd08bdc9566478653d5765c3be11ba141f` |
+| GitHub Actions | Last pre-reconciliation run [30963753935](https://github.com/amanda-yin-x/aletheia/actions/runs/30963753935) passed on `0d5b356`; the final pushed documentation commit requires its own green run before this row is advanced. |
 | Patch hygiene | `git diff --check` passed |
 
-The final browser command was:
+### Exact local command ledger
+
+These are the commands associated with the recorded results. The PostgreSQL
+database name was disposable and was dropped after its marker passed.
 
 ```bash
+cd apps/api
+uv run ruff check app tests
+uv run mypy app
+ENVIRONMENT=test uv run pytest -q
+ENVIRONMENT=test uv run pytest -q \
+  tests/test_contracts.py \
+  tests/test_gate1_compilation.py \
+  tests/test_gate1_persistence_contracts.py
+
+cd ../..
+make migration-check
+
+cd apps/api
+TEST_DATABASE_URL=postgresql+asyncpg://amandayin@localhost:5432/aletheia_gate1_verify_20260804_2130 \
+TEST_MIGRATION_DATABASE_URL=postgresql+psycopg://amandayin@localhost:5432/aletheia_gate1_verify_20260804_2130 \
+ENVIRONMENT=test \
+uv run pytest -q -m postgres tests/test_migrations_integration.py
+
+ENVIRONMENT=test uv run python scripts/export_contracts.py
+cd ../..
+corepack pnpm --filter @aletheia/web exec openapi-typescript \
+  ../../apps/api/openapi.json \
+  -o ../../packages/api-client/src/schema.d.ts
+git diff --exit-code -- \
+  apps/api/openapi.json apps/api/schemas packages/api-client/src/schema.d.ts
+
+corepack pnpm --filter @aletheia/web lint
+corepack pnpm --filter @aletheia/web run cf-typegen
+corepack pnpm --filter @aletheia/web typecheck
+corepack pnpm --filter @aletheia/web test
+corepack pnpm --filter @aletheia/web build
+corepack pnpm --filter @aletheia/web exec opennextjs-cloudflare build
+corepack pnpm --filter @aletheia/web exec wrangler deploy --dry-run --env=""
+corepack pnpm --filter @aletheia/web exec wrangler deploy --dry-run --env staging
+corepack pnpm --filter @aletheia/web exec wrangler deploy --dry-run --env="" \
+  --outfile .open-next/worker.bundle
+corepack pnpm --filter @aletheia/web exec wrangler check startup \
+  --worker .open-next/worker.bundle
+
 PLAYWRIGHT_API_PORT=18081 \
 PLAYWRIGHT_WEB_PORT=13031 \
 PLAYWRIGHT_ISOLATED_WEB=1 \
-pnpm --filter @aletheia/web test:e2e
+corepack pnpm --filter @aletheia/web exec playwright test \
+  --grep "two domains keep project routing and compiled evidence isolated"
+
+cd apps/api && uv run pip-audit
+cd ../.. && corepack pnpm audit --prod --audit-level high
+git diff --check
+```
+
+The complete final browser command was:
+
+```bash
+PLAYWRIGHT_API_PORT=8014 \
+PLAYWRIGHT_WEB_PORT=3014 \
+PLAYWRIGHT_ISOLATED_WEB=1 \
+corepack pnpm --filter @aletheia/web test:e2e
 ```
 
 An earlier full run hit a transient Next development 404 only when stale reused
@@ -109,7 +222,7 @@ The dry-run size and startup values are packaging observations. They do not
 measure production latency, capacity, availability, or a deployed Gate 1
 Worker. Dependency audits are not an independent security assessment.
 
-## 5. Two-domain proof
+## 7. Two-domain proof
 
 The same compiler version/profile and generic modules build both packs. A
 regression scans generic compiler code for Northstar/refund/Acme/appointment
@@ -142,13 +255,19 @@ isolated Northstar evidence.
 
 ### Browser evidence
 
-![Acme placement routing with explicit blocked and human-review states](screenshots/acme-routing-desktop.png)
+The placement screenshot shows the post-review non-superseded rule ledger. Its
+471 rows and 20 retired rows are the current-revision view described above, not
+the complete 473-clause compiler disposition ledger. The build screenshot is a
+post-review demonstration build and is not presented as having the clean
+fixture root recorded in Section 9.
+
+![Acme non-superseded placement ledger with explicit blocked and human-review states](screenshots/acme-routing-desktop.png)
 
 ![Acme compiled bundle with an exact generated span and source anchor](screenshots/acme-build-desktop.png)
 
-## 6. Artifact tree
+## 8. Artifact tree
 
-Both verified builds contain 19 artifacts. The Acme build demonstrates the
+Both verified builds contain 20 artifacts. The Acme build demonstrates the
 generic shape:
 
 ```text
@@ -163,6 +282,7 @@ tools.json
 facts/
   evaluation.json
 inputs/
+  clause-inventory.json
   compiler-profile.json
   findings.json
   pinned-source-metadata.json
@@ -185,56 +305,70 @@ The manifest pins the concrete artifact names and digests for a build. This
 tree is a representative verified build, not a promise that every future
 profile must emit the same scoped filenames.
 
-## 7. Verified build roots and representative metrics
+## 9. Verified build roots and representative metrics
 
 | Measure | Northstar retail | Acme appointments |
 |---|---:|---:|
-| Build root | `4e0601f04010ae67b837a718c1a97942b048fa9468eb4820c098ee54c9ab99df` | `efccbe65a0f57e4eafbc649dc4b707a2dd69949771d4310c53762b3b690e95c5` |
-| Artifact count | 19 | 19 |
+| Build root | `0b11b2f92430cabaa09bbf3eb837431a3f66b4c79a535003a4512f07698d5676` | `fb8eb7030c76211e0247481dd637aa52a241385379f4867ceb41d51a9343d2a4` |
+| Artifact count | 20 | 20 |
+| Declared normative lines | 172 | 473 |
+| Persisted generated spans | 709 | 1,798 |
 | Baseline always-loaded | 165 lines / 6,794 chars / 1,699 est. tokens | 40 / 2,284 / 571 |
-| Compiled kernel | 7 / 198 / 50 | 7 / 221 / 56 |
-| Expected task context | 32 / 1,113 / 279 | 29 / 1,273 / 319 |
-| Scoped skill | 18 / 724 / 181 | 15 / 792 / 198 |
-| Scoped knowledge | 7 / 191 / 48 | 7 / 260 / 65 |
+| Compiled kernel | 16 / 1,077 / 270 | 18 / 1,753 / 439 |
+| Expected task context | 186 / 10,277 / 2,570 | 449 / 42,690 / 10,673 |
+| Scoped skill | 163 / 9,009 / 2,253 | 414 / 39,524 / 9,881 |
+| Scoped knowledge | 7 / 191 / 48 | 17 / 1,413 / 354 |
 | Guard | 7,884 chars / 1,971 est. tokens | 5,893 / 1,474 |
 | Regression tests | 943 lines / 24,602 chars / 6,151 est. tokens | 583 / 18,121 / 4,531 |
-| Total without manifest | 986 lines / 98,763 chars / 24,691 est. tokens | 623 / 155,881 / 38,971 |
+| Total without manifest | 1,155 lines / 1,407,209 chars / 351,803 est. tokens | 1,058 / 3,806,026 / 951,507 |
 
-The deterministic estimator is reported with the build. These values separate
+The deterministic estimator is `char_div_4` version `1.0.0` (an explicit
+character-count estimate, not a model tokenizer). These values separate
 always-loaded/task context from total generated evidence; total bundle size is
 not presented as runtime prompt size.
 
-For both builds:
+Northstar's 172-entry compiler disposition ledger contains 161 routed, two
+unsupported, and nine retired clauses; 163 are active normative clauses.
+Acme's 473-entry compiler disposition ledger contains 425 routed, 18 blocked,
+eight unsupported, and 22 retired clauses; 451 are active. The reviewer UI
+shows 471 non-superseded Acme rule revisions (425 routed, 20 retired, and 26
+needing attention); the two superseded rule revisions remain in immutable
+history and account for the difference from the complete compiler ledger.
+Explicit-disposition, routing, verified-anchor, approved
+preservation, severity-weighted preservation, and supported machine-decidable
+high/critical guard-and-test ratios are `1.0` for both builds. Northstar records
+two unresolved active clauses; Acme records 24. `behavioral_fidelity` remains
+`not_measured`.
 
-- active clauses / explicit dispositions: `9 / 9`;
-- routing coverage: `1.0`;
-- verified source-anchor coverage: `1.0`;
-- approved and severity-weighted preservation: `1.0`;
-- high/critical guard-and-test placement: `1.0`;
-- unsupported: `1`;
-- unresolved: `1`;
-- `behavioral_fidelity: not_measured`.
-
-Acme additionally records two blocked clauses, one unsupported clause, and one
-unresolved clause. The protected-literal regression confirms identifiers such
-as `ACME-STYLE-001` do not invent numeric thresholds; actual `$200` and `30
-days` literals remain detected.
-
-## 8. Representative exact provenance
+## 10. Representative exact provenance
 
 One final Acme generated span resolves as follows:
 
 ```text
-knowledge/appointment-scheduling.md
-  generated line 7
-  generated UTF-8 bytes [153, 259)
-    → rule.appointment.knowledge@1
+policies/tool-policy.json
+  generated line 1
+  generated UTF-8 bytes [2966, 4323)
+    → rule.appointment.identity@1
     → placement version 1
-    → appointment-knowledge.md@1
-      source line 14
-      source UTF-8 bytes [503, 609)
-      source-anchor id 1f21fa…
-      quote SHA-256 bc6b6f…
+    → booking-policy-v2.md@1
+      source line 12
+      source UTF-8 bytes [401, 513)
+      exact quote:
+        ACME-POL-IDENTITY-001: Verify the customer's identity before
+        rescheduling or cancelling an existing appointment.
+      source-anchor id
+        c1bb12a022f4ceb7ee0bf67910e4790db1f479da7dcbe5cd5ea2a1b7bddcf424
+      quote SHA-256
+        988582ab18665e359a8d38a5e9ef7cebc8ba35667c47b33f85b8c57baa8e4502
+      original + normalized SHA-256
+        084118ce55a164764fab6705bf6158e805864f93589e3227ddfe609d81d924f2
+      parser/normalizer
+        checked_in_utf8@1.0.0 / aletheia_text@1.0.0
+  artifact SHA-256
+    bfd10a2ac984ed5c5289b8fa43044af6a29d7b57e62d8b45ebd8fd41a8906226
+  → manifest non-root member set
+  → Acme build root
+    fb8eb7030c76211e0247481dd637aa52a241385379f4867ceb41d51a9343d2a4
 ```
 
 Tests independently slice the stored normalized UTF-8 bytes at every anchor,
@@ -242,7 +376,7 @@ decode them, compare the exact quote, recompute the quote hash, and match raw
 and normalized document hashes. Generated spans are persisted and their count
 matches the source-map span count.
 
-## 9. Demo path
+## 11. Demo path
 
 1. Run `make bootstrap`, then `make demo`; open `http://localhost:3000`.
 2. Enter the seeded workspace and use **Project / domain** to select Acme.
@@ -262,7 +396,7 @@ matches the source-map span count.
 9. Run the Acme deterministic cases, then switch to Northstar and confirm the
    refund artifacts/evidence remain project-isolated.
 
-## 10. Claims this evidence supports
+## 12. Claims this evidence supports
 
 - A reviewed clause can be given one explicit, versioned disposition.
 - The same bounded compiler operates over two materially different synthetic
@@ -276,7 +410,7 @@ matches the source-map span count.
 - A covered deterministic proposal can be stopped before fixture mutation.
 - Local builds and their evidence can be reproduced and inspected.
 
-## 11. Claims this evidence does not support
+## 13. Claims this evidence does not support
 
 - automatic extraction or understanding of arbitrary customer documents;
 - automatic/general conflict discovery or formal verification;
@@ -289,18 +423,23 @@ matches the source-map span count.
 - database RLS, secure customer uploads, signed promotion, enterprise controls,
   compliance, certification, or independent security assurance.
 
-## 12. Exact next gate
+## 14. Exact next gate
 
 The immediate next step is a product/evidence checkpoint, not automatic scope
 expansion:
 
-1. retain `d10af278f785be76a8232589b4d0264792147a17` as the exact local
+1. retain `2292a5f7089d061c9dc8b977852ee04d182373bc` as the exact local
    implementation checkpoint and deploy it only as a separate, verified release;
 2. keep Gate 0H anonymous hosted verification separate and do not infer it from
    local Gate 1;
-3. gather design-partner evidence on whether authority/placement/source-map
+3. treat a stable customer-facing `aletheia check` exit/evidence contract and a
+   narrow pre-side-effect dispatcher as the immediate post-Gate-1 integration
+   checkpoint if product validation calls for them; the existing
+   `compile`/`test`/`report` CLI was retained, but no full Gate 8 command or
+   customer runtime is claimed;
+4. gather design-partner evidence on whether authority/placement/source-map
    review saves real policy-engineering time;
-4. only with explicit approval begin **Gate 2: bounded deterministic analysis**
+5. only with explicit approval begin **Gate 2: bounded deterministic analysis**
    over the existing typed IR, with SAT/UNSAT/unknown/timeout and declared
    assumptions.
 
